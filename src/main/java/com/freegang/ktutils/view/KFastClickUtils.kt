@@ -3,36 +3,26 @@ package com.freegang.ktutils.view
 import android.view.View
 
 object KFastClickUtils {
-    private var lastClickTime: Long = 0
-    private const val DEFAULT_CLICK_INTERVAL: Long = 2000L // 默认点击间隔为2000毫秒
+    private val records: MutableMap<String, Long> = HashMap()
 
     /**
      * 判断是否为快速点击
-     *
-     * @return 如果两次点击时间间隔小于默认点击间隔，则返回true；否则返回false。
-     */
-    @JvmStatic
-    fun isFastClick(): Boolean {
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime - lastClickTime
-        if (elapsedTime < DEFAULT_CLICK_INTERVAL) return true
-        lastClickTime = currentTime
-        return false
-    }
-
-    /**
-     * 判断是否为快速点击
+     * @url https://zhuanlan.zhihu.com/p/34841081
      *
      * @param interval 自定义点击间隔时间
      * @return 如果两次点击时间间隔小于指定的点击间隔，则返回true；否则返回false。
      */
-    @JvmStatic
-    fun isFastClick(interval: Long): Boolean {
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime - lastClickTime
-        if (elapsedTime < interval) return true
-        lastClickTime = currentTime
-        return false
+    fun isFastDoubleClick(interval: Long): Boolean {
+        if (records.size > 1000) records.clear()
+        //本方法被调用的文件名和行号作为标记
+        val ste = Throwable().stackTrace[1]
+        val key = ste.fileName + ste.lineNumber
+        var lastClickTime = records[key]
+        val thisClickTime = System.currentTimeMillis()
+        records[key] = thisClickTime
+        lastClickTime = lastClickTime ?: 0
+        val timeDuration = thisClickTime - lastClickTime
+        return timeDuration < interval
     }
 }
 

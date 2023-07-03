@@ -2,7 +2,6 @@ package com.freegang.ktutils.app
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.Application
 import android.app.PendingIntent
@@ -11,11 +10,9 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PackageInfoFlags
-import android.content.res.Resources
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.util.Size
 import androidx.core.content.PermissionChecker
 import java.io.File
 import java.lang.reflect.InvocationTargetException
@@ -124,16 +121,20 @@ object KAppUtils {
      *
      * @param context 上下文对象，用于获取资源和包信息。
      * @param packageName 包名(需要App已安装)
+     * @param flags 标志，见: PackageManager#flag
      * @return PackageInfo
      */
     @JvmStatic
     @JvmOverloads
-    fun getPackageInfo(context: Context, packageName: String = context.packageName): PackageInfo {
+    fun getPackageInfo(
+        context: Context,
+        packageName: String = context.packageName,
+        flags: Int = PackageManager.GET_ACTIVITIES,
+    ): PackageInfo {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val flags = PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
-            context.packageManager.getPackageInfo(packageName, flags)
+            context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(flags.toLong()))
         } else {
-            context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
+            context.packageManager.getPackageInfo(packageName, flags)
         }
     }
 
@@ -304,18 +305,6 @@ object KAppUtils {
         } catch (e: PackageManager.NameNotFoundException) {
             false
         }
-    }
-
-    /**
-     * 获取屏幕宽高
-     * @return size 屏幕的宽高
-     */
-    @JvmStatic
-    fun screenSize(): Size {
-        val displayMetrics = Resources.getSystem().displayMetrics
-        val heightPixels = displayMetrics.heightPixels
-        val widthPixels = displayMetrics.widthPixels
-        return Size(widthPixels, heightPixels)
     }
 
     /**

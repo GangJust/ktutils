@@ -534,7 +534,12 @@ object KViewUtils {
         targetType: Class<T>,
         logic: (it: T) -> Boolean
     ): List<T> {
-        //view group
+        if (view !is ViewGroup) {
+            if (targetType.isInstance(view) && logic.invoke(targetType.cast(view) as T)) {
+                return listOf(view as T)
+            }
+            return emptyList()
+        }
         val views = mutableListOf<T>()
         val stack = Stack<View>()
         stack.push(view)
@@ -1074,3 +1079,13 @@ val View.idName get() = KViewUtils.getIdName(this)
 val View.idHex get() = KViewUtils.getIdHex(this)
 
 val View.parentView get() = this.parent as View
+
+val View.isDisplay: Boolean
+    get() {
+        //val screenSize = KDisplayUtils.screenSize()
+        //val temp = IntArray(2) { 0 }
+        //this.getLocationOnScreen(temp)
+        //return (temp[0] >= 0 && temp[0] <= screenSize.width) && (temp[1] >= 0 && temp[1] <= screenSize.height)
+        val rect = Rect()
+        return getLocalVisibleRect(rect)
+    }
