@@ -873,7 +873,7 @@ object KViewUtils {
             build.append("ViewNode{")
             build.append("className=", view.javaClass.name, ", ")
             build.append("package=", view.javaClass.`package`?.name, ", ")
-            build.append("superClass=", view.javaClass.name, ", ")
+            build.append("superClass=", view.javaClass.superclass.name, ", ")
             build.append("id=", view.id, ", ")
             build.append("idHex=", getIdHex(view), ", ")
             build.append("idName=", getIdName(view), ", ")
@@ -1078,7 +1078,7 @@ val View.idName get() = KViewUtils.getIdName(this)
 
 val View.idHex get() = KViewUtils.getIdHex(this)
 
-val View.parentView get() = this.parent as View
+val View.parentView get() = this.parent as ViewGroup
 
 val View.isDisplay: Boolean
     get() {

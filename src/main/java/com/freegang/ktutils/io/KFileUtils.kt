@@ -83,42 +83,23 @@ object KFileUtils {
         val lastIndexOf = filename.lastIndexOf(".")
         val hasSuffix = lastIndexOf != -1
 
-        // 如果字符串长度未超过最大限制且没有后缀名，则直接返回该字符串
-        if (filename.length <= maxLength && !hasSuffix) {
-            return filename
+        val suffix = if (hasSuffix) filename.substring(lastIndexOf) else ""
+
+        val stringList = filename.substring(0, filename.length - suffix.length).split("")
+        var countLength = 0
+        var maxIndex = 0
+        for (i in stringList.indices) {
+            val item = stringList[i]
+            if (item.isEmpty()) continue
+            maxIndex = i
+            countLength += item.toByteArray().size
+            if (countLength >= maxLength) break
         }
 
-        // 计算保留后缀名的最大长度
-        val suffixLength = if (hasSuffix) filename.substring(lastIndexOf).length else 0
-        val maxByteLength = maxLength - suffixLength
-
-        // 对字符串进行截取
-        val bytes = filename.toByteArray(Charsets.UTF_8)
-        var byteLength = 0
-        var lastByteIsChineseChar = false
-        for ((_, byte) in bytes.withIndex()) {
-            // 如果当前字符是中文字符
-            val byteLengthToAdd = if (byte.toInt() and 0xff > 127) 2 else 1
-            if (byteLength + byteLengthToAdd > maxByteLength) {
-                break
-            }
-            byteLength += byteLengthToAdd
-            lastByteIsChineseChar = byteLengthToAdd == 2
-            if (byteLength == maxByteLength) {
-                break
-            }
-        }
-
-        // 如果最后一个字符是中文字符，需要将其去掉，因为如果截取中文字符的一部分，会导致编码问题
-        if (lastByteIsChineseChar && byteLength > 1) {
-            byteLength -= 1
-        }
-
-        return if (hasSuffix) {
-            val prefix = filename.substring(0, lastIndexOf)
-            prefix.substring(0, byteLength.coerceAtMost(prefix.length)) + filename.substring(lastIndexOf)
+        return if (suffix.isNotEmpty()) {
+            filename.substring(0, maxIndex - suffix.length - 1) + suffix
         } else {
-            filename.substring(0, byteLength)
+            filename.substring(0, maxIndex - 1)
         }
     }
 }

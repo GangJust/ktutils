@@ -12,6 +12,7 @@ object KFastClickUtils {
      * @param interval 自定义点击间隔时间
      * @return 如果两次点击时间间隔小于指定的点击间隔，则返回true；否则返回false。
      */
+    @JvmStatic
     fun isFastDoubleClick(interval: Long): Boolean {
         if (records.size > 1000) records.clear()
         //本方法被调用的文件名和行号作为标记
