@@ -10,6 +10,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PackageInfoFlags
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
@@ -69,7 +70,10 @@ object KAppUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getAppLabelName(context: Context, packageName: String = context.packageName): String {
+    fun getAppLabelName(
+        context: Context,
+        packageName: String = context.packageName,
+    ): String {
         // 获取应用的包信息
         val packageInfo = getPackageInfo(context, packageName)
 
@@ -94,7 +98,10 @@ object KAppUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getVersionName(context: Context, packageName: String = context.packageName): String {
+    fun getVersionName(
+        context: Context,
+        packageName: String = context.packageName,
+    ): String {
         return getPackageInfo(context, packageName).versionName
     }
 
@@ -107,7 +114,10 @@ object KAppUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getVersionCode(context: Context, packageName: String = context.packageName): Long {
+    fun getVersionCode(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Long {
         val packageInfo = getPackageInfo(context, packageName)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             packageInfo.longVersionCode
@@ -146,7 +156,10 @@ object KAppUtils {
      * @return String
      */
     @JvmStatic
-    fun getApkVersionName(context: Context, apkFile: File): String? {
+    fun getApkVersionName(
+        context: Context,
+        apkFile: File,
+    ): String? {
         return getApkPackageInfo(context, apkFile)?.versionName
     }
 
@@ -158,7 +171,10 @@ object KAppUtils {
      * @return Long
      */
     @JvmStatic
-    fun getApkVersionCode(context: Context, apkFile: File): Long? {
+    fun getApkVersionCode(
+        context: Context,
+        apkFile: File,
+    ): Long? {
         val packageInfo = getApkPackageInfo(context, apkFile)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             packageInfo?.longVersionCode
@@ -175,7 +191,10 @@ object KAppUtils {
      * @return PackageInfo
      */
     @JvmStatic
-    fun getApkPackageInfo(context: Context, apkFile: File): PackageInfo? {
+    fun getApkPackageInfo(
+        context: Context,
+        apkFile: File,
+    ): PackageInfo? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val flags = PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
             context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, flags)
@@ -191,7 +210,10 @@ object KAppUtils {
      * @param packageName 包名
      */
     @JvmStatic
-    fun getSignature(context: Context, packageName: String): ByteArray {
+    fun getSignature(
+        context: Context,
+        packageName: String = context.packageName,
+    ): ByteArray {
         val pm = context.packageManager
         val packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
         val signatures = packageInfo.signatures
@@ -206,7 +228,11 @@ object KAppUtils {
      * @param packageName 包名
      */
     @JvmStatic
-    fun getMD5(context: Context, packageName: String): String {
+    @JvmOverloads
+    fun getMD5(
+        context: Context,
+        packageName: String = context.packageName,
+    ): String {
         return getDigest(getSignature(context, packageName), "MD5")
     }
 
@@ -217,7 +243,11 @@ object KAppUtils {
      * @param packageName 包名
      */
     @JvmStatic
-    fun getSHA1(context: Context, packageName: String): String {
+    @JvmOverloads
+    fun getSHA1(
+        context: Context,
+        packageName: String = context.packageName,
+    ): String {
         return getDigest(getSignature(context, packageName), "SHA1")
     }
 
@@ -228,11 +258,18 @@ object KAppUtils {
      * @param packageName 包名
      */
     @JvmStatic
-    fun getSHA256(context: Context, packageName: String): String {
+    @JvmOverloads
+    fun getSHA256(
+        context: Context,
+        packageName: String = context.packageName,
+    ): String {
         return getDigest(getSignature(context, packageName), "SHA256")
     }
 
-    private fun getDigest(signatures: ByteArray, algorithm: String): String {
+    private fun getDigest(
+        signatures: ByteArray,
+        algorithm: String,
+    ): String {
         try {
             val md = MessageDigest.getInstance(algorithm)
             md.update(signatures)
@@ -245,12 +282,63 @@ object KAppUtils {
     }
 
     /**
+     * 判断某个App是否Debug状态
+     * @param context 上下文对象，用于获取资源和包信息。
+     * @param packageName 目标包名
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun isAppInDebug(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Boolean {
+        try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong()))
+            } else {
+                context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
+            }
+            val applicationInfo = packageInfo.applicationInfo
+            return applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    /**
+     * 判断某个App是否安装
+     * @param context 上下文对象，用于获取资源和包信息。
+     * @param packageName 目标包名
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun isAppInstalled(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong()))
+            } else {
+                context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
+            }
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    /**
      * 判断是否具有某个权限
      * @param application Application
      * @param permission 权限名
      */
     @JvmStatic
-    fun checkPermission(application: Application, permission: String): Boolean {
+    fun checkPermission(
+        application: Application,
+        permission: String,
+    ): Boolean {
         // 管理外部存储
         if (permission == Manifest.permission.MANAGE_EXTERNAL_STORAGE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -279,32 +367,12 @@ object KAppUtils {
     }
 
     /**
-     * 判断某个App是否Debug状态
-     * @param context 上下文对象，用于获取资源和包信息。
+     * 判断某个App是否是深色模式
+     * @param context 上下文对象
      */
-    @JvmStatic
-    fun isAppInDebug(context: Context): Boolean {
-        val info = context.applicationInfo
-        return (info.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    }
-
-    /**
-     * 判断某个App是否安装
-     * @param context 上下文对象，用于获取资源和包信息。
-     * @param packageName 目标包名
-     */
-    @JvmStatic
-    fun isAppInstalled(context: Context, packageName: String): Boolean {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(0))
-            } else {
-                context.packageManager.getPackageInfo(packageName, 0)
-            }
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
+    fun isDarkMode(context: Context): Boolean {
+        val currentNightMode: Int = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
     /**
@@ -332,3 +400,5 @@ val Context.appLabelName get() = KAppUtils.getAppLabelName(this)
 val Context.appVersionName get() = KAppUtils.getVersionName(this)
 
 val Context.appVersionCode get() = KAppUtils.getVersionCode(this)
+
+val Context.isDarkMode get() = KAppUtils.isDarkMode(this)

@@ -9,16 +9,15 @@ object KFileUtils {
      * @param file 要删除的文件或目录
      */
     @JvmStatic
-    fun deleteForcefully(file: File) {
+    fun deleteForcefully(file: File): Boolean {
         if (!file.exists()) {
-            return
+            return false
         }
 
         try {
             // 文件直接删除
             if (file.isFile) {
-                file.delete()
-                return
+                return file.delete()
             }
 
             // 遍历删除文件夹
@@ -31,7 +30,10 @@ object KFileUtils {
         } catch (e: SecurityException) {
             // 处理没有权限删除的情况
             e.printStackTrace()
+            return false
         }
+
+        return true
     }
 
     /**
@@ -40,8 +42,8 @@ object KFileUtils {
      * @param file 要删除的文件或目录
      */
     @JvmStatic
-    fun deleteRecursively(file: File) {
-        file.deleteRecursively()
+    fun deleteRecursively(file: File): Boolean {
+        return file.deleteRecursively()
     }
 
     /**

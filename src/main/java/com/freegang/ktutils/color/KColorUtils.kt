@@ -28,7 +28,7 @@ object KColorUtils {
      * @param color 8 位 ARGB 颜色值
      * @return 是否为亮色，true 为亮色，false 为暗色
      */
-    fun isLightColor(color: Int): Boolean {
+    fun isDarkColor(color: Int): Boolean {
         // 提取颜色的红、绿、蓝分量
         val red = color shr 16 and 0xFF
         val green = color shr 8 and 0xFF
@@ -38,7 +38,6 @@ object KColorUtils {
         val brightness = (red * 299 + green * 587 + blue * 114) / 1000
 
         // 判断相对亮度是否超过阈值（128），超过则为亮色，否则为暗色
-        return brightness >= 128
+        return brightness < 128
     }
-
 }

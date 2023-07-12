@@ -2,6 +2,9 @@ package com.freegang.ktutils.collection
 
 object KCollectionUtils {
 
+    /**
+     * 只是为了方便java调用
+     */
     @JvmStatic
     @JvmOverloads
     fun <T> joinToString(c: Collection<T>, separator: CharSequence = ", ", transform: Transform<T>? = null): String {
@@ -9,6 +12,9 @@ object KCollectionUtils {
         return c.joinToString(separator = separator) { transform.transform(it) }
     }
 
+    /**
+     * 只是为了方便java调用
+     */
     @JvmStatic
     @JvmOverloads
     fun <T> joinToString(arr: Array<T>, separator: CharSequence = ", ", transform: Transform<T>? = null): String {
@@ -55,12 +61,17 @@ object KCollectionUtils {
         return c1.plus(c2)
     }
 
-
+    /**
+     * 只是为了方便java调用
+     */
     @JvmStatic
     fun <T, R> map(l: List<T>, transformMap: TransformMap<T, R>): List<R> {
         return l.map { transformMap.map(it) }
     }
 
+    /**
+     * 只是为了方便java调用
+     */
     @JvmStatic
     fun <T, R> map(c: Array<T>, transformMap: TransformMap<T, R>): List<R> {
         return c.map { transformMap.map(it) }

@@ -33,16 +33,12 @@ object KFastClickUtils {
  * @param interval 点击间隔时间（毫秒），默认为2000毫秒
  * @param l 点击事件监听器
  */
-fun View.setFastClickListener(
+fun View.setFastOnClickListener(
     interval: Long = 2000, // 默认点击间隔为2000毫秒
     l: View.OnClickListener,
 ) {
-    var lastClickTime: Long = 0
     setOnClickListener {
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime - lastClickTime
-        if (elapsedTime < interval) return@setOnClickListener
-        lastClickTime = currentTime
+        if (KFastClickUtils.isFastDoubleClick(interval)) return@setOnClickListener
         l.onClick(it)
     }
 }

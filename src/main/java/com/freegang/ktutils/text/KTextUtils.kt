@@ -1,5 +1,7 @@
 package com.freegang.ktutils.text
 
+import com.freegang.ktutils.text.KTextUtils.toString
+
 object KTextUtils {
 
     /**
@@ -120,12 +122,30 @@ object KTextUtils {
     }
 
     /**
+     * 将指定对象转为字符串[toString]，在字符串的开头用指定的字符或空格填充到指定的长度
+     */
+    @JvmStatic
+    fun padStart(text: Any?, length: Int, padChar: Char): String {
+        text ?: return ""
+        return "$text".padStart(length, padChar)
+    }
+
+    /**
      * 在字符串末尾用指定的字符或空格填充到指定的长度
      */
     @JvmStatic
     fun padEnd(text: String?, length: Int, padChar: Char): String {
         text ?: return ""
         return text.padEnd(length, padChar)
+    }
+
+    /**
+     * 将指定对象转为字符串[toString]，并在字符串末尾用指定的字符或空格填充到指定的长度
+     */
+    @JvmStatic
+    fun padEnd(text: Any?, length: Int, padChar: Char): String {
+        text ?: return ""
+        return "$text".padEnd(length, padChar)
     }
 
     /**

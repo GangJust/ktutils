@@ -338,5 +338,13 @@ class KLogCat {
         fun e(vararg msg: String) {
             instance.println(Log.ERROR, instance.tag, *msg)
         }
+
+        /**
+         * ERROR = 6
+         */
+        @JvmStatic
+        fun e(e: Throwable) {
+            instance.println(Log.ERROR, instance.tag, e.stackTraceToString())
+        }
     }
 }

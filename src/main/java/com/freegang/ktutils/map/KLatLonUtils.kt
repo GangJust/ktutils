@@ -32,6 +32,7 @@ object KLatLonUtils {
      * @param lon2 第二个坐标点的经度
      * @return 两个坐标点之间的距离，单位：米
      */
+    @JvmStatic
     fun getDistance(lat1: String, lon1: String, lat2: String, lon2: String): Double {
         return getDistance(
             lat1.toDouble(),
