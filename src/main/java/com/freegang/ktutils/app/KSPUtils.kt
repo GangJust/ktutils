@@ -1,4 +1,4 @@
-package com.freegang.xpler.utils.app
+package com.freegang.ktutils.app
 
 import android.content.Context
 import android.content.SharedPreferences
