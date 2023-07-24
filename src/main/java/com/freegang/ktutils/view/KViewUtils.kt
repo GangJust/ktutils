@@ -1050,6 +1050,25 @@ fun View.traverse(call: (it: View) -> Unit) {
     KViewUtils.traverse(this, call)
 }
 
+fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
+    layoutParams = layoutParams?.apply {
+        width = needWidth
+        height = needHeight
+    }
+}
+
+fun View.setLayoutWidth(needWidth: Int) {
+    layoutParams = layoutParams?.apply {
+        width = needWidth
+    }
+}
+
+fun View.setLayoutHeight(needHeight: Int) {
+    layoutParams = layoutParams?.apply {
+        height = needHeight
+    }
+}
+
 fun <T : View> View.findViewsByType(targetType: Class<T>): List<T> {
     return KViewUtils.findViews(this, targetType)
 }

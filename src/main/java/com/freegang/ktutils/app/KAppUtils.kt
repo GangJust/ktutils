@@ -74,17 +74,14 @@ object KAppUtils {
         context: Context,
         packageName: String = context.packageName,
     ): String {
-        // 获取应用的包信息
         val packageInfo = getPackageInfo(context, packageName)
 
-        // 获取应用的标签资源 ID
-        val labelRes = packageInfo.applicationInfo.labelRes
+        val labelRes = packageInfo?.applicationInfo?.labelRes ?: return ""
 
         return try {
-            // 使用标签资源 ID 获取应用的名称
             context.resources.getString(labelRes)
         } catch (e: Exception) {
-            // 如果获取名称的过程中发生异常，返回空字符串
+            e.printStackTrace()
             ""
         }
     }
@@ -102,7 +99,7 @@ object KAppUtils {
         context: Context,
         packageName: String = context.packageName,
     ): String {
-        return getPackageInfo(context, packageName).versionName
+        return getPackageInfo(context, packageName)?.versionName ?: ""
     }
 
     /**
@@ -120,9 +117,9 @@ object KAppUtils {
     ): Long {
         val packageInfo = getPackageInfo(context, packageName)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            packageInfo.longVersionCode
+            packageInfo?.longVersionCode ?: 0
         } else {
-            packageInfo.versionCode.toLong()
+            packageInfo?.versionCode?.toLong() ?: 0
         }
     }
 
@@ -140,11 +137,16 @@ object KAppUtils {
         context: Context,
         packageName: String = context.packageName,
         flags: Int = PackageManager.GET_ACTIVITIES,
-    ): PackageInfo {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(flags.toLong()))
-        } else {
-            context.packageManager.getPackageInfo(packageName, flags)
+    ): PackageInfo? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(flags.toLong()))
+            } else {
+                context.packageManager.getPackageInfo(packageName, flags)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
@@ -159,8 +161,8 @@ object KAppUtils {
     fun getApkVersionName(
         context: Context,
         apkFile: File,
-    ): String? {
-        return getApkPackageInfo(context, apkFile)?.versionName
+    ): String {
+        return getApkPackageInfo(context, apkFile)?.versionName ?: ""
     }
 
     /**
@@ -174,12 +176,12 @@ object KAppUtils {
     fun getApkVersionCode(
         context: Context,
         apkFile: File,
-    ): Long? {
+    ): Long {
         val packageInfo = getApkPackageInfo(context, apkFile)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            packageInfo?.longVersionCode
+            packageInfo?.longVersionCode ?: 0
         } else {
-            packageInfo?.versionCode?.toLong()
+            packageInfo?.versionCode?.toLong() ?: 0
         }
     }
 
@@ -214,11 +216,16 @@ object KAppUtils {
         context: Context,
         packageName: String = context.packageName,
     ): ByteArray {
-        val pm = context.packageManager
-        val packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-        val signatures = packageInfo.signatures
-        val signature = signatures[0]
-        return signature.toByteArray()
+        return try {
+            val pm = context.packageManager
+            val packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+            val signatures = packageInfo.signatures
+            val signature = signatures[0]
+            signature.toByteArray()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ByteArray(0)
+        }
     }
 
     /**
@@ -270,15 +277,16 @@ object KAppUtils {
         signatures: ByteArray,
         algorithm: String,
     ): String {
-        try {
+        if (signatures.isEmpty()) return "";
+        return try {
             val md = MessageDigest.getInstance(algorithm)
             md.update(signatures)
             val digest = md.digest()
-            return digest.joinToString(":") { String.format("%02x", it) }
+            digest.joinToString(":") { String.format("%02x", it) }
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
-        return ""
     }
 
     /**
@@ -292,18 +300,18 @@ object KAppUtils {
         context: Context,
         packageName: String = context.packageName,
     ): Boolean {
-        try {
+        return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong()))
             } else {
                 context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
             }
             val applicationInfo = packageInfo.applicationInfo
-            return applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+            applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
+            false
         }
-        return false
     }
 
     /**
@@ -325,6 +333,7 @@ object KAppUtils {
             }
             true
         } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
             false
         }
     }

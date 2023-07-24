@@ -77,31 +77,38 @@ object KFileUtils {
      * 将文件名转换为安全的文件名，确保文件名不超过255个字节。
      *
      * @param filename 原始文件名
-     * @return 安全的文件名
+     * @param suffix 指定后缀名, 默认空字符串则按一般文件的后缀分割符 `小数点(.)` 为后缀
+     * @return 安全的文件名, 如果处理失败, 则返回原文件名
      */
     @JvmStatic
-    fun secureFilename(filename: String): String {
+    fun secureFilename(
+        filename: String,
+        suffix: String = "",
+    ): String {
+        var actualSuffix = suffix
+        if (actualSuffix.isBlank()) {
+            val lastIndexOf = filename.lastIndexOf(".")
+            val hasSuffix = (lastIndexOf != -1) && (lastIndexOf != 0) && (lastIndexOf != filename.length)
+            actualSuffix = if (hasSuffix) filename.substring(lastIndexOf) else ""
+        }
+
         val maxLength = 255
-        val lastIndexOf = filename.lastIndexOf(".")
-        val hasSuffix = lastIndexOf != -1
-
-        val suffix = if (hasSuffix) filename.substring(lastIndexOf) else ""
-
-        val stringList = filename.substring(0, filename.length - suffix.length).split("")
+        val actualSuffixByteSize = actualSuffix.toByteArray().size
+        val stringList = filename.removeSuffix(actualSuffix).split("")
         var countLength = 0
-        var maxIndex = 0
+        var secureFilename = ""
         for (i in stringList.indices) {
             val item = stringList[i]
             if (item.isEmpty()) continue
-            maxIndex = i
             countLength += item.toByteArray().size
-            if (countLength >= maxLength) break
+            if (countLength + actualSuffixByteSize >= maxLength) break
+            secureFilename = secureFilename.plus(item)
         }
 
-        return if (suffix.isNotEmpty()) {
-            filename.substring(0, maxIndex - suffix.length - 1) + suffix
-        } else {
-            filename.substring(0, maxIndex - 1)
+        return try {
+            secureFilename.plus(actualSuffix)
+        } catch (e: Exception) {
+            return filename
         }
     }
 }
@@ -175,10 +182,11 @@ val String.pureFileName: String
 
 /**
  * 将字符串转换为安全的文件名，去除特殊字符，并限制总长度不超过255个字节。
- *
+ * @param suffix 指定后缀名, 默认空字符串则按一般文件的后缀分割符 `小数点(.)` 为后缀
  * @return 安全的文件名
  */
-val String.secureFilename: String
-    get() = KFileUtils.secureFilename(this)
+fun String.secureFilename(suffix: String = ""): String {
+    return KFileUtils.secureFilename(this, suffix)
+}
 
 
