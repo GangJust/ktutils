@@ -1,6 +1,11 @@
 package com.freegang.ktutils.map
 
-import com.baidu.mapapi.map.*
+import com.baidu.mapapi.map.BaiduMap
+import com.baidu.mapapi.map.Marker
+import com.baidu.mapapi.map.MarkerOptions
+import com.baidu.mapapi.map.Overlay
+import com.baidu.mapapi.map.Polygon
+import com.baidu.mapapi.map.PolygonOptions
 import java.lang.reflect.ParameterizedType
 
 /// 百度地图覆盖物工具类

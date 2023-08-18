@@ -122,17 +122,13 @@ object KFileUtils {
 fun File.deleteForcefully() = KFileUtils.deleteForcefully(this)
 
 /**
- * 在当前文件路径下创建指定名称的子文件或子目录。
- * 如果当前文件是一个文件而不是目录，将抛出异常。
+ * 获取当前路径下指定名称的子文件或子目录。
+ * 如需要创建子文件或子目录, 请结合[need]使用
  *
  * @param name 子文件或子目录的名称
- * @return 创建的子文件或子目录
- * @throws Exception 如果当前文件是一个文件而不是目录
+ * @return 当前路径下的子文件或子目录
  */
 fun File.child(name: String): File {
-    if (this.isFile) {
-        throw Exception("`File.child(\"$name\")` trying to add a child to a file.")
-    }
     return File(this, name)
 }
 

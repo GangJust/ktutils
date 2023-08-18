@@ -12,7 +12,7 @@ object KReflectUtils {
      */
     fun getAllFields(obj: Any): List<Field> {
         val fields = mutableListOf<Field>()
-        var currentClass: Class<*>? = obj.javaClass
+        var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
         while (currentClass != null && currentClass != Any::class.java) {
             currentClass.declaredFields.forEach {
                 it.isAccessible = true
@@ -30,7 +30,7 @@ object KReflectUtils {
      */
     fun getAllMethods(obj: Any): List<Method> {
         val methods = mutableListOf<Method>()
-        var currentClass: Class<*>? = obj.javaClass
+        var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
         while (currentClass != null && currentClass != Any::class.java) {
             currentClass.declaredMethods.forEach {
                 it.isAccessible = true
@@ -132,7 +132,14 @@ object KReflectUtils {
     }
 }
 
-private val methodCache = mutableMapOf<String, Method>()
+val Any.classLoader: ClassLoader?
+    get() {
+        return if (this.javaClass == Class::class.java) {
+            (this as Class<*>).classLoader
+        } else {
+            this.javaClass.classLoader
+        }
+    }
 
 fun Any.fields(
     name: String? = null,

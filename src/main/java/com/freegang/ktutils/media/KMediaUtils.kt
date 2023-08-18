@@ -1,4 +1,4 @@
-package com.freegang.ktutils.app
+package com.freegang.ktutils.media
 
 import android.content.Context
 import android.database.Cursor

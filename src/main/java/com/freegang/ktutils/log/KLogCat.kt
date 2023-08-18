@@ -265,11 +265,21 @@ class KLogCat {
         /**
          * 开启保存日志到存储设备。
          *
-         * 将会保存到应用程序的私有目录下
+         * 默认将会保存到应用程序的私有目录下
          */
         @JvmStatic
         fun openStorage() {
             instance.saveToStorage = true
+        }
+
+        /**
+         * 关闭保存日志到存储设备。
+         *
+         * 默认将会保存到应用程序的私有目录下
+         */
+        @JvmStatic
+        fun closeStorage() {
+            instance.saveToStorage = false
         }
 
         /**
@@ -344,7 +354,7 @@ class KLogCat {
          */
         @JvmStatic
         fun e(e: Throwable) {
-            instance.println(Log.ERROR, instance.tag, e.stackTraceToString())
+            e(e.stackTraceToString())
         }
     }
 }

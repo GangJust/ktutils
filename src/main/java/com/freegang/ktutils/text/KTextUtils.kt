@@ -270,4 +270,20 @@ object KTextUtils {
             default
         }
     }
+
+    /**
+     * 将一个字符串转换为长整数
+     * @param text 要转换的字符串
+     * @param default 转换失败时的默认值
+     * @return 如果转换成功，则返回该整数，否则返回默认值
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun <S : CharSequence> toLong(text: S?, default: Long = 0L): Long {
+        return try {
+            "$text".toLong()
+        } catch (e: NumberFormatException) {
+            default
+        }
+    }
 }

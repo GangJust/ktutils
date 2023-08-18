@@ -77,10 +77,12 @@ object KCollectionUtils {
         return c.map { transformMap.map(it) }
     }
 
+    @FunctionalInterface
     interface Transform<T> {
         fun transform(t: T): CharSequence
     }
 
+    @FunctionalInterface
     interface TransformMap<T, R> {
         fun map(t: T): R
     }

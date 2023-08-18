@@ -72,10 +72,9 @@ object KOkHttpUtils {
             .build()
 
         return try {
-            val response = client.newCall(request).execute()
-            response.body?.string() ?: RESULT_NOTHING
+            client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
-            RESULT_NOTHING
+            e.message ?: RESULT_NOTHING
         }
     }
 
@@ -124,10 +123,9 @@ object KOkHttpUtils {
             .build()
 
         return try {
-            val response = client.newCall(request).execute()
-            response.body?.string() ?: RESULT_NOTHING
+            client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
-            RESULT_NOTHING
+            e.message ?: RESULT_NOTHING
         }
     }
 
@@ -181,20 +179,19 @@ object KOkHttpUtils {
     fun request(
         url: String,
         method: String,
-        requestBody: RequestBody,
-        headers: Headers = Headers.headersOf(),
+        requestBody: RequestBody? = null,
+        headers: Headers? = null,
     ): String {
         val request = Request.Builder()
-            .headers(headers)
+            .headers(headers ?: Headers.headersOf())
             .method(method, requestBody)
             .url(url)
             .build()
 
         return try {
-            val response = client.newCall(request).execute()
-            response.body?.string() ?: RESULT_NOTHING
+            client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
-            RESULT_NOTHING
+            e.message ?: RESULT_NOTHING
         }
     }
 

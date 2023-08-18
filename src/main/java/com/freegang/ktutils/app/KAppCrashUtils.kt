@@ -16,7 +16,7 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
     private var mDefaultHandler: Thread.UncaughtExceptionHandler? = null
 
     private var mApp: Application? = null
-    private var mErrActivity: Class<out Activity>? = null
+    private var mIntent: Intent? = null
     private var mMessage: String = ""
 
     companion object {
@@ -30,8 +30,17 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
 
     @JvmOverloads
     fun init(app: Application, errActivity: Class<out Activity>? = null, message: String = "程序崩溃!") {
+        init(
+            app,
+            if (errActivity == null) Intent() else Intent(app.applicationContext, errActivity),
+            message,
+        )
+    }
+
+    @JvmOverloads
+    fun init(app: Application, intent: Intent, message: String = "程序崩溃!") {
         this.mApp = app
-        this.mErrActivity = errActivity
+        this.mIntent = intent
         this.mMessage = message
         //获取系统默认的UncaughtException处理器
         mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -67,12 +76,11 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
 
     /// 结束应用
     private fun exitAppOrStartErrActivity(e: Throwable) {
-        if (mErrActivity != null) {
-            val intent = Intent(mApp!!.applicationContext, mErrActivity)
-            intent.putExtra("message", e.message)
-            intent.putExtra("stack_trace", e.stackTraceToString())
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-            mApp!!.startActivity(intent)
+        if (mIntent!!.component != null) {
+            mIntent!!.putExtra("message", e.message)
+            mIntent!!.putExtra("stack_trace", e.stackTraceToString())
+            mIntent!!.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            mApp!!.startActivity(mIntent)
             Process.killProcess(Process.myPid())
             exitProcess(1)
         } else {
@@ -82,7 +90,7 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            mApp!!.topActivity?.finishAffinity()
+            mApp!!.activeActivity?.finishAffinity()
             Process.killProcess(Process.myPid())
             exitProcess(1)
         }

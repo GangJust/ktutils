@@ -5,6 +5,7 @@ import java.net.URL
 import java.net.URLDecoder
 
 // android.net.Uri 获取url带锚点#的参数为null, 故让gpt生成了一个工具类
+// "https://www.example.com:8080/#123?a=234&b=456"
 object KUrlUtils {
     /**
      * 获取 URL 的协议部分。
@@ -182,6 +183,20 @@ object KUrlUtils {
             return ""
         } catch (e: MalformedURLException) {
             ""
+        }
+    }
+
+    /**
+     * 判断某个URL是否有效
+     * @param url 要解析的 URL 字符串
+     */
+    @JvmStatic
+    fun isValidUrl(url: String): Boolean {
+        return try {
+            URL(url)
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 }
