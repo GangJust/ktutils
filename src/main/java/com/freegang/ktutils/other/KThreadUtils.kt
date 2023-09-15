@@ -9,8 +9,8 @@ object KThreadUtils {
      * @param runnable
      */
     @JvmStatic
-    fun newThread(runnable: Runnable) {
-        thread {
+    fun newThread(runnable: Runnable): Thread {
+        return thread {
             runnable.run()
         }
     }

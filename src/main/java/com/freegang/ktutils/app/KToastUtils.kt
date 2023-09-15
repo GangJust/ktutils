@@ -1,8 +1,13 @@
 package com.freegang.ktutils.app
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.drawable.NinePatchDrawable
 import android.os.CountDownTimer
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 
@@ -20,7 +25,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(message)
-        mToast?.xOffset
+        setToastTheme(context.applicationContext, mToast)
         showToastWithDuration(mToast, duration)
     }
 
@@ -32,6 +37,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(rsId)
+        setToastTheme(context.applicationContext, mToast)
         showToastWithDuration(mToast, duration)
     }
 
@@ -52,9 +58,6 @@ object KToastUtils {
         if (duration <= 0) {
             toast?.duration = Toast.LENGTH_SHORT
             toast?.show()
-        } else if (duration == Toast.LENGTH_SHORT.toLong()) {
-            toast?.duration = Toast.LENGTH_SHORT
-            toast?.show()
         } else if (duration == Toast.LENGTH_LONG.toLong()) {
             toast?.duration = Toast.LENGTH_LONG
             toast?.show()
@@ -71,6 +74,36 @@ object KToastUtils {
                 }
             }
             countDownTimer?.start()
+        }
+    }
+
+    private fun setToastTheme(context: Context, toast: Toast?) {
+        runCatching {
+            val modeNight = context.isDarkMode
+
+            //取消点击事件
+            toast?.view?.isClickable = false
+            toast?.view?.isLongClickable = false
+
+            //背景色
+            val drawable = toast?.view?.background as NinePatchDrawable?
+            drawable?.colorFilter = if (modeNight) {
+                PorterDuffColorFilter(Color.parseColor("#FF161823"), PorterDuff.Mode.SRC_IN)
+            } else {
+                PorterDuffColorFilter(Color.parseColor("#FFFFFFFF"), PorterDuff.Mode.SRC_IN)
+            }
+
+            //文字颜色
+            val textView: TextView? = toast?.view?.findViewById(android.R.id.message)
+            textView?.setTextColor(
+                if (modeNight) {
+                    Color.parseColor("#FFFFFFFF")
+                } else {
+                    Color.parseColor("#FF161823")
+                }
+            )
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 

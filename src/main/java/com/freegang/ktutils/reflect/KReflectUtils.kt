@@ -1,9 +1,11 @@
 package com.freegang.ktutils.reflect
 
+import android.util.Log
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
 object KReflectUtils {
+    private const val TAG = "KReflectUtils"
 
     /**
      * 获取某个对象的所有字段, 包含其继承的父类字段, 同名字段顺序排列
@@ -58,14 +60,17 @@ object KReflectUtils {
         for (field in allFields) {
             if (name != null && type != null) {
                 if (field.name == name && field.type == type) {
+                    Log.d(TAG, "name: $name, type: $type")
                     filteredFields.add(field)
                 }
             } else if (name != null) {
                 if (field.name == name) {
+                    Log.d(TAG, "name: $name")
                     filteredFields.add(field)
                 }
             } else if (type != null) {
                 if (field.type == type) {
+                    Log.d(TAG, "type: $type")
                     filteredFields.add(field)
                 }
             } else {
@@ -97,37 +102,43 @@ object KReflectUtils {
                     method.returnType == returnType &&
                     method.parameterTypes.contentEquals(paramTypes)
                 ) {
+                    Log.d(TAG, "name: $name, returnType: $returnType, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else if (name != null && returnType != null) {
                 if (method.name == name && method.returnType == returnType) {
+                    Log.d(TAG, "name: $name, returnType: $returnType")
                     filteredMethods.add(method)
                 }
             } else if (name != null && paramTypes.isNotEmpty()) {
                 if (method.name == name && method.parameterTypes.contentEquals(paramTypes)) {
+                    Log.d(TAG, "name: $name, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else if (returnType != null && paramTypes.isNotEmpty()) {
                 if (method.returnType == returnType && method.parameterTypes.contentEquals(paramTypes)) {
+                    Log.d(TAG, "returnType: $returnType, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else if (name != null) {
                 if (method.name == name) {
+                    Log.d(TAG, "name: $name")
                     filteredMethods.add(method)
                 }
             } else if (returnType != null) {
                 if (method.returnType == returnType) {
+                    Log.d(TAG, "returnType: $returnType")
                     filteredMethods.add(method)
                 }
             } else if (paramTypes.isNotEmpty()) {
                 if (method.parameterTypes.contentEquals(paramTypes)) {
+                    Log.d(TAG, "paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else {
                 filteredMethods.add(method)
             }
         }
-
         return filteredMethods
     }
 }
@@ -161,6 +172,19 @@ fun Any.fieldGets(
     }
 }
 
+fun Any.fieldGetFirst(
+    name: String? = null,
+    type: Class<*>? = null,
+): Any? {
+    return fields(name, type).map {
+        try {
+            it.get(this)
+        } catch (e: Exception) {
+            null
+        }
+    }.firstOrNull()
+}
+
 fun Any.methods(
     name: String? = null,
     returnType: Class<*>? = null,
@@ -181,4 +205,11 @@ fun Any.methodInvokes(
             null
         }
     }
+}
+
+fun Any.methodInvokeFirst(
+    name: String? = null,
+    vararg args: Any,
+): Any? {
+    return methodInvokes(name, *args).firstOrNull()
 }

@@ -20,7 +20,7 @@ object KBaiduOverlayUtils {
      */
     @JvmStatic
     fun addPolygon(map: BaiduMap, option: PolygonOptions) {
-        val polygon = map.addOverlay(option) as Polygon
+        val polygon = map.addOverlay(option) as? Polygon ?: return
         polygonList.add(polygon)
     }
 
@@ -32,7 +32,7 @@ object KBaiduOverlayUtils {
     @JvmStatic
     fun addPolygon(map: BaiduMap, options: List<PolygonOptions>) {
         for (option in options) {
-            val polygon = map.addOverlay(option) as Polygon
+            val polygon = map.addOverlay(option) as? Polygon ?: return
             polygonList.add(polygon)
         }
     }
@@ -77,7 +77,7 @@ object KBaiduOverlayUtils {
      */
     @JvmStatic
     fun addMarker(map: BaiduMap, option: MarkerOptions) {
-        val overlay = map.addOverlay(option) as Marker
+        val overlay = map.addOverlay(option) as? Marker ?: return
         markerList.add(overlay)
     }
 
@@ -89,7 +89,7 @@ object KBaiduOverlayUtils {
     @JvmStatic
     fun addMarker(map: BaiduMap, options: List<MarkerOptions>) {
         for (option in options) {
-            val overlay = map.addOverlay(option) as Marker
+            val overlay = map.addOverlay(option) as? Marker ?: return
             markerList.add(overlay)
         }
     }
@@ -151,7 +151,7 @@ object KBaiduOverlayUtils {
      */
     @JvmStatic
     fun clearMarker(map: BaiduMap) {
-        map.removeOverLays(markerList as MutableList<Overlay>)
+        map.removeOverLays(markerList as List<Overlay>?)
         markerList.clear()
     }
 }

@@ -404,7 +404,7 @@ object KViewUtils {
      * @param call 遍历回调函数，接收一个 View 参数
      */
     @JvmStatic
-    fun traverse(view: View, call: (it: View) -> Unit) {
+    fun traverse(view: View, call: (View) -> Unit) {
         if (view !is ViewGroup) {
             call.invoke(view)
             return
@@ -532,7 +532,7 @@ object KViewUtils {
     fun <T : View> findViewsExact(
         view: View,
         targetType: Class<T>,
-        logic: (it: T) -> Boolean
+        logic: (T) -> Boolean
     ): List<T> {
         if (view !is ViewGroup) {
             if (targetType.isInstance(view) && logic.invoke(targetType.cast(view) as T)) {
@@ -1046,7 +1046,7 @@ fun View.getViewTree(): KViewUtils.ViewNode {
     return KViewUtils.buildViewTree(this)
 }
 
-fun View.traverse(call: (it: View) -> Unit) {
+fun View.traverse(call: (View) -> Unit) {
     KViewUtils.traverse(this, call)
 }
 
@@ -1081,7 +1081,7 @@ fun <T : View> View.findViewsByDesc(targetType: Class<T>, containsDesc: String, 
     return KViewUtils.findViewsByDesc(this, targetType, containsDesc, ignoreCase)
 }
 
-fun <T : View> View.findViewsByExact(targetType: Class<T>, logic: (it: T) -> Boolean): List<T> {
+fun <T : View> View.findViewsByExact(targetType: Class<T>, logic: (T) -> Boolean): List<T> {
     return KViewUtils.findViewsExact(this, targetType, logic)
 }
 
@@ -1098,6 +1098,8 @@ val View.idName get() = KViewUtils.getIdName(this)
 val View.idHex get() = KViewUtils.getIdHex(this)
 
 val View.parentView get() = this.parent as ViewGroup
+
+val ViewParent.parentView get() = this.parent as ViewGroup
 
 val View.isDisplay: Boolean
     get() {

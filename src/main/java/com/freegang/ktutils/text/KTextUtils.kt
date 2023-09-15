@@ -1,7 +1,5 @@
 package com.freegang.ktutils.text
 
-import com.freegang.ktutils.text.KTextUtils.toString
-
 object KTextUtils {
 
     /**
