@@ -74,6 +74,8 @@ object KToastUtils {
                 }
             }
             countDownTimer?.start()
+            toast?.duration = Toast.LENGTH_LONG
+            toast?.show()
         }
     }
 
@@ -81,11 +83,11 @@ object KToastUtils {
         runCatching {
             val modeNight = context.isDarkMode
 
-            //取消点击事件
+            // 取消点击事件
             toast?.view?.isClickable = false
             toast?.view?.isLongClickable = false
 
-            //背景色
+            // 背景色
             val drawable = toast?.view?.background as NinePatchDrawable?
             drawable?.colorFilter = if (modeNight) {
                 PorterDuffColorFilter(Color.parseColor("#FF161823"), PorterDuff.Mode.SRC_IN)
@@ -93,7 +95,7 @@ object KToastUtils {
                 PorterDuffColorFilter(Color.parseColor("#FFFFFFFF"), PorterDuff.Mode.SRC_IN)
             }
 
-            //文字颜色
+            // 文字颜色
             val textView: TextView? = toast?.view?.findViewById(android.R.id.message)
             textView?.setTextColor(
                 if (modeNight) {

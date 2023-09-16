@@ -1,8 +1,15 @@
 package com.freegang.ktutils.json
 
+import android.icu.util.Output
+import androidx.annotation.RequiresPermission.Write
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
+import java.io.OutputStream
+import java.io.Reader
+import java.io.Writer
+import java.lang.Exception
 
 interface JSONObjectMapFunction {
     fun invoke(entry: Map.Entry<String, Any>)
@@ -148,7 +155,7 @@ object KJSONUtils {
     @JvmStatic
     fun isEmpty(json: JSONObject): Boolean {
         val jsonStr = json.toString()
-        return jsonStr == "{}" || jsonStr == ""
+        return json == JSONObject.NULL || jsonStr == "{}" || jsonStr == "null" || jsonStr == ""
     }
 
     /// Json Array ///
@@ -268,9 +275,8 @@ object KJSONUtils {
     @JvmStatic
     fun isEmpty(array: JSONArray): Boolean {
         if (array.length() == 0) return true
-
         val jsonStr = array.toString()
-        return jsonStr == "[]" || jsonStr == ""
+        return jsonStr == "[]" || jsonStr == "null" || jsonStr == ""
     }
 
 
@@ -330,6 +336,15 @@ fun String.parseJSON(): JSONObject {
     return KJSONUtils.parse(this)
 }
 
+fun String.readJSON(read: Reader): JSONObject {
+    return try {
+        val json = read.use { it.readText() }
+        JSONObject(json)
+    } catch (e: Exception) {
+        JSONObject()
+    }
+}
+
 fun JSONObject.getStringOrDefault(key: String, default: String = ""): String {
     return KJSONUtils.getString(this, key, default)
 }
@@ -374,12 +389,30 @@ fun JSONObject.map(block: JSONObjectMapFunction) {
     KJSONUtils.map(this, block)
 }
 
+fun JSONObject.write(out: Writer): Boolean {
+    return try {
+        out.use { it.write(this.toString()) }
+        true
+    } catch (e: Exception) {
+        false
+    }
+}
+
 val JSONObject.isEmpty: Boolean
     get() = KJSONUtils.isEmpty(this)
 
 /// Extended Json Array ///
 fun String.parseJSONArray(): JSONArray {
     return KJSONUtils.parseArray(this)
+}
+
+fun String.readJSONArray(read: Reader): JSONArray {
+    return try {
+        val json = read.use { it.readText() }
+        JSONArray(json)
+    } catch (e: Exception) {
+        JSONArray()
+    }
 }
 
 fun JSONArray.getStringOrDefault(index: Int, default: String = ""): String {
@@ -420,6 +453,15 @@ fun JSONArray.getJSONArrayOrDefault(index: Int, default: JSONArray = JSONArray()
 
 fun JSONArray.toMaps(): List<Map<String, Any>> {
     return KJSONUtils.toMaps(this)
+}
+
+fun JSONArray.write(out: Writer): Boolean {
+    return try {
+        out.use { it.write(this.toString()) }
+        true
+    } catch (e: Exception) {
+        false
+    }
 }
 
 val JSONArray.isEmpty: Boolean

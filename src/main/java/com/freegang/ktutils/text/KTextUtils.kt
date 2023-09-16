@@ -285,3 +285,13 @@ object KTextUtils {
         }
     }
 }
+
+inline fun <R> String.ifNotEmpty(block: (String) -> R): R? {
+     if (KTextUtils.isEmpty(this)) return null
+    return block.invoke(this)
+}
+
+inline fun <R> String.ifEmpty(block: (String) -> R): R? {
+    if (KTextUtils.isEmpty(this)) return null
+    return block.invoke(this)
+}
