@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.PermissionChecker
+import com.freegang.ktutils.reflect.methodInvokeFirst
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.security.MessageDigest
@@ -289,6 +290,33 @@ object KAppUtils {
         }
     }
 
+
+    /**
+     * 返回当前app的abi架构
+     *
+     * @param context 上下文对象，用于获取资源和包信息。
+     */
+    fun getAbiBit(context: Context): String {
+        val nativeLibraryDir = context.applicationInfo.nativeLibraryDir
+        val nextIndexOfLastSlash: Int = nativeLibraryDir.lastIndexOf('/') + 1
+        return nativeLibraryDir.substring(nextIndexOfLastSlash)
+    }
+
+    /**
+     * 判断当前dalvik虚拟机是否64位
+     */
+    @JvmStatic
+    fun is64BitDalvik(): Boolean {
+        try {
+            val forName = Class.forName("dalvik.system.VMRuntime")
+            val runtime = forName.methodInvokeFirst("getRuntime")
+            return runtime?.methodInvokeFirst("is64Bit") as? Boolean ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
     /**
      * 判断某个App是否Debug状态
      * @param context 上下文对象，用于获取资源和包信息。
@@ -404,6 +432,10 @@ object KAppUtils {
 }
 
 ///
+val Any.is64BitDalvik get() = KAppUtils.is64BitDalvik()
+
+val Context.abiBit get() = KAppUtils.getAbiBit(this)
+
 val Context.appLabelName get() = KAppUtils.getAppLabelName(this)
 
 val Context.appVersionName get() = KAppUtils.getVersionName(this)
