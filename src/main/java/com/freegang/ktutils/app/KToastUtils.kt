@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.graphics.drawable.NinePatchDrawable
 import android.os.CountDownTimer
 import android.view.View
 import android.widget.TextView
@@ -25,7 +24,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(message)
-        setToastTheme(context.applicationContext, mToast)
+        setToastTheme(context, mToast)
         showToastWithDuration(mToast, duration)
     }
 
@@ -37,7 +36,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(rsId)
-        setToastTheme(context.applicationContext, mToast)
+        setToastTheme(context, mToast)
         showToastWithDuration(mToast, duration)
     }
 
@@ -81,29 +80,25 @@ object KToastUtils {
 
     private fun setToastTheme(context: Context, toast: Toast?) {
         runCatching {
-            val modeNight = context.isDarkMode
-
-            // 取消点击事件
-            toast?.view?.isClickable = false
-            toast?.view?.isLongClickable = false
-
-            // 背景色
-            val drawable = toast?.view?.background as NinePatchDrawable?
-            drawable?.colorFilter = if (modeNight) {
-                PorterDuffColorFilter(Color.parseColor("#FF161823"), PorterDuff.Mode.SRC_IN)
-            } else {
-                PorterDuffColorFilter(Color.parseColor("#FFFFFFFF"), PorterDuff.Mode.SRC_IN)
-            }
-
-            // 文字颜色
-            val textView: TextView? = toast?.view?.findViewById(android.R.id.message)
-            textView?.setTextColor(
-                if (modeNight) {
-                    Color.parseColor("#FFFFFFFF")
+            val isDarkMode = context.isDarkMode
+            toast?.view?.apply {
+                isClickable = false
+                isLongClickable = false
+                background.colorFilter = if (isDarkMode) {
+                    PorterDuffColorFilter(Color.parseColor("#FF2C2F39"), PorterDuff.Mode.SRC_IN)
                 } else {
-                    Color.parseColor("#FF161823")
+                    PorterDuffColorFilter(Color.parseColor("#FFFFFFFF"), PorterDuff.Mode.SRC_IN)
                 }
-            )
+                findViewById<TextView>(android.R.id.message).apply {
+                    setTextColor(
+                        if (isDarkMode) {
+                            Color.parseColor("#FFFFFFFF")
+                        } else {
+                            Color.parseColor("#FF2C2F39")
+                        }
+                    )
+                }
+            }
         }.onFailure {
             it.printStackTrace()
         }

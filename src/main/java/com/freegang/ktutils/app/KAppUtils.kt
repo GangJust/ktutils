@@ -309,7 +309,7 @@ object KAppUtils {
     fun is64BitDalvik(): Boolean {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvokeFirst("getRuntime")
+            val runtime = forName.methodInvokeFirst(name = "getRuntime")
             return runtime?.methodInvokeFirst("is64Bit") as? Boolean ?: false
         } catch (e: Exception) {
             e.printStackTrace()
@@ -384,7 +384,7 @@ object KAppUtils {
             return true
         }
 
-        //悬浮窗
+        // 悬浮窗
         if (permission == Manifest.permission.SYSTEM_ALERT_WINDOW) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return Settings.canDrawOverlays(application)
@@ -392,7 +392,7 @@ object KAppUtils {
             return true
         }
 
-        //修改系统设置
+        // 修改系统设置
         if (permission == Manifest.permission.WRITE_SETTINGS) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return Settings.System.canWrite(application)

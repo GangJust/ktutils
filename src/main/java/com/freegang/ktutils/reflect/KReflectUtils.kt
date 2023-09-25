@@ -12,6 +12,7 @@ object KReflectUtils {
      * @param obj 目标对象
      * @return 所有字段列表
      */
+    @JvmStatic
     fun getAllFields(obj: Any): List<Field> {
         val fields = mutableListOf<Field>()
         var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
@@ -30,6 +31,7 @@ object KReflectUtils {
      * @param obj 目标对象
      * @return 所有方法列表
      */
+    @JvmStatic
     fun getAllMethods(obj: Any): List<Method> {
         val methods = mutableListOf<Method>()
         var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
@@ -50,6 +52,8 @@ object KReflectUtils {
      * @param type 字段类型, 可空
      * @return 满足指定要求的指定字段列表
      */
+    @JvmStatic
+    @JvmOverloads
     fun findFields(
         obj: Any,
         name: String? = null,
@@ -59,7 +63,7 @@ object KReflectUtils {
         val filteredFields = mutableListOf<Field>()
         for (field in allFields) {
             if (name != null && type != null) {
-                if (field.name == name && field.type == type) {
+                if (field.name == name && compareType(field, type)) {
                     Log.d(TAG, "name: $name, type: $type")
                     filteredFields.add(field)
                 }
@@ -69,15 +73,34 @@ object KReflectUtils {
                     filteredFields.add(field)
                 }
             } else if (type != null) {
-                if (field.type == type) {
+                if (compareType(field, type)) {
                     Log.d(TAG, "type: $type")
                     filteredFields.add(field)
                 }
             } else {
-                filteredFields.add(field)
+                return emptyList()
             }
         }
         return filteredFields
+    }
+
+    private fun compareType(field: Field, targetType: Class<*>): Boolean {
+        val type = field.type
+
+        // 类直接比较
+        if (type == targetType) {
+            return true
+        }
+
+        // 基本数据类型比较
+        if (isCompatible(type, targetType)) {
+            return true
+        }
+
+
+        // 继承关系比较
+        return type.isAssignableFrom(targetType)
+                || targetType.isAssignableFrom(type)
     }
 
     /**
@@ -85,38 +108,40 @@ object KReflectUtils {
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
-     * @param paramTypes 参数列表类型, 可选
+     * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
      * @return 满足指定要求的指定字段列表
      */
+    @JvmStatic
+    @JvmOverloads
     fun findMethods(
         obj: Any,
         name: String? = null,
         returnType: Class<*>? = null,
-        vararg paramTypes: Class<*>,
+        vararg paramTypes: Class<*>?,
     ): List<Method> {
         val allMethods = getAllMethods(obj)
         val filteredMethods = mutableListOf<Method>()
         for (method in allMethods) {
             if (name != null && returnType != null && paramTypes.isNotEmpty()) {
-                if (method.name == name &&
-                    method.returnType == returnType &&
-                    method.parameterTypes.contentEquals(paramTypes)
+                if (method.name == name
+                    && compareReturnType(method, returnType)
+                    && compareParamTypes(method, paramTypes)
                 ) {
                     Log.d(TAG, "name: $name, returnType: $returnType, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else if (name != null && returnType != null) {
-                if (method.name == name && method.returnType == returnType) {
+                if (method.name == name && compareReturnType(method, returnType)) {
                     Log.d(TAG, "name: $name, returnType: $returnType")
                     filteredMethods.add(method)
                 }
             } else if (name != null && paramTypes.isNotEmpty()) {
-                if (method.name == name && method.parameterTypes.contentEquals(paramTypes)) {
+                if (method.name == name && compareParamTypes(method, paramTypes)) {
                     Log.d(TAG, "name: $name, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else if (returnType != null && paramTypes.isNotEmpty()) {
-                if (method.returnType == returnType && method.parameterTypes.contentEquals(paramTypes)) {
+                if (compareReturnType(method, returnType) && compareParamTypes(method, paramTypes)) {
                     Log.d(TAG, "returnType: $returnType, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
@@ -126,20 +151,101 @@ object KReflectUtils {
                     filteredMethods.add(method)
                 }
             } else if (returnType != null) {
-                if (method.returnType == returnType) {
+                if (compareReturnType(method, returnType)) {
                     Log.d(TAG, "returnType: $returnType")
                     filteredMethods.add(method)
                 }
             } else if (paramTypes.isNotEmpty()) {
-                if (method.parameterTypes.contentEquals(paramTypes)) {
+                if (compareParamTypes(method, paramTypes)) {
                     Log.d(TAG, "paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
             } else {
-                filteredMethods.add(method)
+                return emptyList()
             }
         }
         return filteredMethods
+    }
+
+    private fun compareReturnType(method: Method, targetReturnType: Class<*>): Boolean {
+        val returnType = method.returnType
+
+        // 类直接比较
+        if (returnType == targetReturnType) {
+            return true
+        }
+
+        // 基本数据类型比较
+        if (isCompatible(returnType, targetReturnType)) {
+            return true
+        }
+
+        // 继承关系比较
+        return isAssignableFrom(returnType, targetReturnType)
+    }
+
+    private fun compareParamTypes(method: Method, targetParamTypes: Array<out Class<*>?>): Boolean {
+        val parameterTypes = method.parameterTypes
+
+        // 比较数量
+        if (parameterTypes.size != targetParamTypes.size) {
+            return false
+        }
+
+        for (i in parameterTypes.indices) {
+            val type = parameterTypes[i]
+            val targetType = targetParamTypes[i] ?: continue // null则模糊匹配
+
+            // 类直接比较
+            if (type == targetType) {
+                continue
+            }
+
+            // 基本数据类型比较
+            if (isCompatible(type, targetType)) {
+                continue
+            }
+
+            // 继承关系比较
+            if (isAssignableFrom(type, targetType)) {
+                continue
+            }
+
+            // 参数类型不一致
+            return false
+        }
+
+        // 所有参数类型一致
+        return true
+    }
+
+    private fun isCompatible(c1: Class<*>, c2: Class<*>): Boolean {
+        if (c1.isPrimitive) {
+            return getWrapperClass(c1) == c2
+        } else if (c2.isPrimitive) {
+            return getWrapperClass(c2) == c1
+        }
+        return false
+    }
+
+    private fun getWrapperClass(primitiveClass: Class<*>): Class<*> {
+        return when (primitiveClass) {
+            Boolean::class.javaPrimitiveType -> Boolean::class.javaObjectType
+            Byte::class.javaPrimitiveType -> Byte::class.javaObjectType
+            Char::class.javaPrimitiveType -> Char::class.javaObjectType
+            Short::class.javaPrimitiveType -> Short::class.javaObjectType
+            Int::class.javaPrimitiveType -> Int::class.javaObjectType
+            Long::class.javaPrimitiveType -> Long::class.javaObjectType
+            Float::class.javaPrimitiveType -> Float::class.javaObjectType
+            Double::class.javaPrimitiveType -> Double::class.javaObjectType
+            else -> primitiveClass
+        }
+
+    }
+
+    private fun isAssignableFrom(c1: Class<*>, c2: Class<*>): Boolean {
+        if (c1 == Any::class.java || c2 == Any::class.java) return false
+        return c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1)
     }
 }
 
@@ -156,7 +262,11 @@ fun Any.fields(
     name: String? = null,
     type: Class<*>? = null,
 ): List<Field> {
-    return KReflectUtils.findFields(this, name, type)
+    return if (name == null && type == null) {
+        KReflectUtils.getAllFields(this)
+    } else {
+        KReflectUtils.findFields(this, name, type)
+    }
 }
 
 fun Any.fieldGets(
@@ -172,33 +282,34 @@ fun Any.fieldGets(
     }
 }
 
+@Throws(IllegalArgumentException::class, IllegalAccessException::class)
 fun Any.fieldGetFirst(
     name: String? = null,
     type: Class<*>? = null,
 ): Any? {
-    return fields(name, type).map {
-        try {
-            it.get(this)
-        } catch (e: Exception) {
-            null
-        }
-    }.firstOrNull()
+    val field = fields(name, type).firstOrNull()
+    return field?.get(this)
 }
 
 fun Any.methods(
     name: String? = null,
     returnType: Class<*>? = null,
-    vararg paramTypes: Class<*>,
+    vararg paramTypes: Class<*>?,
 ): List<Method> {
-    return KReflectUtils.findMethods(this, name, returnType, *paramTypes)
+    return if (name == null && returnType == null && paramTypes.isEmpty()) {
+        KReflectUtils.getAllMethods(this)
+    } else {
+        KReflectUtils.findMethods(this, name, returnType, *paramTypes)
+    }
 }
 
 fun Any.methodInvokes(
     name: String? = null,
-    vararg args: Any,
+    returnType: Class<*>? = null,
+    vararg args: Any?,
 ): List<Any?> {
-    val typedArray = args.map { it::class.java }.toTypedArray()
-    return methods(name = name, paramTypes = typedArray).map {
+    val typedArray = args.map { it?.javaClass }.toTypedArray()
+    return methods(name = name, returnType = returnType, paramTypes = typedArray).map {
         try {
             it.invoke(this, *args)
         } catch (e: Exception) {
@@ -207,9 +318,14 @@ fun Any.methodInvokes(
     }
 }
 
+
+@Throws(IllegalArgumentException::class, IllegalAccessException::class)
 fun Any.methodInvokeFirst(
     name: String? = null,
-    vararg args: Any,
+    returnType: Class<*>? = null,
+    vararg args: Any?,
 ): Any? {
-    return methodInvokes(name, *args).firstOrNull()
+    val typedArray = args.map { it?.javaClass }.toTypedArray()
+    val method = methods(name = name, returnType = returnType, paramTypes = typedArray).firstOrNull()
+    return method?.invoke(this, *args)
 }
