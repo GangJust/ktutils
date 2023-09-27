@@ -7,6 +7,12 @@ import java.lang.reflect.Method
 object KReflectUtils {
     private const val TAG = "KReflectUtils"
 
+    private val allFieldsCache = mutableMapOf<String, List<Field>>()
+    private val allMethodsCache = mutableMapOf<String, List<Method>>()
+
+    private val usingFieldsCache = mutableMapOf<String, Field>()
+    private val usingMethodsCache = mutableMapOf<String, Method>()
+
     /**
      * 获取某个对象的所有字段, 包含其继承的父类字段, 同名字段顺序排列
      * @param obj 目标对象
@@ -14,15 +20,25 @@ object KReflectUtils {
      */
     @JvmStatic
     fun getAllFields(obj: Any): List<Field> {
+        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+        val key = currentClass.name
+
+        // 读缓存
+        val fieldList = allFieldsCache[key] ?: emptyList()
+        if (fieldList.isNotEmpty()) {
+            return fieldList
+        }
+
+        // 没有缓存
         val fields = mutableListOf<Field>()
-        var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
-        while (currentClass != null && currentClass != Any::class.java) {
+        while (currentClass != Any::class.java) {
             currentClass.declaredFields.forEach {
                 it.isAccessible = true
                 fields.add(it)
             }
             currentClass = currentClass.superclass
         }
+        allFieldsCache[key] = fields
         return fields
     }
 
@@ -33,15 +49,25 @@ object KReflectUtils {
      */
     @JvmStatic
     fun getAllMethods(obj: Any): List<Method> {
+        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+        val key = currentClass.name
+
+        // 读缓存
+        val methodList = allMethodsCache[key] ?: emptyList()
+        if (methodList.isNotEmpty()) {
+            return methodList
+        }
+
+        // 没有缓存
         val methods = mutableListOf<Method>()
-        var currentClass: Class<*>? = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
-        while (currentClass != null && currentClass != Any::class.java) {
+        while (currentClass != Any::class.java) {
             currentClass.declaredMethods.forEach {
                 it.isAccessible = true
                 methods.add(it)
             }
             currentClass = currentClass.superclass
         }
+        allMethodsCache[key] = methods
         return methods
     }
 
@@ -51,16 +77,23 @@ object KReflectUtils {
      * @param name 字段名, 可空
      * @param type 字段类型, 可空
      * @return 满足指定要求的指定字段列表
+     * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
      */
     @JvmStatic
     @JvmOverloads
+    @Throws(IllegalArgumentException::class)
     fun findFields(
         obj: Any,
         name: String? = null,
         type: Class<*>? = null,
     ): List<Field> {
+        if (name == null && type == null) {
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+        }
+
         val allFields = getAllFields(obj)
         val filteredFields = mutableListOf<Field>()
+
         for (field in allFields) {
             if (name != null && type != null) {
                 if (field.name == name && compareType(field, type)) {
@@ -84,6 +117,38 @@ object KReflectUtils {
         return filteredFields
     }
 
+    /**
+     * 按指定要求查找指定字段
+     * @param obj 目标对象
+     * @param name 字段名, 可空
+     * @param type 字段类型, 可空
+     * @return 满足指定要求的指定字段
+     * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
+     */
+    @JvmStatic
+    @JvmOverloads
+    @Throws(IllegalArgumentException::class)
+    fun findFieldFirst(
+        obj: Any,
+        name: String? = null,
+        type: Class<*>? = null,
+    ): Field? {
+        if (name == null && type == null) {
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+        }
+
+        val clazz = this.javaClass
+        val key = "${clazz.name}#$name@${type?.name}"
+        if (usingFieldsCache.containsKey(key)) {
+            return usingFieldsCache[key]
+        }
+
+        val fields = findFields(obj, name, type)
+        val field = fields.firstOrNull() ?: return null
+        usingFieldsCache[key] = field
+        return field
+    }
+
     private fun compareType(field: Field, targetType: Class<*>): Boolean {
         val type = field.type
 
@@ -104,21 +169,26 @@ object KReflectUtils {
     }
 
     /**
-     * 按指定要求查找指定字段集合, 同名方法顺序排列
+     * 按指定要求查找指定方法集合, 同名方法顺序排列
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
      * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
      * @return 满足指定要求的指定字段列表
+     * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
      */
     @JvmStatic
     @JvmOverloads
+    @Throws(IllegalArgumentException::class)
     fun findMethods(
         obj: Any,
         name: String? = null,
         returnType: Class<*>? = null,
         vararg paramTypes: Class<*>?,
     ): List<Method> {
+        if (name == null && returnType == null && paramTypes.isEmpty()) {
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+        }
         val allMethods = getAllMethods(obj)
         val filteredMethods = mutableListOf<Method>()
         for (method in allMethods) {
@@ -165,6 +235,39 @@ object KReflectUtils {
             }
         }
         return filteredMethods
+    }
+
+    /**
+     * 按指定要求查找指定方法
+     * @param obj 目标对象
+     * @param name 字段名, 可空
+     * @param returnType 返回类型, 可空
+     * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
+     * @return 满足指定要求的指定字段列表
+     * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
+     */
+    @JvmStatic
+    @JvmOverloads
+    @Throws(IllegalArgumentException::class)
+    fun findMethodFirst(
+        obj: Any,
+        name: String? = null,
+        returnType: Class<*>? = null,
+        vararg paramTypes: Class<*>?,
+    ): Method? {
+        if (name == null && returnType == null && paramTypes.isEmpty()) {
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+        }
+        val clazz = this.javaClass
+        val key = "${clazz.name}#$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
+        if (usingMethodsCache.containsKey(key)) {
+            return usingMethodsCache[key]
+        }
+
+        val methods = findMethods(obj, name, returnType, *paramTypes)
+        val method = methods.firstOrNull() ?: return null
+        usingMethodsCache[key] = method
+        return method
     }
 
     private fun compareReturnType(method: Method, targetReturnType: Class<*>): Boolean {
@@ -269,11 +372,18 @@ fun Any.fields(
     }
 }
 
+fun Any.fieldFirst(
+    name: String? = null,
+    type: Class<*>? = null,
+): Field? {
+    return KReflectUtils.findFieldFirst(this, name, type)
+}
+
 fun Any.fieldGets(
     name: String? = null,
     type: Class<*>? = null,
 ): List<Any?> {
-    return fields(name, type).map {
+    return fields(name = name, type = type).map {
         try {
             it.get(this)
         } catch (e: Exception) {
@@ -287,8 +397,17 @@ fun Any.fieldGetFirst(
     name: String? = null,
     type: Class<*>? = null,
 ): Any? {
-    val field = fields(name, type).firstOrNull()
+    val field = fieldFirst(name = name, type = type)
     return field?.get(this)
+}
+
+@Throws(IllegalArgumentException::class, IllegalAccessException::class)
+fun Any.fieldSetFirst(
+    name: String,
+    value: Any?,
+) {
+    val field = fields(name, value?.javaClass).firstOrNull()
+    field?.set(this, value)
 }
 
 fun Any.methods(
@@ -301,6 +420,14 @@ fun Any.methods(
     } else {
         KReflectUtils.findMethods(this, name, returnType, *paramTypes)
     }
+}
+
+fun Any.methodFirst(
+    name: String? = null,
+    returnType: Class<*>? = null,
+    vararg paramTypes: Class<*>?,
+): Method? {
+    return KReflectUtils.findMethodFirst(this, name, returnType, *paramTypes)
 }
 
 fun Any.methodInvokes(
@@ -318,14 +445,13 @@ fun Any.methodInvokes(
     }
 }
 
-
 @Throws(IllegalArgumentException::class, IllegalAccessException::class)
 fun Any.methodInvokeFirst(
     name: String? = null,
     returnType: Class<*>? = null,
-    vararg args: Any?,
+    vararg args: Any,
 ): Any? {
-    val typedArray = args.map { it?.javaClass }.toTypedArray()
-    val method = methods(name = name, returnType = returnType, paramTypes = typedArray).firstOrNull()
+    val typedArray = args.map { it.javaClass }.toTypedArray()
+    val method = methodFirst(name = name, returnType = returnType, paramTypes = typedArray)
     return method?.invoke(this, *args)
 }

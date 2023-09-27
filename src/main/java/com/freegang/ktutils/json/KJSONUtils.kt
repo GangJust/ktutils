@@ -1,15 +1,10 @@
 package com.freegang.ktutils.json
 
-import android.icu.util.Output
-import androidx.annotation.RequiresPermission.Write
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.IOException
-import java.io.OutputStream
 import java.io.Reader
 import java.io.Writer
-import java.lang.Exception
 
 interface JSONObjectMapFunction {
     fun invoke(entry: Map.Entry<String, Any>)

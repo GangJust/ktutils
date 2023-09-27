@@ -28,6 +28,8 @@ object KToastUtils {
         showToastWithDuration(mToast, duration)
     }
 
+    @JvmStatic
+    @JvmOverloads
     fun show(
         context: Context,
         @StringRes rsId: Int,
@@ -87,12 +89,12 @@ object KToastUtils {
                 background.colorFilter = if (isDarkMode) {
                     PorterDuffColorFilter(Color.parseColor("#FF2C2F39"), PorterDuff.Mode.SRC_IN)
                 } else {
-                    PorterDuffColorFilter(Color.parseColor("#FFFFFFFF"), PorterDuff.Mode.SRC_IN)
+                    PorterDuffColorFilter(Color.parseColor("#FFE8E8E8"), PorterDuff.Mode.SRC_IN)
                 }
                 findViewById<TextView>(android.R.id.message).apply {
                     setTextColor(
                         if (isDarkMode) {
-                            Color.parseColor("#FFFFFFFF")
+                            Color.parseColor("#FFE8E8E8")
                         } else {
                             Color.parseColor("#FF2C2F39")
                         }
