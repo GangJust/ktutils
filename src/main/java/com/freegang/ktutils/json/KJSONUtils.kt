@@ -6,8 +6,9 @@ import org.json.JSONObject
 import java.io.Reader
 import java.io.Writer
 
-interface JSONObjectMapFunction {
-    fun invoke(entry: Map.Entry<String, Any>)
+@FunctionalInterface
+interface JSONObjectForeachFunction {
+    fun invoke(entry: Map.Entry<String, Any?>)
 }
 
 object KJSONUtils {
@@ -113,9 +114,9 @@ object KJSONUtils {
     }
 
     @JvmStatic
-    fun toMap(json: JSONObject): Map<String, Any> {
+    fun toMap(json: JSONObject): Map<String, Any?> {
         val iterator = json.keys().iterator()
-        val map = mutableMapOf<String, Any>()
+        val map = mutableMapOf<String, Any?>()
         while (iterator.hasNext()) {
             val key = iterator.next()
             map[key] = json.get(key)
@@ -124,14 +125,14 @@ object KJSONUtils {
     }
 
     @JvmStatic
-    fun map(json: JSONObject, block: JSONObjectMapFunction) {
+    fun forEach(json: JSONObject, block: JSONObjectForeachFunction) {
         val iterator = json.keys().iterator()
         while (iterator.hasNext()) {
             val key = iterator.next()
-            block.invoke(object : Map.Entry<String, Any> {
+            block.invoke(object : Map.Entry<String, Any?> {
                 override val key: String
                     get() = key
-                override val value: Any
+                override val value: Any?
                     get() = json.get(key)
             })
         }
@@ -253,9 +254,9 @@ object KJSONUtils {
     }
 
     @JvmStatic
-    fun toMaps(array: JSONArray): List<Map<String, Any>> {
+    fun toMaps(array: JSONArray): List<Map<String, Any?>> {
         if (array.length() == 0) return emptyList()
-        val list = mutableListOf<Map<String, Any>>()
+        val list = mutableListOf<Map<String, Any?>>()
         for (i in 0 until array.length()) {
             list.add(toMap(getJSONObject(array, i)))
         }
@@ -376,12 +377,32 @@ fun JSONObject.getJSONArrayOrDefault(key: String, default: JSONArray = JSONArray
     }
 }
 
-fun JSONObject.toMap(): Map<String, Any> {
+fun JSONObject.toMap(): Map<String, Any?> {
     return KJSONUtils.toMap(this)
 }
 
-fun JSONObject.map(block: JSONObjectMapFunction) {
-    KJSONUtils.map(this, block)
+fun Map<String, Any?>.toJSONObject(): JSONObject {
+    val json = JSONObject()
+    this.forEach { entry ->
+        try {
+            json.put(entry.key, entry.value)
+        } catch (e: Exception) {
+            json.put(entry.key, null)
+        }
+    }
+    return json
+}
+
+fun JSONObject.forEach(block: JSONObjectForeachFunction) {
+    KJSONUtils.forEach(this, block)
+}
+
+inline fun JSONObject.forEach(crossinline block: (key: String, valeu: Any?) -> Unit) {
+    KJSONUtils.forEach(this, object : JSONObjectForeachFunction {
+        override fun invoke(entry: Map.Entry<String, Any?>) {
+            block.invoke(entry.key, entry.value)
+        }
+    })
 }
 
 fun JSONObject.write(out: Writer): Boolean {
@@ -446,7 +467,7 @@ fun JSONArray.getJSONArrayOrDefault(index: Int, default: JSONArray = JSONArray()
     }
 }
 
-fun JSONArray.toMaps(): List<Map<String, Any>> {
+fun JSONArray.toMaps(): List<Map<String, Any?>> {
     return KJSONUtils.toMaps(this)
 }
 
