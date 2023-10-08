@@ -1,6 +1,8 @@
 package com.freegang.ktutils.view
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.ShapeDrawable
@@ -395,6 +397,18 @@ object KViewUtils {
         }
     }
 
+    //
+    /**
+     * 将某个View直接转换为Bitmap
+     * @param view 被操作的View
+     */
+    @JvmStatic
+    fun viewToBitmap(view: View): Bitmap {
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        view.draw(canvas)
+        return bitmap
+    }
 
     //
     /**
@@ -1110,3 +1124,5 @@ val View.isDisplay: Boolean
         val rect = Rect()
         return getLocalVisibleRect(rect)
     }
+
+val View.toBitmap get() = KViewUtils.viewToBitmap(this)

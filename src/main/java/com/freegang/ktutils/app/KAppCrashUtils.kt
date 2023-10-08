@@ -64,24 +64,26 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             Toast.makeText(mApp, mMessage, Toast.LENGTH_SHORT).show()
             Looper.loop()
         }.start()
-        val errMessage = "\n发生错误: ${e.message}\n" +
-                "出现时间: ${KLogCat.dateTimeFormat.format(System.currentTimeMillis())}\n" +
-                "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
-                "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
-                "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
-                "应用架构: ${mApp!!.abiBit}\n" +
-                "安全补丁级别: ${mApp!!.securityPatchLevel})\n" +
-                "DalvikVM: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
-                "堆栈信息: ${e.stackTraceToString()}\n"
-        KLogCat.e(errMessage)
         return true
     }
 
     /// 结束应用
     private fun exitAppOrStartErrActivity(e: Throwable) {
+        // 构建错误信息
+        val errMessage = "发生错误: ${e.message}\n" +
+                "出现时间: ${KLogCat.dateTimeFormat.format(System.currentTimeMillis())}\n" +
+                "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
+                "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
+                "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
+                "应用架构: ${mApp!!.abiBit}\n" +
+                "安全补丁级别: ${mApp!!.securityPatchLevel}\n" +
+                "DalvikVM: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
+                "堆栈信息: ${e.stackTraceToString()}"
+        KLogCat.e(errMessage)
+
+        // 传递错误信息
         if (mIntent!!.component != null) {
-            mIntent!!.putExtra("message", e.message)
-            mIntent!!.putExtra("stack_trace", e.stackTraceToString())
+            mIntent!!.putExtra("errMessage", errMessage)
             mIntent!!.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             mApp!!.startActivity(mIntent)
             Process.killProcess(Process.myPid())
