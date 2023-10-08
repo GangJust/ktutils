@@ -139,16 +139,7 @@ class KLogCat {
     private fun _clearStorage(): Boolean {
         val storageFolder = getStorageFolder() ?: return false
         if (!storageFolder.exists()) return true
-
-        val files = storageFolder.listFiles()
-        files?.forEach { file ->
-            if (file.isDirectory) {
-                file.deleteRecursively()
-            } else {
-                file.delete()
-            }
-        }
-
+        storageFolder.deleteRecursively()
         return true
     }
 
@@ -170,12 +161,12 @@ class KLogCat {
      */
     private fun buildStorageFile(date: Date): File? {
         val application = application ?: return null
-        try {
+        return try {
             val appName = application.resources.getString(application.applicationInfo.labelRes)
             val versionName = application.packageManager.getPackageInfo(application.packageName, 0).versionName ?: ""
-            return File(getStorageFolder(), "${appName}_${versionName}_".plus(dateFormat.format(date)).plus(".log"))
+            File(getStorageFolder(), "${appName}_${versionName}_".plus(dateFormat.format(date)).plus(".log"))
         } catch (e: Exception) {
-            return File(getStorageFolder(), dateFormat.format(date).plus(".log"))
+            File(getStorageFolder(), dateFormat.format(date).plus(".log"))
         }
     }
 

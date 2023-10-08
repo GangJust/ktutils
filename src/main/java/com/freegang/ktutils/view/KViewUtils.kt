@@ -695,7 +695,7 @@ object KViewUtils {
             jsonObject.put("background", "$background")
         }
 
-        //文本框
+        // 文本框
         if (view is TextView) {
             jsonObject.put("text", "${view.text}")
             jsonObject.put("hint", "${view.hint}")
@@ -731,7 +731,7 @@ object KViewUtils {
         jsonObject.put("selected", "${view.isSelected}")
         jsonObject.put("clickable", "${view.isClickable}")
         jsonObject.put("longClickable", "${view.isLongClickable}")
-        //点击事件
+        // 点击事件
         val clickListener = getOnClickListener(view)
         if (clickListener != null) {
             jsonObject.put("onClickListener", clickListener)
@@ -744,7 +744,7 @@ object KViewUtils {
         if (onTouchListener != null) {
             jsonObject.put("onTouchListener", onTouchListener)
         }
-        //列表类适配器
+        // 列表类适配器
         if (view is ViewPager) {
             jsonObject.put("ViewPagerAdapter", "${view.adapter}")
             jsonObject.put("ViewPagerCurrentItem", "${view.currentItem}")
@@ -811,13 +811,13 @@ object KViewUtils {
     }
 
     data class ViewNode(
-        var parent: ViewGroup? = null,  //父视图
-        var view: View? = null,  //当前视图
-        var depth: Int = 1,  //当前树的深度
-        var children: MutableList<ViewNode> = mutableListOf(), //子节点
+        var parent: ViewGroup? = null,  // 父视图
+        var view: View? = null,  // 当前视图
+        var depth: Int = 1,  // 当前树的深度
+        var children: MutableList<ViewNode> = mutableListOf(), // 子节点
     ) {
 
-        //销毁当前节点下的所有视图树
+        // 销毁当前节点下的所有视图树
         fun destroy() {
             destroy(this)
         }
@@ -836,7 +836,7 @@ object KViewUtils {
             }
         }
 
-        //当前节点下的所有视图树深度遍历到字符串
+        // 当前节点下的所有视图树深度遍历到字符串
         fun deepToString(indent: Int = 4): String {
             val buffer = StringBuffer()
             deepChildren("|-", indent, this) { trunk, node ->
@@ -945,7 +945,7 @@ object KViewUtils {
                     build.append("background=", background, ", ")
                 }
             }
-            //文本框
+            // 文本框
             if (view is TextView) {
                 build.append("text=", view.text, ", ")
                 build.append("hint=", view.hint, ", ")
@@ -981,7 +981,7 @@ object KViewUtils {
             build.append("selected=", view.isSelected, ", ")
             build.append("clickable=", view.isClickable, ", ")
             build.append("longClickable=", view.isLongClickable, ", ")
-            //点击事件
+            // 点击事件
             val clickListener = getOnClickListener(view)
             if (clickListener != null) {
                 build.append("onClickListener=", clickListener, ", ")
@@ -994,7 +994,7 @@ object KViewUtils {
             if (onTouchListener != null) {
                 build.append("onTouchListener=", onTouchListener, ", ")
             }
-            //列表类适配器
+            // 列表类适配器
             if (view is ViewPager) {
                 build.append("ViewPagerAdapter", view.adapter, ", ")
                 build.append("ViewPagerCurrentItem", view.currentItem, ", ")
@@ -1103,10 +1103,10 @@ val ViewParent.parentView get() = this.parent as ViewGroup
 
 val View.isDisplay: Boolean
     get() {
-        //val screenSize = KDisplayUtils.screenSize()
-        //val temp = IntArray(2) { 0 }
-        //this.getLocationOnScreen(temp)
-        //return (temp[0] >= 0 && temp[0] <= screenSize.width) && (temp[1] >= 0 && temp[1] <= screenSize.height)
+        // val screenSize = KDisplayUtils.screenSize()
+        // val temp = IntArray(2) { 0 }
+        // this.getLocationOnScreen(temp)
+        // return (temp[0] >= 0 && temp[0] <= screenSize.width) && (temp[1] >= 0 && temp[1] <= screenSize.height)
         val rect = Rect()
         return getLocalVisibleRect(rect)
     }

@@ -15,6 +15,8 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.PermissionChecker
+import com.freegang.ktutils.extension.asOrNull
+import com.freegang.ktutils.reflect.fieldGetFirst
 import com.freegang.ktutils.reflect.methodInvokeFirst
 import java.io.File
 import java.lang.reflect.InvocationTargetException
@@ -290,33 +292,6 @@ object KAppUtils {
         }
     }
 
-
-    /**
-     * 返回当前app的abi架构
-     *
-     * @param context 上下文对象，用于获取资源和包信息。
-     */
-    fun getAbiBit(context: Context): String {
-        val nativeLibraryDir = context.applicationInfo.nativeLibraryDir
-        val nextIndexOfLastSlash: Int = nativeLibraryDir.lastIndexOf('/') + 1
-        return nativeLibraryDir.substring(nextIndexOfLastSlash)
-    }
-
-    /**
-     * 判断当前dalvik虚拟机是否64位
-     */
-    @JvmStatic
-    fun is64BitDalvik(): Boolean {
-        try {
-            val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvokeFirst(name = "getRuntime")
-            return runtime?.methodInvokeFirst("is64Bit") as? Boolean ?: false
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return false
-    }
-
     /**
      * 判断某个App是否Debug状态
      * @param context 上下文对象，用于获取资源和包信息。
@@ -429,10 +404,75 @@ object KAppUtils {
         alarmManager?.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pendingIntent)
         exitProcess(0)
     }
+
+    ///
+    /**
+     * 返回当前app的abi架构
+     *
+     * @param context 上下文对象，用于获取资源和包信息。
+     */
+    @JvmStatic
+    fun getAbiBit(context: Context): String {
+        val nativeLibraryDir = context.applicationInfo.nativeLibraryDir
+        val nextIndexOfLastSlash: Int = nativeLibraryDir.lastIndexOf('/') + 1
+        return nativeLibraryDir.substring(nextIndexOfLastSlash)
+    }
+
+    /**
+     * 获取当前dalvik指令集，结果应该与 [getAbiBit] 相同，但不保证
+     */
+    @JvmStatic
+    fun getDalvikInstructionSet(): String {
+        try {
+            val forName = Class.forName("dalvik.system.VMRuntime")
+            val runtime = forName.methodInvokeFirst(name = "getRuntime")
+            return runtime?.methodInvokeFirst("vmInstructionSet")?.asOrNull<String>() ?: "unknown"
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return "unknown"
+    }
+
+
+    /**
+     * 判断当前dalvik虚拟机是否64位
+     */
+    @JvmStatic
+    fun is64BitDalvik(): Boolean {
+        try {
+            val forName = Class.forName("dalvik.system.VMRuntime")
+            val runtime = forName.methodInvokeFirst(name = "getRuntime")
+            return runtime?.methodInvokeFirst("is64Bit")?.asOrNull<Boolean>() ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    /**
+     * 获取当前设备安全补丁级别
+     *
+     * 如: 2023-04-01
+     *
+     * SECURITY_PATCH 字段在 Android 6.0 (23) 设备上是存在的，可以直接通过静态常量获取，这里采用反射(低于23反射也无法获取，因为没有该字段)
+     *
+     * ```
+     * // Api23以上可以直接获取
+     * val securityPatch Build.VERSION.SECURITY_PATCH
+     * ```
+     */
+    @JvmStatic
+    fun getSecurityPatchLevel(): String {
+        return Build.VERSION::class.java.fieldGetFirst(name = "SECURITY_PATCH")?.asOrNull<String>() ?: "unknown"
+    }
 }
 
 ///
 val Any.is64BitDalvik get() = KAppUtils.is64BitDalvik()
+
+val Any.dalvikInstructionSet get() = KAppUtils.getDalvikInstructionSet()
+
+val Any.securityPatchLevel get() = KAppUtils.getSecurityPatchLevel()
 
 val Context.abiBit get() = KAppUtils.getAbiBit(this)
 

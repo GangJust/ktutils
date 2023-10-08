@@ -42,9 +42,9 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
         this.mApp = app
         this.mIntent = intent
         this.mMessage = message
-        //获取系统默认的UncaughtException处理器
+        // 获取系统默认的UncaughtException处理器
         mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        //设置KAppCrashUtils为程序的默认处理器
+        // 设置KAppCrashUtils为程序的默认处理器
         Thread.setDefaultUncaughtExceptionHandler(this)
     }
 
@@ -69,6 +69,9 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
                 "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
                 "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
                 "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
+                "应用架构: ${mApp!!.abiBit}\n" +
+                "安全补丁级别: ${mApp!!.securityPatchLevel})\n" +
+                "DalvikVM: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
                 "堆栈信息: ${e.stackTraceToString()}\n"
         KLogCat.e(errMessage)
         return true
@@ -84,9 +87,9 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             Process.killProcess(Process.myPid())
             exitProcess(1)
         } else {
-            //等待1秒toast显示
+            // 等待3秒toast显示
             try {
-                Thread.sleep(1000)
+                Thread.sleep(3000)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
