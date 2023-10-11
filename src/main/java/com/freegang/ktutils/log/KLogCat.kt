@@ -308,12 +308,22 @@ class KLogCat {
             instance.println(Log.VERBOSE, instance.tag, *msg)
         }
 
+        @JvmStatic
+        fun v(tag: String, msg: String) {
+            instance.println(Log.VERBOSE, tag, msg)
+        }
+
         /**
          * DEBUG = 3
          */
         @JvmStatic
         fun d(vararg msg: String) {
             instance.println(Log.DEBUG, instance.tag, *msg)
+        }
+
+        @JvmStatic
+        fun d(tag: String, msg: String) {
+            instance.println(Log.DEBUG, tag, msg)
         }
 
         /**
@@ -324,12 +334,22 @@ class KLogCat {
             instance.println(Log.INFO, instance.tag, *msg)
         }
 
+        @JvmStatic
+        fun i(tag: String, msg: String) {
+            instance.println(Log.INFO, tag, msg)
+        }
+
         /**
          * WARN = 5
          */
         @JvmStatic
         fun w(vararg msg: String) {
             instance.println(Log.WARN, instance.tag, *msg)
+        }
+
+        @JvmStatic
+        fun w(tag: String, msg: String) {
+            instance.println(Log.WARN, tag, msg)
         }
 
         /**
@@ -340,12 +360,22 @@ class KLogCat {
             instance.println(Log.ERROR, instance.tag, *msg)
         }
 
+        @JvmStatic
+        fun e(tag: String, msg: String) {
+            instance.println(Log.ERROR, tag, msg)
+        }
+
         /**
          * ERROR = 6
          */
         @JvmStatic
         fun e(e: Throwable) {
-            e(e.stackTraceToString())
+            instance.println(Log.ERROR, instance.tag, e.stackTraceToString())
+        }
+
+        @JvmStatic
+        fun e(tag: String, e: Throwable) {
+            instance.println(Log.ERROR, tag, e.stackTraceToString())
         }
     }
 }

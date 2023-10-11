@@ -3,6 +3,8 @@ package com.freegang.ktutils.view
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Point
+import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.ShapeDrawable
@@ -21,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.freegang.ktutils.color.KColorUtils
 import com.freegang.ktutils.display.px2dip
+import com.freegang.ktutils.extension.asOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.reflect.Field
@@ -549,8 +552,11 @@ object KViewUtils {
         logic: (T) -> Boolean
     ): List<T> {
         if (view !is ViewGroup) {
-            if (targetType.isInstance(view) && logic.invoke(targetType.cast(view) as T)) {
-                return listOf(view as T)
+            if (targetType.isInstance(view)) {
+                val cast = targetType.cast(view)!!
+                if (logic.invoke(cast)) {
+                    return listOf(cast)
+                }
             }
             return emptyList()
         }
@@ -559,8 +565,11 @@ object KViewUtils {
         stack.push(view)
         while (!stack.isEmpty()) {
             val current = stack.pop()
-            if (targetType.isInstance(current) && logic.invoke(targetType.cast(current) as T)) {
-                views.add(targetType.cast(current) as T)
+            if (targetType.isInstance(current)) {
+                val cast = targetType.cast(current)!! // child 应该不存在null吧
+                if (logic.invoke(cast)) {
+                    views.add(cast)
+                }
             }
             if (current is ViewGroup) {
                 for (i in current.childCount - 1 downTo 0) {
@@ -602,7 +611,8 @@ object KViewUtils {
      * @return 转换后的JSON字符串
      */
     @JvmStatic
-    fun toViewJson(view: View): String {
+    @JvmOverloads
+    fun toViewJson(view: View, indentSpaces: Int = 0): String {
         if (view !is ViewGroup) return getViewJsonItem(0, view).toString()
 
         // 创建根JSONObject
@@ -646,7 +656,11 @@ object KViewUtils {
         }
 
         // 返回根JSONObject的字符串表示
-        return rootJsonObject.toString()
+        return if (indentSpaces == 0) {
+            return rootJsonObject.toString()
+        } else {
+            rootJsonObject.toString(indentSpaces)
+        }
     }
 
     /**
@@ -811,11 +825,11 @@ object KViewUtils {
         stack.push(root)
         while (!stack.isEmpty()) {
             val current = stack.pop()
-            val view = current.view
-            if (view is ViewGroup) {
-                for (i in view.childCount - 1 downTo 0) {
-                    val child = view.getChildAt(i)
-                    val childNode = ViewNode(view, child, current.depth + 1, mutableListOf())
+            val currentView = current.view
+            if (currentView is ViewGroup) {
+                for (i in currentView.childCount - 1 downTo 0) {
+                    val child = currentView.getChildAt(i)
+                    val childNode = ViewNode(currentView, child, current.depth + 1, mutableListOf())
                     current.children.add(0, childNode) // 添加到当前节点的子节点列表头部
                     stack.push(childNode)
                 }
@@ -1020,25 +1034,25 @@ object KViewUtils {
                 build.append("RecyclerViewAdapter", view.adapter, ", ")
             }
             build.append("tag=", view.tag, ", ")
-            build.append("viewPosition=", view.x, view.y, ", ")
-            build.append("pivotPosition=", view.pivotX, view.pivotY, ", ")
-            build.append("rotationPosition=", view.rotationX, view.rotationY, ", ")
+            build.append("viewPosition=", PointF(view.x, view.y), ", ")
+            build.append("pivotPosition=", PointF(view.pivotX, view.pivotY), ", ")
+            build.append("rotationPosition=", PointF(view.rotationX, view.rotationY), ", ")
             val outOnScreen = IntArray(2) { 0 }
             view.getLocationOnScreen(outOnScreen)
-            build.append("locationOnScreen=", outOnScreen[0], outOnScreen[1], ", ")
+            build.append("locationOnScreen=", Point(outOnScreen[0], outOnScreen[1]), ", ")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val outInSurface = IntArray(2) { 0 }
                 view.getLocationInSurface(outOnScreen)
-                build.append("locationInSurface=", outInSurface[0], outInSurface[1], ", ")
+                build.append("locationInSurface=", Point(outInSurface[0], outInSurface[1]), ", ")
             }
             val outInWindow = IntArray(2) { 0 }
             view.getLocationInWindow(outInWindow)
-            build.append("locationInWindow=", outInWindow[0], outInWindow[1], ", ")
+            build.append("locationInWindow=", Point(outInWindow[0], outInWindow[1]), ", ")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val outRect = Rect()
                 view.getClipBounds(outRect)
-                build.append("locationInWindow=", outRect, ", ")
+                build.append("locationInWindow=", outRect.toShortString(), ", ")
             } else {
                 build.append("clipBounds=", view.clipBounds?.toShortString(), ", ")
             }
@@ -1052,12 +1066,16 @@ object KViewUtils {
 }
 
 ///
-fun View.toViewJson(): String {
-    return KViewUtils.toViewJson(this)
+fun View.toViewJson(indentSpaces: Int = 0): String {
+    return KViewUtils.toViewJson(this, indentSpaces)
 }
 
 fun View.getViewTree(): KViewUtils.ViewNode {
     return KViewUtils.buildViewTree(this)
+}
+
+fun View.toViewTreeString(): String {
+    return KViewUtils.buildViewTree(this).deepToString()
 }
 
 fun View.traverse(call: (View) -> Unit) {
@@ -1107,13 +1125,17 @@ fun <T : View> View.findParentExact(targetType: Class<T>, deep: Int = 1): T? {
     return KViewUtils.findParentExact(this, targetType, deep)
 }
 
+fun View.removeInParent(): View? {
+    val parentView = this.parent.asOrNull<ViewGroup>() ?: return null
+    parentView.removeView(this)
+    return this
+}
+
 val View.idName get() = KViewUtils.getIdName(this)
 
 val View.idHex get() = KViewUtils.getIdHex(this)
 
-val View.parentView get() = this.parent as ViewGroup
-
-val ViewParent.parentView get() = this.parent as ViewGroup
+val View.parentView get() = this.parent.asOrNull<ViewGroup>()
 
 val View.isDisplay: Boolean
     get() {
