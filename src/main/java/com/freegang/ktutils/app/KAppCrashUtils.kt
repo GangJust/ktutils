@@ -76,8 +76,8 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
                 "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
                 "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
                 "应用架构: ${mApp!!.abiBit}\n" +
-                "安全补丁级别: ${mApp!!.securityPatchLevel}\n" +
-                "DalvikVM: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
+                "Google安全补丁级别: ${mApp!!.securityPatchLevel}\n" +
+                "Dalvik虚拟机: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
                 "堆栈信息: ${e.stackTraceToString()}"
         KLogCat.e(errMessage)
 

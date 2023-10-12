@@ -19,6 +19,7 @@ import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
 import androidx.core.view.marginTop
+import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.freegang.ktutils.color.KColorUtils
@@ -254,7 +255,7 @@ object KViewUtils {
             if (view.id == View.NO_ID) {
                 "${View.NO_ID}"
             } else {
-                "@id/${view.context.resources.getResourceEntryName(view.id)}"
+                "@id/${view.resources.getResourceEntryName(view.id)}"
             }
         } catch (e: Exception) {
             "${View.NO_ID}"
@@ -418,12 +419,12 @@ object KViewUtils {
      * 遍历 View 及其子 View
      *
      * @param view 需要遍历的 View
-     * @param call 遍历回调函数，接收一个 View 参数
+     * @param block 遍历回调函数，接收一个 View 参数
      */
     @JvmStatic
-    fun traverse(view: View, call: (View) -> Unit) {
+    fun traverse(view: View, block: (View) -> Unit) {
         if (view !is ViewGroup) {
-            call.invoke(view)
+            block.invoke(view)
             return
         }
 
@@ -431,7 +432,7 @@ object KViewUtils {
         stack.push(view)
         while (!stack.isEmpty()) {
             val current = stack.pop()
-            call.invoke(current)
+            block.invoke(current)
             if (current is ViewGroup) {
                 for (i in current.childCount - 1 downTo 0) {
                     stack.push(current.getChildAt(i))
@@ -542,19 +543,19 @@ object KViewUtils {
      * 获取某个View视图树中所有满足指定逻辑的ChildView
      * @param view View
      * @param targetType 某个View类型, 可以是 View.class
-     * @param logic 回调方法, 该方法参数会传入所有被遍历的view, 返回一个[Boolean]
+     * @param block 回调方法, 该方法参数会传入所有被遍历的view, 返回一个[Boolean]
      * @return List<T> T extends View
      */
     @JvmStatic
     fun <T : View> findViewsExact(
         view: View,
         targetType: Class<T>,
-        logic: (T) -> Boolean
+        block: (T) -> Boolean
     ): List<T> {
         if (view !is ViewGroup) {
             if (targetType.isInstance(view)) {
                 val cast = targetType.cast(view)!!
-                if (logic.invoke(cast)) {
+                if (block.invoke(cast)) {
                     return listOf(cast)
                 }
             }
@@ -567,7 +568,7 @@ object KViewUtils {
             val current = stack.pop()
             if (targetType.isInstance(current)) {
                 val cast = targetType.cast(current)!! // child 应该不存在null吧
-                if (logic.invoke(cast)) {
+                if (block.invoke(cast)) {
                     views.add(cast)
                 }
             }
@@ -692,13 +693,19 @@ object KViewUtils {
         val paddingTopDp = view.context.px2dip(view.paddingTop.toFloat())
         val paddingEndDp = view.context.px2dip(view.paddingEnd.toFloat())
         val paddingBottomDp = view.context.px2dip(view.paddingBottom.toFloat())
-        jsonObject.put("paddingLTRB", "[${paddingStartDp}dp, ${paddingTopDp}dp, ${paddingEndDp}dp, ${paddingBottomDp}dp]")
+        jsonObject.put(
+            "paddingLTRB",
+            "[${paddingStartDp}dp, ${paddingTopDp}dp, ${paddingEndDp}dp, ${paddingBottomDp}dp]"
+        )
 
         val marginStartDp = view.context.px2dip(view.marginStart.toFloat())
         val marginTopDp = view.context.px2dip(view.marginTop.toFloat())
         val marginEndDp = view.context.px2dip(view.marginEnd.toFloat())
         val marginBottomDp = view.context.px2dip(view.marginBottom.toFloat())
-        jsonObject.put("marginLTRB", "[${marginStartDp}dp, ${marginTopDp}dp, ${marginEndDp}dp, ${marginBottomDp}dp]")
+        jsonObject.put(
+            "marginLTRB",
+            "[${marginStartDp}dp, ${marginTopDp}dp, ${marginEndDp}dp, ${marginBottomDp}dp]"
+        )
 
         when (view.visibility) {
             View.VISIBLE -> jsonObject.put("visibility", "VISIBLE")
@@ -716,9 +723,15 @@ object KViewUtils {
         }
         val background = view.background
         if (background is ColorDrawable) {
-            jsonObject.put("background", "ColorDrawable(color: ${KColorUtils.colorIntToHex(background.color)})")
+            jsonObject.put(
+                "background",
+                "ColorDrawable(color: ${KColorUtils.colorIntToHex(background.color)})"
+            )
         } else if (background is ShapeDrawable) {
-            jsonObject.put("background", "ShapeDrawable(color: ${KColorUtils.colorIntToHex(background.paint.color)})")
+            jsonObject.put(
+                "background",
+                "ShapeDrawable(color: ${KColorUtils.colorIntToHex(background.paint.color)})"
+            )
         } else {
             jsonObject.put("background", "$background")
         }
@@ -895,7 +908,8 @@ object KViewUtils {
         }
 
         override fun toString(): String {
-            val view = view ?: return "ViewNode{parent=${parent}, view=null, depth=${depth}, hashCode=${this.hashCode()}}"
+            val view = view
+                ?: return "ViewNode{parent=${parent}, view=null, depth=${depth}, hashCode=${this.hashCode()}}"
 
             val build = StringBuilder()
             build.append("ViewNode{")
@@ -986,7 +1000,11 @@ object KViewUtils {
                     build.append("textStyle=normal, ")
                 }
                 build.append("currentTextColor=", KColorUtils.colorIntToHex(view.currentTextColor), ", ")
-                build.append("currentHintTextColor=", KColorUtils.colorIntToHex(view.currentHintTextColor), ", ")
+                build.append(
+                    "currentHintTextColor=",
+                    KColorUtils.colorIntToHex(view.currentHintTextColor),
+                    ", "
+                )
                 build.append("highlightColor=", KColorUtils.colorIntToHex(view.highlightColor), ", ")
                 build.append("selectable=", view.isTextSelectable, ", ")
                 build.append("minHeight=", view.minHeight, ", ")
@@ -1078,8 +1096,20 @@ fun View.toViewTreeString(): String {
     return KViewUtils.buildViewTree(this).deepToString()
 }
 
-fun View.traverse(call: (View) -> Unit) {
-    KViewUtils.traverse(this, call)
+fun <V : View> V.postRunning(block: V.() -> Unit) {
+    this.post {
+        block.invoke(this)
+    }
+}
+
+fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
+    this.postDelayed(delayInMillis) {
+        block.invoke(this)
+    }
+}
+
+fun View.traverse(block: View.() -> Unit) {
+    KViewUtils.traverse(this, block)
 }
 
 fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
@@ -1109,19 +1139,32 @@ fun <T : View> View.findViewsByDesc(targetType: Class<T>, containsDesc: Regex): 
     return KViewUtils.findViewsByDesc(this, targetType, containsDesc)
 }
 
-fun <T : View> View.findViewsByDesc(targetType: Class<T>, containsDesc: String, ignoreCase: Boolean = false): List<T> {
+fun <T : View> View.findViewsByDesc(
+    targetType: Class<T>,
+    containsDesc: String,
+    ignoreCase: Boolean = false
+): List<T> {
     return KViewUtils.findViewsByDesc(this, targetType, containsDesc, ignoreCase)
 }
 
-fun <T : View> View.findViewsByExact(targetType: Class<T>, logic: (T) -> Boolean): List<T> {
-    return KViewUtils.findViewsExact(this, targetType, logic)
+fun <T : View> View.findViewsByExact(
+    targetType: Class<T>,
+    block: T.() -> Boolean,
+): List<T> {
+    return KViewUtils.findViewsExact(this, targetType, block)
 }
 
-fun <T : View> View.findViewsByIdName(targetType: Class<T>, idName: String): List<T> {
+fun <T : View> View.findViewsByIdName(
+    targetType: Class<T>,
+    idName: String,
+): List<T> {
     return KViewUtils.findViewsByIdName(this, targetType, idName)
 }
 
-fun <T : View> View.findParentExact(targetType: Class<T>, deep: Int = 1): T? {
+fun <T : View> View.findParentExact(
+    targetType: Class<T>,
+    deep: Int = 1,
+): T? {
     return KViewUtils.findParentExact(this, targetType, deep)
 }
 
@@ -1135,7 +1178,7 @@ val View.idName get() = KViewUtils.getIdName(this)
 
 val View.idHex get() = KViewUtils.getIdHex(this)
 
-val View.parentView get() = this.parent.asOrNull<ViewGroup>()
+val View.parentView get() = this.parent?.asOrNull<ViewGroup>()
 
 val View.isDisplay: Boolean
     get() {
