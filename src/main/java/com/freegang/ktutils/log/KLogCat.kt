@@ -309,7 +309,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun v(tag: String, msg: String) {
+        fun tagV(tag: String, msg: String) {
             instance.println(Log.VERBOSE, tag, msg)
         }
 
@@ -322,7 +322,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun d(tag: String, msg: String) {
+        fun tagD(tag: String, msg: String) {
             instance.println(Log.DEBUG, tag, msg)
         }
 
@@ -335,7 +335,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun i(tag: String, msg: String) {
+        fun tagI(tag: String, msg: String) {
             instance.println(Log.INFO, tag, msg)
         }
 
@@ -348,7 +348,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun w(tag: String, msg: String) {
+        fun tagW(tag: String, msg: String) {
             instance.println(Log.WARN, tag, msg)
         }
 
@@ -361,7 +361,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun e(tag: String, msg: String) {
+        fun tagE(tag: String, msg: String) {
             instance.println(Log.ERROR, tag, msg)
         }
 
@@ -374,7 +374,7 @@ class KLogCat {
         }
 
         @JvmStatic
-        fun e(tag: String, e: Throwable) {
+        fun tagE(tag: String, e: Throwable) {
             instance.println(Log.ERROR, tag, e.stackTraceToString())
         }
     }

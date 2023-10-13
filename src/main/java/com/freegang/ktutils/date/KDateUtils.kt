@@ -78,21 +78,9 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun formatDateToString(date: Date, pattern: String = PATTERN_FULL): String {
+    fun formatDateToString(date: Date = current, pattern: String = PATTERN_FULL): String {
         val format = SimpleDateFormat(pattern, Locale.CHINA)
         return format.format(date)
-    }
-
-    /**
-     * 格式化当前日期为字符串
-     *
-     * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"
-     * @return 格式化后的日期字符串
-     */
-    @JvmStatic
-    @JvmOverloads
-    fun formatCurrentDateToString(pattern: String = PATTERN_FULL): String {
-        return formatDateToString(current, pattern)
     }
 
     /**
@@ -136,7 +124,8 @@ object KDateUtils {
      * @return 起始时间的日期对象
      */
     @JvmStatic
-    fun getStartOfDay(date: Date): Date {
+    @JvmOverloads
+    fun getStartOfDay(date: Date = current): Date {
         val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -153,7 +142,8 @@ object KDateUtils {
      * @return 结束时间的日期对象
      */
     @JvmStatic
-    fun getEndOfDay(date: Date): Date {
+    @JvmOverloads
+    fun getEndOfDay(date: Date = current): Date {
         val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.set(Calendar.HOUR_OF_DAY, 23)
@@ -164,71 +154,90 @@ object KDateUtils {
     }
 
     /**
-     * 获取指定日期之后的若干年的日期。
+     * 为指定日期[date]增加指定年份[years], 返回增加指定年数后的日期
      *
      * @param date 起始日期
-     * @param years 年数（正数表示之后，负数表示之前）
+     * @param years 年份（正数表示之后，负数表示之前）
      * @return 增加指定年数后的日期
      */
     @JvmStatic
-    fun addYears(date: Date, years: Int): Date {
-        val calendar = Calendar.getInstance()
+    @JvmOverloads
+    fun addYears(date: Date = current, years: Int): Date {
         calendar.time = date
         calendar.add(Calendar.YEAR, years)
         return calendar.time
     }
 
     /**
-     * 获取指定日期之后的若干天的日期。
+     * 为指定日期[date]增加指定月份[months], 返回增加指定月份后的日期
+     *
+     * @param date 起始日期
+     * @param months 月份（正数表示之后，负数表示之前）
+     * @return 增加指定年数后的日期
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun addMonths(date: Date = current, months: Int): Date {
+        calendar.time = date
+        calendar.add(Calendar.MONTH, month)
+        return calendar.time
+    }
+
+    /**
+     * 为指定日期[date]增加指定天数[days], 返回增加指定天数后的日期
+     *
      * @param date 起始日期
      * @param days 天数（正数表示之后，负数表示之前）
      * @return 增加指定天数后的日期
      */
     @JvmStatic
-    fun addDays(date: Date, days: Int): Date {
-        val calendar = Calendar.getInstance()
+    @JvmOverloads
+    fun addDays(date: Date = current, days: Int): Date {
         calendar.time = date
         calendar.add(Calendar.DAY_OF_YEAR, days)
         return calendar.time
     }
 
     /**
-     * 获取指定日期之后的若干小时的日期。
+     * 为指定日期[date]增加指定小时数[hours], 返回增加指定小时数后的日期
+     *
      * @param date 起始日期
-     * @param hours 要增加的小时数（正数表示之后，负数表示之前）
+     * @param hours 小时数（正数表示之后，负数表示之前）
      * @return 增加指定小时数后的日期
      */
     @JvmStatic
-    fun addHours(date: Date, hours: Int): Date {
-        val calendar = Calendar.getInstance()
+    @JvmOverloads
+    fun addHours(date: Date = current, hours: Int): Date {
         calendar.time = date
         calendar.add(Calendar.HOUR_OF_DAY, hours)
         return calendar.time
     }
 
     /**
-     * 获取指定日期之后的若干分钟的日期。
+     * 为指定日期[date]增加指定分钟数[minutes], 返回增加指定分钟数后的日期
+     *
      * @param date 起始日期
-     * @param minutes 要增加的分钟数（正数表示之后，负数表示之前）
+     * @param minutes 分钟数（正数表示之后，负数表示之前）
      * @return 增加指定分钟数后的日期
      */
     @JvmStatic
-    fun addMinutes(date: Date, minutes: Int): Date {
-        val calendar = Calendar.getInstance()
+    @JvmOverloads
+    fun addMinutes(date: Date = current, minutes: Int): Date {
         calendar.time = date
         calendar.add(Calendar.MINUTE, minutes)
         return calendar.time
     }
 
     /**
-     * 获取指定日期之后的若干秒的日期。
+     * 为指定日期[date]增加指定秒数[seconds], 返回增加指定秒数后的日期
+     *
      * @param date 起始日期
      * @param seconds 秒数（正数表示之后，负数表示之前）
      * @return 增加指定秒数后的日期
      */
     @JvmStatic
-    fun addSeconds(date: Date, seconds: Int): Date {
-        val calendar = Calendar.getInstance()
+    @JvmOverloads
+    fun addSeconds(date: Date = current, seconds: Int): Date {
         calendar.time = date
         calendar.add(Calendar.SECOND, seconds)
         return calendar.time
@@ -279,11 +288,67 @@ object KDateUtils {
      * @return 如果是闰年则返回 true，否则返回 false
      */
     @JvmStatic
-    fun isLeapYear(date: Date): Boolean {
+    @JvmOverloads
+    fun isLeapYear(date: Date = current): Boolean {
         val calendar = Calendar.getInstance()
         calendar.time = date
         val year = calendar.get(Calendar.YEAR)
         return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+    }
+
+
+    /**
+     * 对某个时间进行系列操作
+     */
+    class Builder(private var date: Date = current) {
+
+        fun addYears(years: Int): Builder {
+            date = addYears(date, years)
+            return this
+        }
+
+        fun addMonths(months: Int): Builder {
+            date = addMonths(date, months)
+            return this
+        }
+
+        fun addDays(days: Int): Builder {
+            date = addDays(date, days)
+            return this
+        }
+
+        fun addHour(hours: Int): Builder {
+            date = addHours(date, hours)
+            return this
+        }
+
+        fun addMinutes(minutes: Int): Builder {
+            date = addMinutes(date, minutes)
+            return this
+        }
+
+        fun addSeconds(seconds: Int): Builder {
+            date = addSeconds(date, seconds)
+            return this
+        }
+
+        fun getStartOfDay(): Builder {
+            date = getStartOfDay(date)
+            return this
+        }
+
+        fun getEndOfDay(): Builder {
+            date = getEndOfDay(date)
+            return this
+        }
+
+        fun build(): Date {
+            return date
+        }
+
+        fun buildFormat(pattern: String): String {
+            return formatDateToString(date, pattern)
+        }
     }
 }
 
