@@ -6,6 +6,18 @@ import java.util.Locale
 object KColorUtils {
 
     /**
+     * 更改指定颜色的透明度
+     * @param color 指定颜色
+     * @param alpha 指定透明度 0~255
+     */
+    fun alpha(color: Int, alpha: Int): Int {
+        val red = Color.red(color)
+        val green = Color.green(color)
+        val blue = Color.blue(color)
+        return Color.argb(alpha, red, green, blue)
+    }
+
+    /**
      * 将给定的颜色值转换为十六进制字符串表示
      *
      * @param color 颜色值

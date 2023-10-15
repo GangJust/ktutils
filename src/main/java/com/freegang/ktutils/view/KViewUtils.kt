@@ -878,15 +878,18 @@ object KViewUtils {
         }
 
         // 当前节点下的所有视图树深度遍历到字符串
-        fun deepToString(indent: Int = 4): String {
+        fun deepToString(
+            indent: Int = 4,
+            format: (ViewNode) -> String = { it.toString() },
+        ): String {
             val buffer = StringBuffer()
             deepChildren("|-", indent, this) { trunk, node ->
-                buffer.append("$trunk${node}\n")
+                buffer.append("$trunk${format(node)}\n")
             }
             return buffer.toString()
         }
 
-        private fun deepChildren(
+        fun deepChildren(
             trunk: String = "|-",
             indent: Int = 4,
             node: ViewNode,
@@ -1092,8 +1095,13 @@ fun View.getViewTree(): KViewUtils.ViewNode {
     return KViewUtils.buildViewTree(this)
 }
 
-fun View.toViewTreeString(): String {
-    return KViewUtils.buildViewTree(this).deepToString()
+fun View.toViewTreeString(
+    indent: Int = 4,
+    format: (KViewUtils.ViewNode) -> String = { it.toString() },
+): String {
+    return KViewUtils
+        .buildViewTree(this)
+        .deepToString(indent, format)
 }
 
 fun <V : View> V.postRunning(block: V.() -> Unit) {
@@ -1172,6 +1180,26 @@ fun View.removeInParent(): View? {
     val parentView = this.parent.asOrNull<ViewGroup>() ?: return null
     parentView.removeView(this)
     return this
+}
+
+fun View.removeInParentIndex(): Int {
+    val parentView = this.parent.asOrNull<ViewGroup>() ?: return -1
+    val indexOfChild = parentView.indexOfChild(this)
+    if (indexOfChild != -1) {
+        parentView.removeViewAt(indexOfChild)
+    }
+    return indexOfChild
+}
+
+fun View.replaceCurrentView(view: View): Boolean {
+    val parentView = this.parent.asOrNull<ViewGroup>() ?: return false
+    val indexOfChild = parentView.indexOfChild(this)
+    if (indexOfChild != -1) {
+        parentView.removeViewAt(indexOfChild)
+        parentView.addView(view, indexOfChild)
+        return true
+    }
+    return false
 }
 
 val View.idName get() = KViewUtils.getIdName(this)

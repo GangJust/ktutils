@@ -433,7 +433,6 @@ object KAppUtils {
         return "unknown"
     }
 
-
     /**
      * 判断当前dalvik虚拟机是否64位
      */
@@ -465,6 +464,57 @@ object KAppUtils {
     fun getSecurityPatchLevel(): String {
         return Build.VERSION::class.java.fieldGetFirst(name = "SECURITY_PATCH")?.asOrNull<String>() ?: "unknown"
     }
+
+
+    /**
+     * 获取状态栏高度, 旧方式
+     */
+    @SuppressLint("DiscouragedApi", "InternalInsetResource")
+    fun getStatusBarHeight(context: Context): Int {
+        val resourceId = context.resources.getIdentifier(
+            "status_bar_height", "dimen", "android",
+        )
+        return if (resourceId > 0) {
+            context.resources.getDimensionPixelSize(resourceId)
+        } else {
+            0
+        }
+    }
+
+
+    /**
+     * 获取底部导航栏高度, 旧方式
+     */
+    @SuppressLint("InternalInsetResource", "DiscouragedApi")
+    @JvmStatic
+    fun getNavigationBarHeight(context: Context): Int {
+        val resourceId = context.resources.getIdentifier(
+            "navigation_bar_height", "dimen", "android",
+        )
+        if (resourceId > 0) {
+            return context.resources.getDimensionPixelSize(resourceId)
+        }
+        return 0
+    }
+
+    /**
+     * 判断当前底部导航栏类型, 旧方式
+     *
+     * 0 : Navigation is displayed with 3 buttons
+     * 1 : Navigation is displayed with 2 button(Android P navigation mode)
+     * 2 : 全屏手势(Android Q上的手势)
+     */
+    @SuppressLint("InternalInsetResource", "DiscouragedApi")
+    @JvmStatic
+    fun getNavBarInteractionMode(context: Context): Int {
+        val resources = context.resources
+        val resourceId = resources.getIdentifier(
+            "config_navBarInteractionMode", "integer", "android",
+        )
+        return if (resourceId > 0) {
+            resources.getInteger(resourceId)
+        } else 0
+    }
 }
 
 ///
@@ -483,3 +533,9 @@ val Context.appVersionName get() = KAppUtils.getVersionName(this)
 val Context.appVersionCode get() = KAppUtils.getVersionCode(this)
 
 val Context.isDarkMode get() = KAppUtils.isDarkMode(this)
+
+val Context.statusBarHeight get() = KAppUtils.getStatusBarHeight(this)
+
+val Context.navigationBarHeight get() = KAppUtils.getNavigationBarHeight(this)
+
+val Context.navBarInteractionMode get() = KAppUtils.getNavBarInteractionMode(this)
