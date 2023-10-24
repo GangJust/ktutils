@@ -39,8 +39,8 @@ object KViewUtils {
      * @param viewGroup 要设置可见性的 ViewGroup。
      */
     @JvmStatic
-    fun showAll(viewGroup: ViewGroup) {
-        setVisibilityAll(viewGroup, View.VISIBLE)
+    fun showAll(view: View) {
+        setVisibilityAll(view, View.VISIBLE)
     }
 
     /**
@@ -49,8 +49,8 @@ object KViewUtils {
      * @param viewGroup 要设置可见性的 ViewGroup。
      */
     @JvmStatic
-    fun hideAll(viewGroup: ViewGroup) {
-        setVisibilityAll(viewGroup, View.GONE)
+    fun hideAll(view: View) {
+        setVisibilityAll(view, View.GONE)
     }
 
     /**
@@ -59,34 +59,39 @@ object KViewUtils {
      * @param viewGroup 要设置可见性的 ViewGroup。
      */
     @JvmStatic
-    fun invisibleAll(viewGroup: ViewGroup) {
-        setVisibilityAll(viewGroup, View.INVISIBLE)
+    fun invisibleAll(view: View) {
+        setVisibilityAll(view, View.INVISIBLE)
     }
 
     /**
-     * 递归设置 ViewGroup 及其所有子视图的可见性。
+     * 设置 ViewGroup 及其所有子视图的可见性。
      *
-     * @param viewGroup   要设置可见性的 ViewGroup。
+     * @param view   要设置可见性的 View。
      * @param visibility  要设置的可见性，可选值为 [View.VISIBLE]、[View.GONE] 或 [View.INVISIBLE]。
      */
-    private fun setVisibilityAll(viewGroup: ViewGroup, visibility: Int) {
-        if (viewGroup.visibility == visibility) return // 如果已经设置过了，就直接返回
-        val childCount = viewGroup.childCount
-        if (childCount == 0) return
+    private fun setVisibilityAll(view: View, visibility: Int) {
+        val stack = Stack<View>()
+        stack.push(view)
 
-        // 先递归遍历设置所有子视图的 Visibility
-        for (i in 0 until childCount) {
-            val childAt = viewGroup.getChildAt(i)
-            if (childAt.visibility != visibility) { // 仅当可见性状态不同时才进行递归调用
-                if (childAt is ViewGroup) {
-                    setVisibilityAll(childAt, visibility)
-                } else {
-                    childAt.visibility = visibility // 仅限于子视图范围内设置可见性
+        while (!stack.isEmpty()) {
+            val currentView = stack.pop()
+
+            if (currentView is ViewGroup) {
+                val childCount = currentView.childCount
+                for (i in 0 until childCount) {
+                    val childAt = currentView.getChildAt(i)
+                    if (childAt.visibility != visibility) {
+                        stack.push(childAt)
+                    }
                 }
             }
+
+            if (currentView.visibility != visibility) {
+                currentView.visibility = visibility
+            }
         }
-        viewGroup.visibility = visibility // 再设置当前视图的 Visibility
     }
+
 
     //
     /**
@@ -129,8 +134,8 @@ object KViewUtils {
      * @return 如果 ViewGroup 及其所有子视图全部可见，则返回 `true`；否则返回 `false`。
      */
     @JvmStatic
-    fun isVisibleAll(viewGroup: ViewGroup): Boolean {
-        val resultList = traverseVisibilityAll(viewGroup)
+    fun isVisibleAll(view: View): Boolean {
+        val resultList = traverseVisibilityAll(view)
         return !resultList.contains(View.GONE) && !resultList.contains(View.INVISIBLE)
     }
 
@@ -141,8 +146,8 @@ object KViewUtils {
      * @return 如果 ViewGroup 及其所有子视图全部隐藏，则返回 `true`；否则返回 `false`。
      */
     @JvmStatic
-    fun isGoneAll(viewGroup: ViewGroup): Boolean {
-        val resultList = traverseVisibilityAll(viewGroup)
+    fun isGoneAll(view: View): Boolean {
+        val resultList = traverseVisibilityAll(view)
         return resultList.contains(View.GONE) && !resultList.contains(View.VISIBLE)
     }
 
@@ -153,75 +158,112 @@ object KViewUtils {
      * @return 如果 ViewGroup 及其所有子视图全部不可见，则返回 `true`；否则返回 `false`。
      */
     @JvmStatic
-    fun isInvisibleAll(viewGroup: ViewGroup): Boolean {
-        val resultList = traverseVisibilityAll(viewGroup)
+    fun isInvisibleAll(view: View): Boolean {
+        val resultList = traverseVisibilityAll(view)
         return !resultList.contains(View.GONE) && resultList.contains(View.INVISIBLE)
     }
 
     /**
-     * 递归遍历 ViewGroup 及其所有子视图，返回可见性状态列表。
+     * 遍历给定视图（包括其所有子视图）的可见性状态，并返回一个包含所有可见性状态的列表。
+     * 如果给定的视图是一个视图组，则会遍历其所有子视图（包括嵌套的视图组）。
+     * 如果给定的视图不是一个视图组，则只会返回该视图的可见性状态。
      *
-     * @param viewGroup 要遍历的 ViewGroup。
-     * @return 可见性状态列表，包含 ViewGroup 及其所有子视图的可见性状态。
+     * @param view 需要遍历的视图。
+     * @return 包含所有遍历到的视图的可见性状态的列表。
      */
-    private fun traverseVisibilityAll(viewGroup: ViewGroup): List<Int> {
+    private fun traverseVisibilityAll(view: View): List<Int> {
+        // 创建一个用于存储所有视图可见性状态的列表
         val resultList = mutableListOf<Int>()
-        if (viewGroup.visibility == View.GONE) {
-            resultList.add(View.GONE)
-            return resultList
-        }
 
-        val stack = ArrayDeque<ViewGroup>()
-        stack.addFirst(viewGroup)
+        // 创建一个堆栈，用于存储待处理的视图
+        val stack = ArrayDeque<View>()
+        stack.addFirst(view)  // 首先添加给定的视图
 
+        // 当堆栈不为空时，继续处理视图
         while (stack.isNotEmpty()) {
+            // 从堆栈中取出一个视图
             val current = stack.removeFirst()
-            for (i in 0 until current.childCount) {
-                val child = current.getChildAt(i)
-                if (child is ViewGroup) {
-                    if (child.visibility == View.GONE) {
-                        resultList.add(View.GONE)
-                    } else {
-                        stack.addFirst(child)
-                    }
+            // 添加当前视图的可见性状态到结果列表中
+            resultList.add(current.visibility)
+
+            // 如果当前视图是一个视图组，则遍历其所有子视图
+            if (current is ViewGroup) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChildAt(i)
+                    // 将子视图添加到堆栈中，以便后续处理
+                    stack.addFirst(child)
                 }
-                resultList.add(child.visibility)
             }
         }
+        // 返回包含所有视图可见性状态的列表
         return resultList
     }
 
     //
     /**
+     * 设置视图及其所有子视图的启用状态。
+     *
+     * @param view 需要设置的视图。这个视图及其所有子视图的启用状态都会被改变。
+     * @param enabled 新的启用状态。如果为 true，视图及其所有子视图将被启用；如果为 false，它们将被禁用。
+     */
+    fun setEnabledAll(view: View, enabled: Boolean) {
+        // 创建一个双端队列来存储待处理的视图
+        val stack = ArrayDeque<View>()
+        // 首先添加传入的视图到队列
+        stack.addFirst(view)
+        // 当队列不为空时，继续处理
+        while (stack.isNotEmpty()) {
+            // 从队列首部移除并获取一个视图
+            val currentView = stack.removeFirst()
+            // 设置该视图的启用状态
+            currentView.isEnabled = enabled
+            // 如果当前视图是一个视图组（即，它有子视图）
+            if (currentView is ViewGroup) {
+                // 遍历并添加所有子视图到队列，以便之后处理
+                for (i in 0 until currentView.childCount) {
+                    stack.addFirst(currentView.getChildAt(i))
+                }
+            }
+        }
+    }
+
+
+    /**
      * 判断给定的 ViewGroup 及其所有子视图是否全部可用。
      *
-     * @param viewGroup 要判断的 ViewGroup。
+     * @param view 要判断的 ViewGroup。
      * @return 是否全部可用，如果全部可用返回 true，否则返回 false。
      */
     @JvmStatic
-    fun isEnabledAll(viewGroup: ViewGroup): Boolean {
-        val stack = ArrayDeque<ViewGroup>()
-        stack.addFirst(viewGroup)
+    fun isEnabledAll(view: View): Boolean {
+        // 创建一个视图堆栈
+        val stack = Stack<View>()
+        // 将传入的视图压入堆栈
+        stack.push(view)
 
+        // 当堆栈不为空时，继续执行循环
         while (stack.isNotEmpty()) {
-            val current = stack.removeFirst()
+            // 弹出堆栈顶部的视图
+            val currentView = stack.pop()
 
-            if (!current.isEnabled) {
+            // 如果当前视图处于禁用状态，返回 false
+            if (!currentView.isEnabled) {
                 return false
             }
 
-            for (i in 0 until current.childCount) {
-                val child = current.getChildAt(i)
-                if (child is ViewGroup) {
-                    stack.addFirst(child)
-                } else if (!child.isEnabled) {
-                    return false
+            // 如果当前视图是一个视图组（即可以包含其他视图的视图）
+            if (currentView is ViewGroup) {
+                // 遍历该视图组中的所有子视图，并将它们压入堆栈
+                for (i in 0 until currentView.childCount) {
+                    stack.push(currentView.getChildAt(i))
                 }
             }
         }
 
+        // 如果所有视图都处于启用状态，返回 true
         return true
     }
+
 
     //
     /**
@@ -1200,6 +1242,10 @@ fun View.replaceCurrentView(view: View): Boolean {
         return true
     }
     return false
+}
+
+fun View.setEnabledAll(enabled: Boolean) {
+    KViewUtils.setEnabledAll(this, enabled)
 }
 
 val View.idName get() = KViewUtils.getIdName(this)
