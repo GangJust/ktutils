@@ -7,7 +7,11 @@ object KCollectionUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun <T> joinToString(c: Collection<T>, separator: CharSequence = ", ", transform: Transform<T>? = null): String {
+    fun <T> joinToString(
+        c: Collection<T>,
+        separator: CharSequence = ", ",
+        transform: Transform<T>? = null
+    ): String {
         transform ?: return c.joinToString(separator = separator)
         return c.joinToString(separator = separator) { transform.transform(it) }
     }
@@ -17,7 +21,11 @@ object KCollectionUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun <T> joinToString(arr: Array<T>, separator: CharSequence = ", ", transform: Transform<T>? = null): String {
+    fun <T> joinToString(
+        arr: Array<T>,
+        separator: CharSequence = ", ",
+        transform: Transform<T>? = null
+    ): String {
         transform ?: return arr.joinToString(separator = separator)
         return arr.joinToString(separator = separator) { transform.transform(it) }
     }
@@ -114,7 +122,7 @@ inline fun <reified T : Collection<*>> T.ifNotEmpty(block: T.() -> Unit) {
 }
 
 inline fun <reified T : Sequence<*>> T.ifNotEmpty(block: T.() -> Unit) {
-    if (this.count() == 0) return
+    if (any()) return
     block.invoke(this)
 }
 

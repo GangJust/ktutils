@@ -14,7 +14,8 @@ object KReflectUtils {
     private val usingMethodsCache = mutableMapOf<String, Method>()
 
     /**
-     * 获取某个对象的所有字段, 包含其继承的父类字段, 同名字段顺序排列
+     * 获取某个对象的所有字段, 包含其继承的父类字段, 同名字段顺序排列。
+     *
      * @param obj 目标对象
      * @return 所有字段列表
      */
@@ -43,7 +44,8 @@ object KReflectUtils {
     }
 
     /**
-     * 获取某个对象的所有方法 包含其继承的父类方法, 同名方法顺序排列
+     * 获取某个对象的所有方法 包含其继承的父类方法, 同名方法顺序排列。
+     *
      * @param obj 目标对象
      * @return 所有方法列表
      */
@@ -72,7 +74,8 @@ object KReflectUtils {
     }
 
     /**
-     * 按指定要求查找指定字段集合, 同名字段顺序排列
+     * 按指定要求查找指定字段集合, 同名字段顺序排列。
+     *
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param type 字段类型, 可空
@@ -118,7 +121,8 @@ object KReflectUtils {
     }
 
     /**
-     * 按指定要求查找指定字段
+     * 按指定要求查找指定字段。
+     *
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param type 字段类型, 可空
@@ -169,7 +173,8 @@ object KReflectUtils {
     }
 
     /**
-     * 按指定要求查找指定方法集合, 同名方法顺序排列
+     * 按指定要求查找指定方法集合, 同名方法顺序排列。
+     *
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
@@ -211,7 +216,11 @@ object KReflectUtils {
                     filteredMethods.add(method)
                 }
             } else if (returnType != null && paramTypes.isNotEmpty()) {
-                if (compareReturnType(method, returnType) && compareParamTypes(method, paramTypes)) {
+                if (compareReturnType(method, returnType) && compareParamTypes(
+                        method,
+                        paramTypes
+                    )
+                ) {
                     Log.d(TAG, "returnType: $returnType, paramTypes: $paramTypes")
                     filteredMethods.add(method)
                 }
@@ -238,7 +247,8 @@ object KReflectUtils {
     }
 
     /**
-     * 按指定要求查找指定方法
+     * 按指定要求查找指定方法。
+     *
      * @param obj 目标对象
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
@@ -259,7 +269,8 @@ object KReflectUtils {
             throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
         }
         val clazz = obj.javaClass
-        val key = "${clazz.name}#$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
+        val key =
+            "${clazz.name}#$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
         if (usingMethodsCache.containsKey(key)) {
             return usingMethodsCache[key]
         }
