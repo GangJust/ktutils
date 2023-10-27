@@ -27,7 +27,8 @@ object KDateUtils {
     const val PATTERN_MONTH = "yyyy-MM"
     const val PATTERN_YEAR = "yyyy"
 
-    private val calendar: Calendar = Calendar.getInstance()
+    private val calendar: Calendar
+        get() = Calendar.getInstance()
 
     /**
      * 获取当前日期
