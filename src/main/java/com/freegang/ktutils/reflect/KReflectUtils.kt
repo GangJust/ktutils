@@ -383,13 +383,6 @@ fun Any.fields(
     }
 }
 
-fun Any.fieldFirst(
-    name: String? = null,
-    type: Class<*>? = null,
-): Field? {
-    return KReflectUtils.findFieldFirst(this, name, type)
-}
-
 fun Any.fieldGets(
     name: String? = null,
     type: Class<*>? = null,
@@ -401,6 +394,13 @@ fun Any.fieldGets(
             null
         }
     }
+}
+
+fun Any.fieldFirst(
+    name: String? = null,
+    type: Class<*>? = null,
+): Field? {
+    return KReflectUtils.findFieldFirst(this, name, type)
 }
 
 @Throws(IllegalArgumentException::class, IllegalAccessException::class)
@@ -417,7 +417,7 @@ fun Any.fieldSetFirst(
     name: String,
     value: Any?,
 ) {
-    val field = fields(name, value?.javaClass).firstOrNull()
+    val field = fieldFirst(name = name, type = value?.javaClass)
     field?.set(this, value)
 }
 

@@ -946,8 +946,9 @@ object KViewUtils {
                 val (current, level) = stack.pop()
                 val currentTrunk = if (level == 0) trunk else trunk + indentTrunk.repeat(level)
                 block.invoke(currentTrunk, current)
-                for (childNode in current.children) {
-                    stack.push(Pair(childNode, level + 1))
+                val size = current.children.size
+                for (i in size - 1 downTo 0) {
+                    stack.push(Pair(current.children[i], level + 1))
                 }
             }
         }
