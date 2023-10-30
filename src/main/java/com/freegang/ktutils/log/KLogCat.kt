@@ -2,6 +2,8 @@ package com.freegang.ktutils.log
 
 import android.app.Application
 import android.util.Log
+import com.freegang.ktutils.io.child
+import com.freegang.ktutils.io.need
 import com.freegang.ktutils.other.forCalc
 import java.io.File
 import java.io.FileWriter
@@ -149,7 +151,7 @@ class KLogCat {
      * @return 本地日志文件夹
      */
     private fun getStorageFolder(): File? {
-        return localPath ?: application?.getExternalFilesDir("logs")
+        return localPath?.child("logs")?.need() ?: application?.getExternalFilesDir("logs")
     }
 
     /**
