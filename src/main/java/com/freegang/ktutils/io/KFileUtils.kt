@@ -157,6 +157,21 @@ object KFileUtils {
     fun appendBytes(file: File, array: ByteArray) {
         file.appendBytes(array)
     }
+
+    /**
+     * 获取某个文件的后缀名。
+     *
+     * @param file 被操作的文件
+     * @return 后缀名, 如果是文件夹则为null
+     */
+    @JvmStatic
+    fun getSuffix(file: File): String? {
+        return if (file.isDirectory) {
+            null
+        } else {
+            file.extension
+        }
+    }
 }
 
 ///
@@ -233,4 +248,10 @@ fun String.secureFilename(suffix: String = ""): String {
     return KFileUtils.secureFilename(this, suffix)
 }
 
-
+/**
+ * 获取字符串以以小数点结尾的后缀
+ *
+ * @return 后缀子串, 如果没有则返回空字符串
+ */
+val String.suffix: String
+    get() = this.substringAfterLast(".").ifEmpty { "" }

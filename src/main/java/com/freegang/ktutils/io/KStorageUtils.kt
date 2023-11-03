@@ -36,17 +36,21 @@ object KStorageUtils {
 
     /**
      * 检查外置存储器的读写权限。
-     * 在外置存储器的根路径下尝试创建和删除一个名为`.temp`的临时文件，
+     * 在外置存储器的指定目录下尝试创建和删除一个名为`.temp`的临时文件，
      * 根据创建和删除成功与否来判断外置存储器的读写权限是否可用。
      *
      * @param context 上下文
+     * @param directory 目录名, 如果null则在根目录创建
      * @return 外置存储器的读写权限是否可用
      */
     @JvmStatic
     @Synchronized
-    fun hasOperationStorage(context: Context): Boolean {
+    fun hasOperationStorage(
+        context: Context,
+        directory: File? = null,
+    ): Boolean {
         return try {
-            val test = getStorageFile(context).child(".temp")
+            val test = directory?.child(".temp") ?: getStorageFile(context).child(".temp")
             val created = test.createNewFile()
             if (created || test.exists()) test.delete()
             true
@@ -72,5 +76,6 @@ val Context.storageRootFile: File
 /**
  * 检查外置存储器的读写权限
  */
-val Context.hasOperationStorage: Boolean
-    get() = KStorageUtils.hasOperationStorage(this)
+fun Context.hasOperationStorage(directory: File? = null): Boolean {
+    return KStorageUtils.hasOperationStorage(this, directory)
+}

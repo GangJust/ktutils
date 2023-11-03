@@ -2,6 +2,7 @@ package com.freegang.ktutils.app
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.Application
 import android.app.PendingIntent
@@ -50,7 +51,8 @@ object KAppUtils {
             val activityThread = Class.forName("android.app.ActivityThread")
             val thread = activityThread.getMethod("currentActivityThread").invoke(null)
             val app =
-                activityThread.getMethod("getApplication").invoke(thread) ?: throw NullPointerException("u should init first")
+                activityThread.getMethod("getApplication").invoke(thread)
+                    ?: throw NullPointerException("u should init first")
             return app as Application
         } catch (e: NoSuchMethodException) {
             e.printStackTrace()
@@ -143,7 +145,10 @@ object KAppUtils {
     ): PackageInfo? {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(flags.toLong()))
+                context.packageManager.getPackageInfo(
+                    packageName,
+                    PackageInfoFlags.of(flags.toLong())
+                )
             } else {
                 context.packageManager.getPackageInfo(packageName, flags)
             }
@@ -204,7 +209,10 @@ object KAppUtils {
             val flags = PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
             context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, flags)
         } else {
-            context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_ACTIVITIES)
+            context.packageManager.getPackageArchiveInfo(
+                apkFile.absolutePath,
+                PackageManager.GET_ACTIVITIES
+            )
         }
     }
 
@@ -305,7 +313,10 @@ object KAppUtils {
     ): Boolean {
         return try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong()))
+                context.packageManager.getPackageInfo(
+                    packageName,
+                    PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
+                )
             } else {
                 context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
             }
@@ -330,7 +341,10 @@ object KAppUtils {
     ): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(packageName, PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong()))
+                context.packageManager.getPackageInfo(
+                    packageName,
+                    PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
+                )
             } else {
                 context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
             }
@@ -375,7 +389,10 @@ object KAppUtils {
             return true
         }
 
-        return PermissionChecker.checkSelfPermission(application, permission) == PermissionChecker.PERMISSION_GRANTED
+        return PermissionChecker.checkSelfPermission(
+            application,
+            permission
+        ) == PermissionChecker.PERMISSION_GRANTED
     }
 
     /**
@@ -383,7 +400,8 @@ object KAppUtils {
      * @param context 上下文对象
      */
     fun isDarkMode(context: Context): Boolean {
-        val currentNightMode: Int = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val currentNightMode: Int =
+            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
@@ -403,6 +421,31 @@ object KAppUtils {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager?
         alarmManager?.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pendingIntent)
         exitProcess(0)
+    }
+
+    /**
+     * 杀死指定包名的应用进程。
+     *
+     * @param context 上下文对象，通常是Activity或Application的实例。
+     * @param packageName 要杀死进程的应用的包名。
+     *
+     * 注意：
+     * 1. 这个方法需要 "android.permission.KILL_BACKGROUND_PROCESSES" 权限。
+     * 2. 只能杀死后台进程，如果应用正在前台运行，这个方法可能无效。
+     * 3. 即使杀死了应用的进程，如果系统需要，可能会自动重启应用的进程。
+     * 4. 从Android 9开始，获取其他应用进程信息的能力被限制，可能无法杀死其他应用的后台进程。
+     */
+    @JvmStatic
+    fun killAppProcess(context: Context, packageName: String) {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningAppProcesses = activityManager.runningAppProcesses ?: return
+
+        for (appProcess in runningAppProcesses) {
+            if (appProcess.processName == packageName) {
+                android.os.Process.killProcess(appProcess.pid)
+                return
+            }
+        }
     }
 
     ///
@@ -462,7 +505,8 @@ object KAppUtils {
      */
     @JvmStatic
     fun getSecurityPatchLevel(): String {
-        return Build.VERSION::class.java.fieldGetFirst(name = "SECURITY_PATCH")?.asOrNull<String>() ?: "unknown"
+        return Build.VERSION::class.java.fieldGetFirst(name = "SECURITY_PATCH")?.asOrNull<String>()
+            ?: "unknown"
     }
 
 
