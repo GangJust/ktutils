@@ -7,11 +7,13 @@ import android.app.AlarmManager
 import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PackageInfoFlags
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
@@ -353,6 +355,53 @@ object KAppUtils {
             e.printStackTrace()
             false
         }
+    }
+
+    /**
+     * 卸载指定包名的应用程序。
+     *
+     * @param context 上下文环境。通常是Activity或Application。
+     * @param packageName 需要卸载的应用程序的包名。
+     */
+    @JvmStatic
+    fun uninstallApp(context: Context, packageName: String) {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11及以上版本使用这个Intent
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+            }
+        } else {
+            // Android 10及以下版本使用这个Intent
+            Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:$packageName")
+            }
+        }
+        // 为Intent设置新任务标志
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // 启动这个Intent
+        context.startActivity(intent)
+    }
+
+
+    /**
+     * 安装指定Uri的APK文件。
+     * 获取本地Apk文件Uir: [KMediaUtils#getFileProviderUri]
+     *
+     * @param context 上下文环境。通常是Activity或Application。
+     * @param apkUri 需要安装的APK文件的Uri。
+     */
+    @JvmStatic
+    fun installApp(context: Context, apkUri: Uri) {
+        // 创建一个新的Intent，设置其动作为ACTION_VIEW
+        val intent = Intent(Intent.ACTION_VIEW)
+        // 设置Intent的数据和类型为指定的APK文件Uri和"application/vnd.android.package-archive"
+        intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
+        // 为Intent设置新任务标志
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // 添加读取Uri权限
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 不要忘记这一行
+        // 启动这个Intent
+        context.startActivity(intent)
     }
 
     /**
