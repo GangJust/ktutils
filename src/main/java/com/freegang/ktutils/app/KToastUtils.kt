@@ -87,16 +87,16 @@ object KToastUtils {
                 isClickable = false
                 isLongClickable = false
                 background.colorFilter = if (isDarkMode) {
-                    PorterDuffColorFilter(Color.parseColor("#FF2C2F39"), PorterDuff.Mode.SRC_IN)
+                    PorterDuffColorFilter(Color.parseColor("#FF3E4046"), PorterDuff.Mode.SRC_IN)
                 } else {
-                    PorterDuffColorFilter(Color.parseColor("#FFE8E8E8"), PorterDuff.Mode.SRC_IN)
+                    PorterDuffColorFilter(Color.parseColor("#FFD5D5D5"), PorterDuff.Mode.SRC_IN)
                 }
                 findViewById<TextView>(android.R.id.message).apply {
                     setTextColor(
                         if (isDarkMode) {
-                            Color.parseColor("#FFE8E8E8")
+                            Color.parseColor("#FFD5D5D5")
                         } else {
-                            Color.parseColor("#FF2C2F39")
+                            Color.parseColor("#FF3E4046")
                         }
                     )
                 }

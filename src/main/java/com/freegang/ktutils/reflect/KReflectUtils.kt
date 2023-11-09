@@ -1,6 +1,7 @@
 package com.freegang.ktutils.reflect
 
 import android.util.Log
+import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -9,6 +10,7 @@ object KReflectUtils {
 
     private val allFieldsCache = mutableMapOf<String, List<Field>>()
     private val allMethodsCache = mutableMapOf<String, List<Method>>()
+    private val allConstructorsCache = mutableMapOf<String, List<Constructor<*>>>()
 
     private val usingFieldsCache = mutableMapOf<String, Field>()
     private val usingMethodsCache = mutableMapOf<String, Method>()
@@ -74,6 +76,36 @@ object KReflectUtils {
     }
 
     /**
+     * 获取一个对象的所有构造器（包括父类）。
+     *
+     * @param obj 需要获取构造器的对象
+     * @return 对象的所有构造器列表
+     */
+    @JvmStatic
+    fun getAllConstructors(obj: Any): List<Constructor<*>> {
+        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+        val key = currentClass.name
+
+        // 读缓存
+        val methodList = allConstructorsCache[key] ?: emptyList()
+        if (methodList.isNotEmpty()) {
+            return methodList
+        }
+
+        // 没有缓存
+        val constructors = mutableListOf<Constructor<*>>()
+        while (currentClass != Any::class.java) {
+            currentClass.declaredConstructors.forEach {
+                it.isAccessible = true
+                constructors.add(it)
+            }
+            currentClass = currentClass.superclass
+        }
+        allConstructorsCache[key] = constructors
+        return constructors
+    }
+
+    /**
      * 按指定要求查找指定字段集合, 同名字段顺序排列。
      *
      * @param obj 目标对象
@@ -83,7 +115,6 @@ object KReflectUtils {
      * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
      */
     @JvmStatic
-    @JvmOverloads
     @Throws(IllegalArgumentException::class)
     fun findFields(
         obj: Any,
@@ -130,7 +161,6 @@ object KReflectUtils {
      * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
      */
     @JvmStatic
-    @JvmOverloads
     @Throws(IllegalArgumentException::class)
     fun findFieldFirst(
         obj: Any,
@@ -149,6 +179,82 @@ object KReflectUtils {
 
         val fields = findFields(obj, name, type)
         val field = fields.firstOrNull() ?: return null
+        usingFieldsCache[key] = field
+        return field
+    }
+
+    /**
+     * 按指定要求查找指定字段集合, 同名字段顺序排列。
+     *
+     * @param fields 目标字段列表
+     * @param name 字段名, 可空
+     * @param type 字段类型, 可空
+     * @return 满足指定要求的指定字段列表
+     * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
+     */
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun findFields(
+        fields: Collection<Field>,
+        name: String? = null,
+        type: Class<*>? = null,
+    ): List<Field> {
+        if (name == null && type == null) {
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+        }
+
+        val filteredFields = mutableListOf<Field>()
+
+        for (field in fields) {
+            if (name != null && type != null) {
+                if (field.name == name && compareType(field, type)) {
+                    Log.d(TAG, "name: $name, type: $type")
+                    filteredFields.add(field)
+                }
+            } else if (name != null) {
+                if (field.name == name) {
+                    Log.d(TAG, "name: $name")
+                    filteredFields.add(field)
+                }
+            } else if (type != null) {
+                if (compareType(field, type)) {
+                    Log.d(TAG, "type: $type")
+                    filteredFields.add(field)
+                }
+            } else {
+                return emptyList()
+            }
+        }
+        return filteredFields
+    }
+
+    /**
+     * 按指定要求查找指定字段。
+     *
+     * @param fields 目标字段列表
+     * @param name 字段名, 可空
+     * @param type 字段类型, 可空
+     * @return 满足指定要求的指定字段
+     * @throws IllegalArgumentException 不允许 [name]、[type] 同时为空
+     */
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun findFieldFirst(
+        fields: Collection<Field>,
+        name: String? = null,
+        type: Class<*>? = null,
+    ): Field? {
+        if (name == null && type == null) {
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+        }
+
+        val key = "$fields$name@${type?.name}"
+        if (usingFieldsCache.containsKey(key)) {
+            return usingFieldsCache[key]
+        }
+
+        val finds = findFields(fields, name, type)
+        val field = finds.firstOrNull() ?: return null
         usingFieldsCache[key] = field
         return field
     }
@@ -179,11 +285,10 @@ object KReflectUtils {
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
      * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
-     * @return 满足指定要求的指定字段列表
+     * @return 满足指定要求的指定字段方法
      * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
      */
     @JvmStatic
-    @JvmOverloads
     @Throws(IllegalArgumentException::class)
     fun findMethods(
         obj: Any,
@@ -253,11 +358,10 @@ object KReflectUtils {
      * @param name 字段名, 可空
      * @param returnType 返回类型, 可空
      * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
-     * @return 满足指定要求的指定字段列表
+     * @return 满足指定要求的指定方法
      * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
      */
     @JvmStatic
-    @JvmOverloads
     @Throws(IllegalArgumentException::class)
     fun findMethodFirst(
         obj: Any,
@@ -277,6 +381,110 @@ object KReflectUtils {
 
         val methods = findMethods(obj, name, returnType, *paramTypes)
         val method = methods.firstOrNull() ?: return null
+        usingMethodsCache[key] = method
+        return method
+    }
+
+    /**
+     * 从方法列表中查找指定方法
+     * @param methods 目标方法列表
+     * @param name 字段名, 可空
+     * @param returnType 返回类型, 可空
+     * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
+     * @return 满足指定要求的指定方法列表
+     * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
+     */
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun findMethods(
+        methods: Collection<Method>,
+        name: String? = null,
+        returnType: Class<*>? = null,
+        vararg paramTypes: Class<*>?,
+    ): List<Method> {
+        if (name == null && returnType == null && paramTypes.isEmpty()) {
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+        }
+        val filteredMethods = mutableListOf<Method>()
+        for (method in methods) {
+            if (name != null && returnType != null && paramTypes.isNotEmpty()) {
+                if (method.name == name
+                    && compareReturnType(method, returnType)
+                    && compareParamTypes(method, paramTypes)
+                ) {
+                    Log.d(TAG, "name: $name, returnType: $returnType, paramTypes: $paramTypes")
+                    filteredMethods.add(method)
+                }
+            } else if (name != null && returnType != null) {
+                if (method.name == name && compareReturnType(method, returnType)) {
+                    Log.d(TAG, "name: $name, returnType: $returnType")
+                    filteredMethods.add(method)
+                }
+            } else if (name != null && paramTypes.isNotEmpty()) {
+                if (method.name == name && compareParamTypes(method, paramTypes)) {
+                    Log.d(TAG, "name: $name, paramTypes: $paramTypes")
+                    filteredMethods.add(method)
+                }
+            } else if (returnType != null && paramTypes.isNotEmpty()) {
+                if (compareReturnType(method, returnType) && compareParamTypes(
+                        method,
+                        paramTypes
+                    )
+                ) {
+                    Log.d(TAG, "returnType: $returnType, paramTypes: $paramTypes")
+                    filteredMethods.add(method)
+                }
+            } else if (name != null) {
+                if (method.name == name) {
+                    Log.d(TAG, "name: $name")
+                    filteredMethods.add(method)
+                }
+            } else if (returnType != null) {
+                if (compareReturnType(method, returnType)) {
+                    Log.d(TAG, "returnType: $returnType")
+                    filteredMethods.add(method)
+                }
+            } else if (paramTypes.isNotEmpty()) {
+                if (compareParamTypes(method, paramTypes)) {
+                    Log.d(TAG, "paramTypes: $paramTypes")
+                    filteredMethods.add(method)
+                }
+            } else {
+                return emptyList()
+            }
+        }
+        return filteredMethods
+    }
+
+    /**
+     * 按指定要求查找指定方法。
+     *
+     * @param methods 目标方法列表
+     * @param name 字段名, 可空
+     * @param returnType 返回类型, 可空
+     * @param paramTypes 参数列表类型, 可选; 当某个参数为null时可模糊匹配如: arrayOf(Int::class.java, null, Char::class.java)
+     * @return 满足指定要求的指定方法
+     * @throws IllegalArgumentException 不允许 [name]、[returnType]、[paramTypes] 同时为空
+     */
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun findMethodFirst(
+        methods: Collection<Method>,
+        name: String? = null,
+        returnType: Class<*>? = null,
+        vararg paramTypes: Class<*>?,
+    ): Method? {
+        if (name == null && returnType == null && paramTypes.isEmpty()) {
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+        }
+        val key =
+            "$methods$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
+        if (usingMethodsCache.containsKey(key)) {
+            return usingMethodsCache[key]
+        }
+
+        val finds = findMethods(methods, name, returnType, *paramTypes)
+        val method = finds.firstOrNull() ?: return null
         usingMethodsCache[key] = method
         return method
     }
