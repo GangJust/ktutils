@@ -1,6 +1,5 @@
 package com.freegang.ktutils.app
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.AlarmManager
@@ -15,8 +14,8 @@ import android.content.pm.PackageManager.PackageInfoFlags
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
+import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.freegang.ktutils.extension.asOrNull
 import com.freegang.ktutils.reflect.fieldGetFirst
@@ -331,7 +330,8 @@ object KAppUtils {
     }
 
     /**
-     * 判断某个App是否安装
+     * 判断某个App是否安装。
+     *
      * @param context 上下文对象，用于获取资源和包信息。
      * @param packageName 目标包名
      */
@@ -405,43 +405,38 @@ object KAppUtils {
     }
 
     /**
-     * 判断是否具有某个权限
-     * @param application Application
-     * @param permission 权限名
+     * 判断 AndroidManifest.xml 清单中是否声明了该权限。
+     *
+     * @param context Context
+     * @param permission 指定权限
+     * @param also 当具有该权限时才回调
      */
     @JvmStatic
-    fun checkPermission(
-        application: Application,
+    @JvmOverloads
+    fun userPermission(
+        context: Context,
+        permission: String,
+        also: ((permission: String) -> Unit)? = null,
+    ): Boolean {
+        val packageInfo = getPackageInfo(context, context.packageName, PackageManager.GET_PERMISSIONS)
+            ?: throw NullPointerException("Unable to obtain packageInfo!")
+        val permissions = packageInfo.requestedPermissions
+        return permissions.contains(permission)
+            .also { if (it) also?.invoke(permission) }
+    }
+
+    /**
+     * 判断是否具有某个权限。
+     *
+     * @param context Context
+     * @param permission 指定权限
+     */
+    @JvmStatic
+    fun checkSelfPermission(
+        context: Context,
         permission: String,
     ): Boolean {
-        // 管理外部存储
-        if (permission == Manifest.permission.MANAGE_EXTERNAL_STORAGE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                return Environment.isExternalStorageManager()
-            }
-            return true
-        }
-
-        // 悬浮窗
-        if (permission == Manifest.permission.SYSTEM_ALERT_WINDOW) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return Settings.canDrawOverlays(application)
-            }
-            return true
-        }
-
-        // 修改系统设置
-        if (permission == Manifest.permission.WRITE_SETTINGS) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return Settings.System.canWrite(application)
-            }
-            return true
-        }
-
-        return PermissionChecker.checkSelfPermission(
-            application,
-            permission
-        ) == PermissionChecker.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(context, permission) == PermissionChecker.PERMISSION_GRANTED
     }
 
     /**

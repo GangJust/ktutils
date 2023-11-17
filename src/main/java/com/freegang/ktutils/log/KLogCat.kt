@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import com.freegang.ktutils.io.child
 import com.freegang.ktutils.io.need
-import com.freegang.ktutils.other.forCalc
+import com.freegang.ktutils.other.iterateAndTransform
 import java.io.File
 import java.io.FileWriter
 import java.text.SimpleDateFormat
@@ -59,12 +59,12 @@ class KLogCat {
 
         // 边框构建器
         val border = if (maxReduce.length >= maxBorderSize) {
-            maxBorderSize.forCalc(0, "") { "$it$borderDotted" }
+            maxBorderSize.iterateAndTransform(0, "") { "$it$borderDotted" }
         } else {
             maxReduce.map { borderSolid }.joinToString("")
         }
         val divider = if (maxReduce.length >= 64) {
-            maxBorderSize.forCalc(0, "") { "$it$borderDotted" }
+            maxBorderSize.iterateAndTransform(0, "") { "$it$borderDotted" }
         } else {
             maxReduce.map { borderDotted }.joinToString("")
         }

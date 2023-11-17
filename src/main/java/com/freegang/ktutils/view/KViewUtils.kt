@@ -1142,9 +1142,10 @@ fun View.toViewTreeString(
     indent: Int = 4,
     format: (KViewUtils.ViewNode) -> String = { it.toString() },
 ): String {
-    return KViewUtils
-        .buildViewTree(this)
-        .deepToString(indent, format)
+    val viewTree = KViewUtils.buildViewTree(this)
+    val deepToString = viewTree.deepToString(indent, format)
+    viewTree.destroy()
+    return deepToString
 }
 
 fun <V : View> V.postRunning(block: V.() -> Unit) {

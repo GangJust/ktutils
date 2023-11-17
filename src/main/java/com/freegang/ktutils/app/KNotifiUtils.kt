@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 
 interface IProgressNotification {
@@ -30,6 +31,8 @@ object KNotifiUtils {
         title: String,
         text: String,
         intent: PendingIntent? = null,
+        ongoing: Boolean = false,
+        actions: Array<NotificationCompat.Action> = emptyArray()
     ) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -37,22 +40,89 @@ object KNotifiUtils {
             val notificationChannel = NotificationChannel(
                 channelId,
                 channelName,
-                NotificationManager.IMPORTANCE_DEFAULT, //默认, 酌情修改
+                NotificationManager.IMPORTANCE_DEFAULT, // 默认, 酌情修改
             )
             manager.createNotificationChannel(notificationChannel)
         }
 
         val notify = NotificationCompat.Builder(context, channelId).apply {
-            setAutoCancel(true) //自动取消
+            setOngoing(ongoing)
+            setAutoCancel(!ongoing) // 自动取消
             setSmallIcon(context.applicationInfo.icon)
             setContentTitle(title)
             setContentText(text)
+            setStyle(NotificationCompat.BigTextStyle().bigText("aavavavavav"))
             if (intent != null) {
                 setContentIntent(intent)
+            }
+            for (action in actions) {
+                addAction(action)
             }
         }
 
         manager.notify(notifyId, notify.build())
+    }
+
+    /**
+     * 显示自定义布局通知
+     */
+    fun showNotification(
+        context: Context,
+        notifyId: Int,
+        channelId: String = "渠道ID",
+        channelName: String = "渠道名",
+        intent: PendingIntent? = null,
+        ongoing: Boolean = false,
+        contentView: RemoteViews? = null,
+        bigContentView: RemoteViews? = null,
+        headsUpContentView: RemoteViews? = null,
+    ) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_DEFAULT, // 默认, 酌情修改
+            )
+            manager.createNotificationChannel(notificationChannel)
+        }
+
+        val notify = NotificationCompat.Builder(context, channelId).apply {
+            setOngoing(ongoing)
+            setAutoCancel(!ongoing) // 自动取消
+            setSmallIcon(context.applicationInfo.icon)
+            if (intent != null) {
+                setContentIntent(intent)
+            }
+            setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            contentView?.let { setCustomContentView(it) }
+            bigContentView?.let { setCustomBigContentView(it) }
+            headsUpContentView?.let { setCustomHeadsUpContentView(it) }
+        }
+
+        manager.notify(notifyId, notify.build())
+    }
+
+    /**
+     * 取消某个通知
+     */
+    fun cancelNotification(
+        context: Context,
+        notifyId: Int,
+    ) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(notifyId)
+    }
+
+    /**
+     * 取消所有通知
+     */
+    fun cancelAllNotification(
+        context: Context,
+    ) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancelAll()
     }
 
     /**
@@ -77,30 +147,30 @@ object KNotifiUtils {
             val notificationChannel = NotificationChannel(
                 channelId,
                 channelName,
-                NotificationManager.IMPORTANCE_DEFAULT //默认, 酌情修改
+                NotificationManager.IMPORTANCE_DEFAULT // 默认, 酌情修改
             )
             manager.createNotificationChannel(notificationChannel)
         }
 
-        //构建通知
+        // 构建通知
         val notify = NotificationCompat.Builder(context, channelId).apply {
-            setAutoCancel(true) //自动取消
+            setAutoCancel(true) // 自动取消
             setSmallIcon(context.applicationInfo.icon)
             setContentTitle(title)
             setContentText(inProgressText.format(0))
             setProgress(100, 0, false)
-            //notify.setProgress(0, 0, true) //不确定状态
+            // notify.setProgress(0, 0, true) //不确定状态
             if (intent != null) {
                 setContentIntent(intent)
             }
         }
 
-        //回调,由调用者设置进度
+        // 回调,由调用者设置进度
         listener.on(ProgressNotification(notifyId, inProgressText, finishedText, manager, notify))
     }
 
 
-    //kotlin
+    // kotlin
     fun showProgressNotification(
         context: Context,
         notifyId: Int,
@@ -130,7 +200,7 @@ object KNotifiUtils {
     }
 
 
-    //控制类
+    // 控制类
     class ProgressNotification(
         private val notifyId: Int = 1,
         private var inProgressText: String,

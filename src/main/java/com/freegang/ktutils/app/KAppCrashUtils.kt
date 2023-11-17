@@ -70,7 +70,7 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
     /// 结束应用
     private fun exitAppOrStartErrActivity(e: Throwable) {
         // 构建错误信息
-        val errMessage = "发生错误: ${e.message}\n" +
+        val errMessage = "错误信息: ${e.message}\n" +
                 "出现时间: ${KLogCat.dateTimeFormat.format(System.currentTimeMillis())}\n" +
                 "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
                 "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
