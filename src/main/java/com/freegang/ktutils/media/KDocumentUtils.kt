@@ -153,6 +153,19 @@ object KDocumentUtils {
     }
 
     /**
+     * 通过指定文件打开一个输入流。
+     *
+     * @param documentFile 指定文件
+     */
+    @JvmStatic
+    fun openInputStream(
+        context: Context,
+        documentFile: DocumentFile,
+    ): InputStream? {
+        return context.contentResolver.openInputStream(documentFile.uri)
+    }
+
+    /**
      * 通过指定文件的Uri打开一个输入流。
      *
      * @param context 应用程序上下文。用于获取 ContentResolver 和 DocumentFile 实例。
@@ -198,6 +211,20 @@ object KDocumentUtils {
     }
 
     /**
+     * 通过指定文件打开一个输出流。
+     *
+     * @param documentFile 指定文件
+     */
+    @JvmStatic
+    fun openOutputStream(
+        context: Context,
+        documentFile: DocumentFile,
+        mode: String = "w",
+    ): OutputStream? {
+        return context.contentResolver.openOutputStream(documentFile.uri, mode)
+    }
+
+    /**
      * 通过指定文件的Uri打开一个输出流。
      *
      * @param context 应用程序上下文。用于获取 ContentResolver 实例。
@@ -208,7 +235,8 @@ object KDocumentUtils {
     @JvmStatic
     fun openOutputStream(
         context: Context,
-        fileUri: Uri
+        fileUri: Uri,
+        mode: String = "w",
     ): OutputStream? {
         // 使用 SAF 的 DocumentFile.fromSingleUri 方法获取表示文件的 DocumentFile 实例
         val file = DocumentFile.fromSingleUri(context, fileUri)
@@ -217,7 +245,7 @@ object KDocumentUtils {
         return if (file != null && file.exists() && file.canWrite()) {
             // 使用 ContentResolver 的 openOutputStream 方法打开文件并返回一个 OutputStream 实例
             // 如果文件不存在或无法打开，openOutputStream 方法将返回 null
-            context.contentResolver.openOutputStream(file.uri)
+            context.contentResolver.openOutputStream(file.uri, mode)
         } else {
             null
         }
@@ -233,18 +261,18 @@ object KDocumentUtils {
      * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
      */
     @JvmStatic
-    @JvmOverloads
     fun openOutputStream(
         context: Context,
         parentTreeUri: Uri,
         filename: String,
+        mode: String = "w",
         mimeType: String? = "application/octet-stream"
     ): OutputStream? {
         getFileUri(context, parentTreeUri, filename)?.let {
-            return openOutputStream(context, it)
+            return openOutputStream(context, it, mode)
         }
         createFile(context, parentTreeUri, filename, mimeType)?.let {
-            return openOutputStream(context, it.uri)
+            return openOutputStream(context, it.uri, mode)
         }
         return null
     }

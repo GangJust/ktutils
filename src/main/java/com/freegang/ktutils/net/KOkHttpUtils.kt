@@ -288,13 +288,18 @@ object KOkHttpUtils {
                     var bytesRead: Long = 0
 
                     while (true) {
-                        val readCount = source.read(bufferedSink.buffer, DEFAULT_BUFFER_SIZE.toLong())
+                        val readCount =
+                            source.read(bufferedSink.buffer, DEFAULT_BUFFER_SIZE.toLong())
                         if (readCount == -1L) break
 
                         bytesRead += readCount
                         bufferedSink.emitCompleteSegments()
 
-                        progressListener?.onProgress(bytesRead, contentLength, bytesRead == contentLength)
+                        progressListener?.onProgress(
+                            bytesRead,
+                            contentLength,
+                            bytesRead == contentLength
+                        )
                     }
 
                     bufferedSink.flush()
@@ -341,7 +346,12 @@ object KOkHttpUtils {
             override fun write(source: Buffer, byteCount: Long) {
                 super.write(source, byteCount)
                 bytesWritten += byteCount
-                progressListener?.onProgress(filename, bytesWritten, contentLength(), bytesWritten == contentLength())
+                progressListener?.onProgress(
+                    filename,
+                    bytesWritten,
+                    contentLength(),
+                    bytesWritten == contentLength()
+                )
             }
         }
     }

@@ -242,15 +242,17 @@ object KUrlUtils {
     @JvmStatic
     @JvmOverloads
     fun parseQuery(query: String, encoding: String? = null): Map<String, String> {
-        return query.split("&").associate {
-            val parts = it.split("=")
-            val key = parts[0]
-            val value = parts[1]
-            if (encoding != null) {
-                URLDecoder.decode(key, encoding) to URLDecoder.decode(value, encoding)
-            } else {
-                key to value
+        return query.split("&")
+            .filter { it.contains("=") }
+            .associate {
+                val parts = it.split("=")
+                val key = parts[0]
+                val value = parts[1]
+                if (encoding != null) {
+                    URLDecoder.decode(key, encoding) to URLDecoder.decode(value, encoding)
+                } else {
+                    key to value
+                }
             }
-        }
     }
 }

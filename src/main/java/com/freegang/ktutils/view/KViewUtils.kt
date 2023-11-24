@@ -36,7 +36,7 @@ object KViewUtils {
     /**
      * 设置 ViewGroup 及其所有子视图的可见性为 [View.VISIBLE]，即全部显示。
      *
-     * @param viewGroup 要设置可见性的 ViewGroup。
+     * @param view 要设置可见性的 ViewGroup。
      */
     @JvmStatic
     fun showAll(view: View) {
@@ -46,7 +46,7 @@ object KViewUtils {
     /**
      * 设置 ViewGroup 及其所有子视图的可见性为 [View.GONE]，即全部隐藏。
      *
-     * @param viewGroup 要设置可见性的 ViewGroup。
+     * @param view 要设置可见性的 ViewGroup。
      */
     @JvmStatic
     fun hideAll(view: View) {
@@ -56,7 +56,7 @@ object KViewUtils {
     /**
      * 设置 ViewGroup 及其所有子视图的可见性为 [View.INVISIBLE]，即全部不可见。
      *
-     * @param viewGroup 要设置可见性的 ViewGroup。
+     * @param view 要设置可见性的 ViewGroup。
      */
     @JvmStatic
     fun invisibleAll(view: View) {
@@ -130,7 +130,7 @@ object KViewUtils {
     /**
      * 判断 ViewGroup 及其所有子视图是否全部可见。
      *
-     * @param viewGroup 要判断可见性的 ViewGroup。
+     * @param view 要判断可见性的 ViewGroup。
      * @return 如果 ViewGroup 及其所有子视图全部可见，则返回 `true`；否则返回 `false`。
      */
     @JvmStatic
@@ -142,7 +142,7 @@ object KViewUtils {
     /**
      * 判断 ViewGroup 及其所有子视图是否全部隐藏。
      *
-     * @param viewGroup 要判断可见性的 ViewGroup。
+     * @param view 要判断可见性的 ViewGroup。
      * @return 如果 ViewGroup 及其所有子视图全部隐藏，则返回 `true`；否则返回 `false`。
      */
     @JvmStatic

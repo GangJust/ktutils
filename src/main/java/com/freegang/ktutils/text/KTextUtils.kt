@@ -209,6 +209,21 @@ object KTextUtils {
     }
 
     /**
+     * 根据指定长度随机生成一个数字字符串
+     *
+     * @param length 字符串的长度
+     * @return 生成的随机数字字符串
+     */
+    @JvmStatic
+    fun randomNum(length: Int): String {
+        val numbers = CharArray(length)
+        for (i in 0 until length) {
+            numbers[i] = (Random.nextInt(0, 10) + 48).toChar()
+        }
+        return String(numbers)
+    }
+
+    /**
      * 该方法用于确保在给定的字符串中每个字符只出现一次，如果提供了目标字符串，则确保目标字符串只出现一次。
      *
      * @param text 输入的字符串，如果为空则返回空字符串

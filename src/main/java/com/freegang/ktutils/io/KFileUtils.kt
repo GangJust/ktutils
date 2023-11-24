@@ -172,6 +172,17 @@ object KFileUtils {
             file.extension
         }
     }
+
+    /**
+     * 获取某个文件名的后缀名。
+     *
+     * @param filename 被操作的文件
+     * @return 后缀名, 如果没有则返回空字符串
+     */
+    @JvmStatic
+    fun getSuffix(filename: String): String {
+        return filename.substringAfterLast(".", "")
+    }
 }
 
 ///
@@ -254,4 +265,4 @@ fun String.secureFilename(suffix: String = ""): String {
  * @return 后缀子串, 如果没有则返回空字符串
  */
 val String.suffix: String
-    get() = this.substringAfterLast(".").ifEmpty { "" }
+    get() = KFileUtils.getSuffix(this)

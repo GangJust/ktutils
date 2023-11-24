@@ -125,6 +125,13 @@ object KJSONUtils {
     }
 
     @JvmStatic
+    fun mapToJson(map: Map<String, Any?>): JSONObject {
+        val json = JSONObject()
+        map.forEach { (t, u) -> json.put(t, u) }
+        return json
+    }
+
+    @JvmStatic
     fun forEach(json: JSONObject, block: JSONObjectForeachFunction) {
         val iterator = json.keys().iterator()
         while (iterator.hasNext()) {

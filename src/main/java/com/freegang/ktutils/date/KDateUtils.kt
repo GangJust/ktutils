@@ -27,7 +27,12 @@ object KDateUtils {
     const val PATTERN_MONTH = "yyyy-MM"
     const val PATTERN_YEAR = "yyyy"
 
-    private val calendar: Calendar
+    /**
+     * 获取日历实例
+     * @return Calendar
+     */
+    @JvmStatic
+    val calendar: Calendar
         get() = Calendar.getInstance()
 
     /**
@@ -82,6 +87,17 @@ object KDateUtils {
     fun formatDateToString(date: Date = current, pattern: String = PATTERN_FULL): String {
         val format = SimpleDateFormat(pattern, Locale.CHINA)
         return format.format(date)
+    }
+
+    /**
+     * 格式化当前日期为字符串
+     *
+     * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"
+     * @return 格式化后的日期字符串
+     */
+    @JvmStatic
+    fun formatDateToString(pattern: String = PATTERN_FULL): String {
+        return formatDateToString(current, pattern)
     }
 
     /**
@@ -164,6 +180,7 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addYears(date: Date = current, years: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.YEAR, years)
         return calendar.time
@@ -179,8 +196,9 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addMonths(date: Date = current, months: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
-        calendar.add(Calendar.MONTH, month)
+        calendar.add(Calendar.MONTH, months)
         return calendar.time
     }
 
@@ -194,6 +212,7 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addDays(date: Date = current, days: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.DAY_OF_YEAR, days)
         return calendar.time
@@ -209,6 +228,7 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addHours(date: Date = current, hours: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.HOUR_OF_DAY, hours)
         return calendar.time
@@ -224,6 +244,7 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addMinutes(date: Date = current, minutes: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.MINUTE, minutes)
         return calendar.time
@@ -239,6 +260,7 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addSeconds(date: Date = current, seconds: Int): Date {
+        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.SECOND, seconds)
         return calendar.time
@@ -347,7 +369,8 @@ object KDateUtils {
             return date
         }
 
-        fun buildFormat(pattern: String): String {
+        @JvmOverloads
+        fun buildFormat(pattern: String = KDateUtils.PATTERN_FULL): String {
             return formatDateToString(date, pattern)
         }
     }
