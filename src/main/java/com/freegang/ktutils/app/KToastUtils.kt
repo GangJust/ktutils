@@ -2,17 +2,31 @@ package com.freegang.ktutils.app
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RoundRectShape
 import android.os.CountDownTimer
+import android.util.TypedValue
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
+import com.freegang.ktutils.display.dip2px
 
 object KToastUtils {
     private var mToast: Toast? = null
     private var countDownTimer: CountDownTimer? = null
+
+    @JvmStatic
+    @JvmOverloads
+    fun showOriginal(
+        context: Context,
+        message: String,
+        duration: Int = Toast.LENGTH_SHORT,
+    ) {
+        Toast.makeText(context, message, duration).show()
+    }
 
     @JvmStatic
     @JvmOverloads
@@ -24,7 +38,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(message)
-        setToastTheme(context, mToast)
+        setToastTheme(context, mToast, message)
         showToastWithDuration(mToast, duration)
     }
 
@@ -38,7 +52,7 @@ object KToastUtils {
         hide()
         mToast = Toast.makeText(context.applicationContext, null, Toast.LENGTH_SHORT)
         mToast?.setText(rsId)
-        setToastTheme(context, mToast)
+        setToastTheme(context, mToast, context.getString(rsId))
         showToastWithDuration(mToast, duration)
     }
 
@@ -80,31 +94,66 @@ object KToastUtils {
         }
     }
 
-    private fun setToastTheme(context: Context, toast: Toast?) {
+    private fun setToastTheme(context: Context, toast: Toast?, message: String) {
         runCatching {
             val isDarkMode = context.isDarkMode
-            toast?.view?.apply {
-                isClickable = false
-                isLongClickable = false
-                background.colorFilter = if (isDarkMode) {
-                    PorterDuffColorFilter(Color.parseColor("#FF3E4046"), PorterDuff.Mode.SRC_IN)
-                } else {
-                    PorterDuffColorFilter(Color.parseColor("#FFD5D5D5"), PorterDuff.Mode.SRC_IN)
+
+            val backgroundColor = if (isDarkMode) "#FF333333" else "#FFD3D3D3"
+            val textColor = if (isDarkMode) "#FFD3D3D3" else "#FF333333"
+            val paddingHorizontal = context.dip2px(16f)
+            val paddingVertical = context.dip2px(12f)
+            val cornerRadius = 24f
+            val shadowColor = "#22666666" // semi-transparent black for shadow
+            val shadowRadius = context.dip2px(0.5f)
+
+            // Create a new LinearLayout to be used as the Toast's view
+            val linearLayout = LinearLayout(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                )
+
+                // Create a new ShapeDrawable with rounded corners for shadow
+                val shadowRadii = FloatArray(8) { cornerRadius + shadowRadius }
+                val shadowShape = RoundRectShape(shadowRadii, null, null)
+                val shadowDrawable = ShapeDrawable(shadowShape).apply {
+                    paint.color = Color.parseColor(shadowColor)
                 }
-                findViewById<TextView>(android.R.id.message).apply {
-                    setTextColor(
-                        if (isDarkMode) {
-                            Color.parseColor("#FFD5D5D5")
-                        } else {
-                            Color.parseColor("#FF3E4046")
-                        }
-                    )
+
+                // Create a new ShapeDrawable with rounded corners for background
+                val backgroundRadii = FloatArray(8) { cornerRadius }
+                val backgroundShape = RoundRectShape(backgroundRadii, null, null)
+                val backgroundDrawable = ShapeDrawable(backgroundShape).apply {
+                    paint.color = Color.parseColor(backgroundColor)
+                    setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
                 }
+
+                // Create a LayerDrawable with the shadow as the bottom layer and the background as the top layer
+                background = LayerDrawable(arrayOf(shadowDrawable, backgroundDrawable)).apply {
+                    // Offset the top layer to create the shadow effect
+                    setLayerInset(1, shadowRadius, shadowRadius, shadowRadius, shadowRadius)
+                }
+
+                // Create a new TextView to be used as the Toast's text
+                val textView = TextView(context).apply {
+                    id = android.R.id.message
+                    text = message
+                    setTextColor(Color.parseColor(textColor))
+                    // Set the text size and style to match the default Toast style
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                }
+
+                // Add the TextView to the LinearLayout
+                addView(textView)
             }
+
+            // Use the LinearLayout as the Toast's view
+            toast?.view = linearLayout
         }.onFailure {
             it.printStackTrace()
         }
     }
+
 
     @JvmStatic
     fun hide() {

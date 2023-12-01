@@ -15,6 +15,7 @@ import android.view.ViewParent
 import android.widget.ListView
 import android.widget.TextView
 import androidx.annotation.IdRes
+import androidx.core.view.get
 import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
@@ -484,6 +485,33 @@ object KViewUtils {
     }
 
     /**
+     * 条件遍历 View 及其子 View
+     *
+     * @param view 需要遍历的 View
+     * @param block 遍历回调函数，接收一个 View 参数，返回一个 Boolean 如果为 `true` 则直接从树遍历中结束
+     */
+    fun traverseWhere(view: View, block: (View) -> Boolean) {
+        if (view !is ViewGroup) {
+            block.invoke(view)
+            return
+        }
+
+        val stack = Stack<View>()
+        stack.push(view)
+        while (!stack.isEmpty()) {
+            val current = stack.pop()
+            if (block.invoke(current)) {
+                return
+            }
+            if (current is ViewGroup) {
+                for (i in current.childCount - 1 downTo 0) {
+                    stack.push(current.getChildAt(i))
+                }
+            }
+        }
+    }
+
+    /**
      * 深度遍历 View，获取所有的 View（包括 View 本身和其所有子 View）
      *
      * @param view 需要遍历的 View
@@ -603,6 +631,7 @@ object KViewUtils {
             }
             return emptyList()
         }
+
         val views = mutableListOf<T>()
         val stack = Stack<View>()
         stack.push(view)
@@ -1164,6 +1193,10 @@ fun View.traverse(block: View.() -> Unit) {
     KViewUtils.traverse(this, block)
 }
 
+fun View.traverseWhere(block: View.() -> Boolean) {
+    KViewUtils.traverseWhere(this, block)
+}
+
 fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
     layoutParams = layoutParams?.apply {
         width = needWidth
@@ -1235,26 +1268,60 @@ fun View.removeInParentIndex(): Int {
     return indexOfChild
 }
 
-fun View.replaceCurrentView(view: View): Boolean {
-    val parentView = this.parent.asOrNull<ViewGroup>() ?: return false
+/**
+ * 用指定的视图替换当前视图。
+ *
+ * @param view 用于替换当前视图的新视图。
+ * @return 如果替换成功，返回true；如果当前视图没有父视图或者在父视图中找不到当前视图，返回false。
+ *
+ * 注意：这个函数只会复制当前视图的ID和布局参数到新视图，如果当前视图有其他状态需要保留，需要手动进行复制。
+ */
+fun View.replaceWith(view: View): Boolean {
+    val parentView = this.parent as? ViewGroup ?: return false
     val indexOfChild = parentView.indexOfChild(this)
-    if (indexOfChild != -1) {
+    return if (indexOfChild != -1) {
         parentView.removeViewAt(indexOfChild)
+        view.apply {
+            id = this@replaceWith.id
+            layoutParams = this@replaceWith.layoutParams
+        }
         parentView.addView(view, indexOfChild)
-        return true
+        true
+    } else {
+        false
     }
-    return false
+}
+
+
+val View.parentView
+    get() = this.parent?.asOrNull<ViewGroup>()
+
+/**
+ * 获取相对于当前View的某个位置的兄弟View。
+ *
+ * @param relativeIndex 相对于当前View的位置索引。正数表示当前View后面的兄弟View，负数表示当前View前面的兄弟View。
+ * @return 如果存在位于relativeIndex位置的兄弟View，则返回该View，否则返回null。
+ */
+fun View.getSiblingViewAt(relativeIndex: Int): View? {
+    val parent = this.parent?.asOrNull<ViewGroup>() ?: return null
+    val indexOfChild = parent.indexOfChild(this)
+    val targetIndex = indexOfChild + relativeIndex
+    return if (targetIndex in 0 until parent.childCount) {
+        parent[targetIndex]
+    } else {
+        null
+    }
 }
 
 fun View.setEnabledAll(enabled: Boolean) {
     KViewUtils.setEnabledAll(this, enabled)
 }
 
-val View.idName get() = KViewUtils.getIdName(this)
+val View.idName
+    get() = KViewUtils.getIdName(this)
 
-val View.idHex get() = KViewUtils.getIdHex(this)
-
-val View.parentView get() = this.parent?.asOrNull<ViewGroup>()
+val View.idHex
+    get() = KViewUtils.getIdHex(this)
 
 val View.isDisplay: Boolean
     get() {
@@ -1266,4 +1333,5 @@ val View.isDisplay: Boolean
         return getLocalVisibleRect(rect)
     }
 
-val View.toBitmap get() = KViewUtils.viewToBitmap(this)
+val View.toBitmap
+    get() = KViewUtils.viewToBitmap(this)

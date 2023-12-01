@@ -1,15 +1,18 @@
 package com.freegang.ktutils.net
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 
 
 /**
@@ -21,6 +24,21 @@ import androidx.annotation.RequiresApi
  * 注意：在Android Q及以上版本，你可能需要额外的权限来访问Wi-Fi的RSSI值。在这种情况下，你可能需要添加ACCESS_FINE_LOCATION或ACCESS_COARSE_LOCATION权限，并在运行时请求这些权限。
  */
 object KWifiUtils {
+
+    /**
+     * 检查应用是否具有Wifi操作权限的方法。
+     *
+     * @param context 上下文对象，通常是Activity或Application的实例。
+     * @return 如果应用具有Wifi操作权限则返回true，否则返回false。
+     */
+    fun hasWifiPermission(context: Context): Boolean {
+        return listOf(
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE
+        ).all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 
     /**
      * 跳转到系统Wifi设置页

@@ -44,6 +44,14 @@ object KDateUtils {
         get() = calendar.time
 
     /**
+     * 获取当前日期时间戳
+     * @return 当前日期时间戳
+     */
+    @JvmStatic
+    val currentTime: Long
+        get() = current.time
+
+    /**
      * 获取当前日期的年份。
      * @return 当前日期的年份。
      */
@@ -324,6 +332,8 @@ object KDateUtils {
      * 对某个时间进行系列操作
      */
     class Builder(private var date: Date = current) {
+
+        constructor(time: Long) : this(Date(time))
 
         fun addYears(years: Int): Builder {
             date = addYears(date, years)
