@@ -109,6 +109,40 @@ object KDateUtils {
     }
 
     /**
+     * 格式化日期为字符串
+     *
+     * @param year
+     * @param month
+     * @param day
+     * @param hour
+     * @param minute
+     * @param second
+     * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"
+     * @return 格式化后的日期字符串
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun formatDateToString(
+        year: Int,
+        month: Int,
+        day: Int,
+        hour: Int = 0,
+        minute: Int = 0,
+        second: Int = 0,
+        pattern: String = PATTERN_FULL,
+    ): String {
+        val format = SimpleDateFormat(pattern, Locale.CHINA)
+        val instance = Calendar.getInstance()
+        instance.set(Calendar.YEAR, year)
+        instance.set(Calendar.MONTH, month)
+        instance.set(Calendar.DAY_OF_MONTH, day)
+        instance.set(Calendar.HOUR_OF_DAY, hour)
+        instance.set(Calendar.MINUTE, minute)
+        instance.set(Calendar.SECOND, second)
+        return format.format(instance.time)
+    }
+
+    /**
      * 将日期字符串解析为日期对象
      *
      * @param dateString 日期字符串

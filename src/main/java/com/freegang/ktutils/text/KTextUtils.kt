@@ -349,6 +349,25 @@ object KTextUtils {
         return !arr.map { "$text".contains(it) }.contains(false)
     }
 
+    /**
+     * 对给定的文本进行省略处理，返回指定长度的字符串。
+     *
+     * @param text 要进行省略处理的文本，可以为null。
+     * @param length 最大长度，表示要截取的字符数。
+     * @return 处理后的字符串，如果文本为空或长度小于等于指定长度，则返回原始文本。
+     */
+    @JvmStatic
+    fun <S : CharSequence> ellipsis(text: S?, length: Int): String {
+        if (text == null || text.length <= length) {
+            return text?.toString() ?: ""
+        }
+
+        val ellipsis = "..."
+        val truncatedText = text.subSequence(0, length - ellipsis.length).toString()
+        return truncatedText + ellipsis
+    }
+
+
     ////  number  ////
     /**
      * 判断一个字符串是否是数字，可以是整数或浮点数。
@@ -459,4 +478,8 @@ inline fun <R> String.ifNotEmpty(block: (String) -> R): R? {
 inline fun <R> String.ifEmpty(block: (String) -> R): R? {
     if (KTextUtils.isEmpty(this)) return null
     return block.invoke(this)
+}
+
+fun CharSequence.ellipsis(length: Int): String {
+    return KTextUtils.ellipsis(this, length)
 }
