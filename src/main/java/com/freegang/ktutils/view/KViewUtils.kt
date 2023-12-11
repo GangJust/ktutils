@@ -465,7 +465,7 @@ object KViewUtils {
      * @param block 遍历回调函数，接收一个 View 参数
      */
     @JvmStatic
-    fun traverse(view: View, block: (View) -> Unit) {
+    fun onEachChild(view: View, block: (View) -> Unit) {
         if (view !is ViewGroup) {
             block.invoke(view)
             return
@@ -490,7 +490,7 @@ object KViewUtils {
      * @param view 需要遍历的 View
      * @param block 遍历回调函数，接收一个 View 参数，返回一个 Boolean 如果为 `true` 则直接从树遍历中结束
      */
-    fun traverseWhere(view: View, block: (View) -> Boolean) {
+    fun onEachWhereChild(view: View, block: (View) -> Boolean) {
         if (view !is ViewGroup) {
             block.invoke(view)
             return
@@ -653,7 +653,48 @@ object KViewUtils {
     }
 
     /**
-     * 获取某个View指定类型的 父View
+     * 遍历给定视图的所有父视图，并对每个指定类型的父视图执行一个操作。
+     *
+     * @param view 要开始遍历的视图。
+     * @param block 对每个指定类型的父视图执行的操作。这个操作接受一个父视图作为参数，直到它的为null为止
+     */
+    @JvmStatic
+    fun onEachParent(
+        view: View,
+        block: (View) -> Unit,
+    ) {
+        var parent: ViewParent? = view.parent
+        while (parent != null) {
+            if (parent is View) {
+                block.invoke(parent)
+            }
+            parent = parent.parent
+        }
+    }
+
+    /**
+     * 遍历给定视图的所有父视图，并对每个指定类型的父视图执行一个操作。
+     *
+     * @param view 要开始遍历的视图。
+     * @param block 对每个指定类型的父视图执行的操作。这个操作接受一个父视图作为参数，并返回一个布尔值。
+     *              如果这个布尔值为 true，那么遍历将立即停止。否则，遍历将继续。
+     */
+    @JvmStatic
+    fun onEachWhereParent(
+        view: View,
+        block: (View) -> Boolean,
+    ) {
+        var parent: ViewParent? = view.parent
+        while (parent != null) {
+            if (parent is View && block.invoke(parent)) {
+                return
+            }
+            parent = parent.parent
+        }
+    }
+
+    /**
+     * 获取某个View指定类型的父View
      * @param view 被获取父类的 View
      * @param targetType 被指定的父类
      * @param deep 回退深度, 默认找到第1个
@@ -1189,12 +1230,12 @@ fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
     }
 }
 
-fun View.traverse(block: View.() -> Unit) {
-    KViewUtils.traverse(this, block)
+fun View.onEachChild(block: View.() -> Unit) {
+    KViewUtils.onEachChild(this, block)
 }
 
-fun View.traverseWhere(block: View.() -> Boolean) {
-    KViewUtils.traverseWhere(this, block)
+fun View.onEachWhereChild(block: View.() -> Boolean) {
+    KViewUtils.onEachWhereChild(this, block)
 }
 
 fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
@@ -1244,6 +1285,14 @@ fun <T : View> View.findViewsByIdName(
     idName: String,
 ): List<T> {
     return KViewUtils.findViewsByIdName(this, targetType, idName)
+}
+
+fun View.onEachParent(block: View.() -> Unit) {
+    KViewUtils.onEachParent(this, block)
+}
+
+fun View.onEachWhereParent(block: View.() -> Boolean) {
+    KViewUtils.onEachWhereParent(this, block)
 }
 
 fun <T : View> View.findParentExact(
