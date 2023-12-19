@@ -357,13 +357,16 @@ object KTextUtils {
      * @return 处理后的字符串，如果文本为空或长度小于等于指定长度，则返回原始文本。
      */
     @JvmStatic
-    fun <S : CharSequence> ellipsis(text: S?, length: Int): String {
-        if (text == null || text.length <= length) {
-            return text?.toString() ?: ""
+    fun <S : CharSequence> ellipsis(
+        text: S?,
+        length: Int,
+    ): String? {
+        if (text == null || text.length <= length || length <= 0) {
+            return text?.toString()
         }
 
         val ellipsis = "..."
-        val truncatedText = text.subSequence(0, length - ellipsis.length).toString()
+        val truncatedText = text.subSequence(0, length).toString()
         return truncatedText + ellipsis
     }
 
@@ -480,6 +483,6 @@ inline fun <R> String.ifEmpty(block: (String) -> R): R? {
     return block.invoke(this)
 }
 
-fun CharSequence.ellipsis(length: Int): String {
+fun CharSequence.ellipsis(length: Int): String? {
     return KTextUtils.ellipsis(this, length)
 }
