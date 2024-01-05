@@ -459,66 +459,13 @@ object KViewUtils {
 
     //
     /**
-     * 遍历 View 及其子 View
-     *
-     * @param view 需要遍历的 View
-     * @param block 遍历回调函数，接收一个 View 参数
-     */
-    @JvmStatic
-    fun onEachChild(view: View, block: (View) -> Unit) {
-        if (view !is ViewGroup) {
-            block.invoke(view)
-            return
-        }
-
-        val stack = Stack<View>()
-        stack.push(view)
-        while (!stack.isEmpty()) {
-            val current = stack.pop()
-            block.invoke(current)
-            if (current is ViewGroup) {
-                for (i in current.childCount - 1 downTo 0) {
-                    stack.push(current.getChildAt(i))
-                }
-            }
-        }
-    }
-
-    /**
-     * 条件遍历 View 及其子 View
-     *
-     * @param view 需要遍历的 View
-     * @param block 遍历回调函数，接收一个 View 参数，返回一个 Boolean 如果为 `true` 则直接从树遍历中结束
-     */
-    fun onEachWhereChild(view: View, block: (View) -> Boolean) {
-        if (view !is ViewGroup) {
-            block.invoke(view)
-            return
-        }
-
-        val stack = Stack<View>()
-        stack.push(view)
-        while (!stack.isEmpty()) {
-            val current = stack.pop()
-            if (block.invoke(current)) {
-                return
-            }
-            if (current is ViewGroup) {
-                for (i in current.childCount - 1 downTo 0) {
-                    stack.push(current.getChildAt(i))
-                }
-            }
-        }
-    }
-
-    /**
      * 深度遍历 View，获取所有的 View（包括 View 本身和其所有子 View）
      *
      * @param view 需要遍历的 View
      * @return 所有的 View 列表
      */
     @JvmStatic
-    fun deepViewGroup(view: View): List<View> {
+    fun deepViewGroup(view: View): Sequence<View> {
         val views = mutableListOf<View>()
         val stack = Stack<View>()
         stack.push(view)
@@ -534,114 +481,54 @@ object KViewUtils {
             }
         }
 
-        return views
+        return views.asSequence()
     }
 
     /**
-     * 获取某个View树中所有指定类型的 ChildView
-     * @param view View
-     * @param targetType 某个View类型, 可以是 View.class
-     * @return List<T> T extends View
+     * 遍历 View 及其子 View
+     *
+     * @param view 需要遍历的 View
+     * @param block 遍历回调函数，接收一个 View 参数
      */
     @JvmStatic
-    fun <T : View> findViews(
-        view: View,
-        targetType: Class<T>,
-    ): List<T> {
-        return findViewsExact(view, targetType) { true }
-    }
-
-    /**
-     * 获取某个View树中所有指定类型的 ChildView
-     * 并且该ChildView的[contentDescription]值包含了指定正则表达式[containsDesc]中的内容
-     * @param view View
-     * @param targetType 某个View类型, 可以是 View.class
-     * @param containsDesc 指定正则表达式
-     * @return List<T> T extends View
-     */
-    @JvmStatic
-    fun <T : View> findViewsByDesc(
-        view: View,
-        targetType: Class<T>,
-        containsDesc: Regex
-    ): List<T> {
-        return findViewsExact(view, targetType) {
-            val desc = it.contentDescription ?: ""
-            desc.contains(containsDesc)
-        }
-    }
-
-    /**
-     * 获取某个View树中所有指定类型的 ChildView
-     * 并且该ChildView的[contentDescription]值包含了指定文本[containsDesc]中的内容
-     * @param view View
-     * @param targetType 某个View类型, 可以是 View.class
-     * @param containsDesc 指定文本
-     * @return List<T> T extends View
-     */
-    @JvmStatic
-    fun <T : View> findViewsByDesc(
-        view: View,
-        targetType: Class<T>,
-        containsDesc: String,
-        ignoreCase: Boolean = false,
-    ): List<T> {
-        return findViewsExact(view, targetType) {
-            val desc = it.contentDescription ?: ""
-            desc.contains(containsDesc, ignoreCase)
-        }
-    }
-
-    /**
-     * 获取某个View视图树中所有指定类型的 ChildView
-     * 并且该ChildView的[idName]等于指定的[idName]
-     * @param view View
-     * @param targetType 某个View类型, 可以是 View.class
-     * @param idName idName 举例: @id/textView
-     * @return List<T> T extends View
-     */
-    @JvmStatic
-    fun <T : View> findViewsByIdName(
-        view: View,
-        targetType: Class<T>,
-        idName: String
-    ): List<T> {
-        return findViewsExact(view, targetType) { getIdName(it) == idName }
-    }
-
-    /**
-     * 获取某个View视图树中所有满足指定逻辑的ChildView
-     * @param view View
-     * @param targetType 某个View类型, 可以是 View.class
-     * @param block 回调方法, 该方法参数会传入所有被遍历的view, 返回一个[Boolean]
-     * @return List<T> T extends View
-     */
-    @JvmStatic
-    fun <T : View> findViewsExact(
-        view: View,
-        targetType: Class<T>,
-        block: (T) -> Boolean
-    ): List<T> {
+    fun forEachChild(view: View, block: ViewFunction) {
         if (view !is ViewGroup) {
-            if (targetType.isInstance(view)) {
-                val cast = targetType.cast(view)!!
-                if (block.invoke(cast)) {
-                    return listOf(cast)
-                }
-            }
-            return emptyList()
+            block.callView(view)
+            return
         }
 
-        val views = mutableListOf<T>()
         val stack = Stack<View>()
         stack.push(view)
         while (!stack.isEmpty()) {
             val current = stack.pop()
-            if (targetType.isInstance(current)) {
-                val cast = targetType.cast(current)!! // child 应该不存在null吧
-                if (block.invoke(cast)) {
-                    views.add(cast)
+            block.callView(current)
+            if (current is ViewGroup) {
+                for (i in current.childCount - 1 downTo 0) {
+                    stack.push(current.getChildAt(i))
                 }
+            }
+        }
+    }
+
+    /**
+     * 条件遍历 View 及其子 View
+     *
+     * @param view 需要遍历的 View
+     * @param block 遍历回调函数，接收一个 View 参数，返回一个 Boolean 如果为 `true` 则直接从树遍历中结束
+     */
+    @JvmStatic
+    fun forEachWhereChild(view: View, block: ViewWhereFunction) {
+        if (view !is ViewGroup) {
+            block.callView(view)
+            return
+        }
+
+        val stack = Stack<View>()
+        stack.push(view)
+        while (!stack.isEmpty()) {
+            val current = stack.pop()
+            if (block.callView(current)) {
+                return
             }
             if (current is ViewGroup) {
                 for (i in current.childCount - 1 downTo 0) {
@@ -649,7 +536,6 @@ object KViewUtils {
                 }
             }
         }
-        return views
     }
 
     /**
@@ -659,14 +545,11 @@ object KViewUtils {
      * @param block 对每个指定类型的父视图执行的操作。这个操作接受一个父视图作为参数，直到它的为null为止
      */
     @JvmStatic
-    fun onEachParent(
-        view: View,
-        block: (View) -> Unit,
-    ) {
+    fun forEachParent(view: View, block: ViewFunction) {
         var parent: ViewParent? = view.parent
         while (parent != null) {
             if (parent is View) {
-                block.invoke(parent)
+                block.callView(parent)
             }
             parent = parent.parent
         }
@@ -680,41 +563,17 @@ object KViewUtils {
      *              如果这个布尔值为 true，那么遍历将立即停止。否则，遍历将继续。
      */
     @JvmStatic
-    fun onEachWhereParent(
+    fun forEachWhereParent(
         view: View,
-        block: (View) -> Boolean,
+        block: ViewWhereFunction,
     ) {
         var parent: ViewParent? = view.parent
         while (parent != null) {
-            if (parent is View && block.invoke(parent)) {
+            if (parent is View && block.callView(parent)) {
                 return
             }
             parent = parent.parent
         }
-    }
-
-    /**
-     * 获取某个View指定类型的父View
-     * @param view 被获取父类的 View
-     * @param targetType 被指定的父类
-     * @param deep 回退深度, 默认找到第1个
-     * @param T 父View实例
-     */
-    @JvmStatic
-    fun <T : View> findParentExact(
-        view: View,
-        targetType: Class<T>,
-        deep: Int = 1,
-    ): T? {
-        var deepCount = deep
-        var parent: ViewParent? = view.parent
-        while (parent != null) {
-            if (targetType.isInstance(parent)) deepCount -= 1
-            if (deepCount == 0) return targetType.cast(parent)
-            parent = parent.parent
-        }
-
-        return null
     }
 
     /**
@@ -828,7 +687,10 @@ object KViewUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val foreground = view.foreground
             if (foreground is ColorDrawable) {
-                jsonObject.put("foreground", "ColorDrawable(${KColorUtils.colorIntToHex(foreground.color)})")
+                jsonObject.put(
+                    "foreground",
+                    "ColorDrawable(${KColorUtils.colorIntToHex(foreground.color)})"
+                )
             } else {
                 jsonObject.put("foreground", "$foreground")
             }
@@ -861,7 +723,10 @@ object KViewUtils {
                 jsonObject.put("textStyle", "normal")
             }
             jsonObject.put("currentTextColor", KColorUtils.colorIntToHex(view.currentTextColor))
-            jsonObject.put("currentHintTextColor", KColorUtils.colorIntToHex(view.currentHintTextColor))
+            jsonObject.put(
+                "currentHintTextColor",
+                KColorUtils.colorIntToHex(view.currentHintTextColor)
+            )
             jsonObject.put("highlightColor", KColorUtils.colorIntToHex(view.highlightColor))
             jsonObject.put("selectable", view.isTextSelectable)
             jsonObject.put("minHeight", view.minHeight)
@@ -934,7 +799,6 @@ object KViewUtils {
         jsonObject.put("rect", Rect(view.left, view.top, view.right, view.bottom).toShortString())
         return jsonObject
     }
-
 
     /**
      * 构建View节点树
@@ -1115,13 +979,21 @@ object KViewUtils {
                 } else {
                     build.append("textStyle=normal, ")
                 }
-                build.append("currentTextColor=", KColorUtils.colorIntToHex(view.currentTextColor), ", ")
+                build.append(
+                    "currentTextColor=",
+                    KColorUtils.colorIntToHex(view.currentTextColor),
+                    ", "
+                )
                 build.append(
                     "currentHintTextColor=",
                     KColorUtils.colorIntToHex(view.currentHintTextColor),
                     ", "
                 )
-                build.append("highlightColor=", KColorUtils.colorIntToHex(view.highlightColor), ", ")
+                build.append(
+                    "highlightColor=",
+                    KColorUtils.colorIntToHex(view.highlightColor),
+                    ", "
+                )
                 build.append("selectable=", view.isTextSelectable, ", ")
                 build.append("minHeight=", view.minHeight, ", ")
                 build.append("maxHeight=", view.maxHeight)
@@ -1190,12 +1062,26 @@ object KViewUtils {
             } else {
                 build.append("clipBounds=", view.clipBounds?.toShortString(), ", ")
             }
-            build.append("rect=", Rect(view.left, view.top, view.right, view.bottom).toShortString(), ", ")
+            build.append(
+                "rect=",
+                Rect(view.left, view.top, view.right, view.bottom).toShortString(),
+                ", "
+            )
             build.append("childrenSize=", children.size, ", ")
             build.append("}")
 
             return build.toString()
         }
+    }
+
+    @FunctionalInterface
+    fun interface ViewFunction {
+        fun callView(view: View)
+    }
+
+    @FunctionalInterface
+    fun interface ViewWhereFunction {
+        fun callView(view: View): Boolean
     }
 }
 
@@ -1218,24 +1104,78 @@ fun View.toViewTreeString(
     return deepToString
 }
 
-fun <V : View> V.postRunning(block: V.() -> Unit) {
-    this.post {
-        block.invoke(this)
+fun View.forEachParent(block: View.() -> Unit) {
+    KViewUtils.forEachParent(this, block)
+}
+
+fun View.forEachWhereParent(block: View.() -> Boolean) {
+    KViewUtils.forEachWhereParent(this, block)
+}
+
+fun View.forEachChild(block: View.() -> Unit) {
+    KViewUtils.forEachChild(this, block)
+}
+
+fun View.forEachWhereChild(block: View.() -> Boolean) {
+    KViewUtils.forEachWhereChild(this, block)
+}
+
+inline fun <reified T : View> View.firstParentOrNull(clazz: Class<T>): T? {
+    var view: View? = null
+    KViewUtils.forEachWhereParent(this) {
+        if (clazz.isInstance(it)) {
+            view = it
+            return@forEachWhereParent true
+        }
+        false
     }
+    return view as T?
 }
 
-fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
-    this.postDelayed(delayInMillis) {
-        block.invoke(this)
+inline fun <reified T : View> View.firstParentOrNull(crossinline block: (T) -> Boolean): T? {
+    var view: View? = null
+    KViewUtils.forEachWhereParent(this) {
+        if (it is T && block.invoke(it)) {
+            view = it
+            return@forEachWhereParent true
+        }
+        false
     }
+    return view as T?
 }
 
-fun View.onEachChild(block: View.() -> Unit) {
-    KViewUtils.onEachChild(this, block)
+inline fun <reified T : View> View.filter(crossinline block: (T) -> Boolean): Sequence<T> {
+    val views = mutableListOf<T>()
+    KViewUtils.forEachChild(this) {
+        if (it is T && block.invoke(it)) {
+            views.add(it)
+        }
+    }
+    return views.asSequence()
 }
 
-fun View.onEachWhereChild(block: View.() -> Boolean) {
-    KViewUtils.onEachWhereChild(this, block)
+inline fun <reified T : View> View.firstOrNull(clazz: Class<T>): T? {
+    var view: View? = null
+    KViewUtils.forEachWhereChild(this) {
+        if (clazz.isInstance(it)) {
+            view = it
+            return@forEachWhereChild true
+        }
+        false
+    }
+    return view as T?
+}
+
+inline fun <reified T : View> View.firstOrNull(crossinline block: (T) -> Boolean): T? {
+    var view: View? = null
+    KViewUtils.forEachWhereChild(this) {
+        if (it is T && block.invoke(it)) {
+            view = it
+            return@forEachWhereChild true
+        }
+        false
+    }
+    return view as T?
 }
 
 fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
@@ -1257,49 +1197,29 @@ fun View.setLayoutHeight(needHeight: Int) {
     }
 }
 
-fun <T : View> View.findViewsByType(targetType: Class<T>): List<T> {
-    return KViewUtils.findViews(this, targetType)
+fun <V : View> V.setEnhanceOnClickListener(onClickListener: (v: V) -> Unit) {
+    // val key = "${this::class.simpleName}[${left},${top},${right}${bottom}]@${hashCode()}"
+    var lastClickTime = 0L
+    this.setOnClickListener {
+        if (System.currentTimeMillis() - lastClickTime < 500L) {
+            lastClickTime = System.currentTimeMillis()
+            return@setOnClickListener
+        }
+        lastClickTime = System.currentTimeMillis()
+        onClickListener.invoke(this)
+    }
 }
 
-fun <T : View> View.findViewsByDesc(targetType: Class<T>, containsDesc: Regex): List<T> {
-    return KViewUtils.findViewsByDesc(this, targetType, containsDesc)
+fun <V : View> V.postRunning(block: V.() -> Unit) {
+    this.post {
+        block.invoke(this)
+    }
 }
 
-fun <T : View> View.findViewsByDesc(
-    targetType: Class<T>,
-    containsDesc: String,
-    ignoreCase: Boolean = false
-): List<T> {
-    return KViewUtils.findViewsByDesc(this, targetType, containsDesc, ignoreCase)
-}
-
-fun <T : View> View.findViewsByExact(
-    targetType: Class<T>,
-    block: T.() -> Boolean,
-): List<T> {
-    return KViewUtils.findViewsExact(this, targetType, block)
-}
-
-fun <T : View> View.findViewsByIdName(
-    targetType: Class<T>,
-    idName: String,
-): List<T> {
-    return KViewUtils.findViewsByIdName(this, targetType, idName)
-}
-
-fun View.onEachParent(block: View.() -> Unit) {
-    KViewUtils.onEachParent(this, block)
-}
-
-fun View.onEachWhereParent(block: View.() -> Boolean) {
-    KViewUtils.onEachWhereParent(this, block)
-}
-
-fun <T : View> View.findParentExact(
-    targetType: Class<T>,
-    deep: Int = 1,
-): T? {
-    return KViewUtils.findParentExact(this, targetType, deep)
+fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
+    this.postDelayed(delayInMillis) {
+        block.invoke(this)
+    }
 }
 
 fun View.removeInParent(): View? {
@@ -1341,10 +1261,6 @@ fun View.replaceWith(view: View): Boolean {
     }
 }
 
-
-val View.parentView
-    get() = this.parent?.asOrNull<ViewGroup>()
-
 /**
  * 获取相对于当前View的某个位置的兄弟View。
  *
@@ -1362,9 +1278,8 @@ fun View.getSiblingViewAt(relativeIndex: Int): View? {
     }
 }
 
-fun View.setEnabledAll(enabled: Boolean) {
-    KViewUtils.setEnabledAll(this, enabled)
-}
+val View.parentView
+    get() = this.parent?.asOrNull<ViewGroup>()
 
 val View.idName
     get() = KViewUtils.getIdName(this)

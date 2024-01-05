@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Looper
 import android.os.Process
 import android.widget.Toast
+import com.freegang.ktutils.app.KAppCrashUtils.CrashCallback
 import com.freegang.ktutils.log.KLogCat
 import kotlin.system.exitProcess
 
@@ -17,35 +18,30 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
 
     private var mApp: Application? = null
     private var mIntent: Intent? = null
-    private var mMessage: String = ""
+    private var mMessage: String? = null
+    private var mCallback: CrashCallback? = null
 
     companion object {
+        private val instance: KAppCrashUtils = KAppCrashUtils()
+
         @JvmStatic
-        val instance: KAppCrashUtils = KAppCrashUtils()
-    }
+        @JvmOverloads
+        fun init(
+            app: Application,
+            message: String? = null,
+            intent: Intent? = null,
+            callback: CrashCallback? = null,
+        ) {
+            instance.mApp = app
+            instance.mIntent = intent
+            instance.mMessage = message
+            instance.mCallback = callback
 
-    fun init(app: Application, message: String = "程序崩溃!") {
-        init(app, null, message)
-    }
-
-    @JvmOverloads
-    fun init(app: Application, errActivity: Class<out Activity>? = null, message: String = "程序崩溃!") {
-        init(
-            app,
-            if (errActivity == null) Intent() else Intent(app.applicationContext, errActivity),
-            message,
-        )
-    }
-
-    @JvmOverloads
-    fun init(app: Application, intent: Intent, message: String = "程序崩溃!") {
-        this.mApp = app
-        this.mIntent = intent
-        this.mMessage = message
-        // 获取系统默认的UncaughtException处理器
-        mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        // 设置KAppCrashUtils为程序的默认处理器
-        Thread.setDefaultUncaughtExceptionHandler(this)
+            // 获取系统默认的UncaughtException处理器
+            instance.mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+            // 设置KAppCrashUtils为程序的默认处理器
+            Thread.setDefaultUncaughtExceptionHandler(instance)
+        }
     }
 
     /// 全局异常处理方法
@@ -64,7 +60,7 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             Toast.makeText(mApp, mMessage, Toast.LENGTH_SHORT).show()
             Looper.loop()
         }.start()
-        return true
+        return mCallback?.callback(e) ?: true
     }
 
     /// 结束应用
@@ -84,7 +80,8 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
         // 传递错误信息
         if (mIntent!!.component != null) {
             mIntent!!.putExtra("errMessage", errMessage)
-            mIntent!!.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            mIntent!!.flags =
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             mApp!!.startActivity(mIntent)
             Process.killProcess(Process.myPid())
             exitProcess(1)
@@ -99,5 +96,10 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             Process.killProcess(Process.myPid())
             exitProcess(1)
         }
+    }
+
+    @FunctionalInterface
+    fun interface CrashCallback {
+        fun callback(e: Throwable): Boolean
     }
 }

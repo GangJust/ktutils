@@ -171,7 +171,7 @@ object KReflectUtils {
             throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
         }
 
-        val clazz = obj.javaClass
+        val clazz = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
         val key = "${clazz.name}#$name@${type?.name}"
         if (usingFieldsCache.containsKey(key)) {
             return usingFieldsCache[key]
@@ -372,7 +372,7 @@ object KReflectUtils {
         if (name == null && returnType == null && paramTypes.isEmpty()) {
             throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
         }
-        val clazz = obj.javaClass
+        val clazz = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
         val key =
             "${clazz.name}#$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
         if (usingMethodsCache.containsKey(key)) {

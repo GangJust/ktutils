@@ -9,29 +9,43 @@ import android.view.ViewGroup
 import android.view.Window
 
 object KActivityUtils {
-    private val mActivities = mutableListOf<Activity>()  // 存储活动的列表
+    private val mActivities = mutableListOf<Activity>()
+    private val onCreatedList = mutableListOf<OnCreated>()
+    private val onStartedList = mutableListOf<OnStarted>()
+    private val onResumedList = mutableListOf<OnResumed>()
+    private val onPausedList = mutableListOf<OnPaused>()
+    private val onStoppedList = mutableListOf<OnStopped>()
+    private val onSaveInstanceStateList = mutableListOf<OnSaveInstanceState>()
+    private val onDestroyedList = mutableListOf<OnDestroyed>()
     private val lifecycleCallbacks = object : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            mActivities.add(activity)  // 活动创建时将其添加到列表中
+            mActivities.add(activity)
+            onCreatedList.forEach { it.onActivityCreated(activity, savedInstanceState) }
         }
 
         override fun onActivityStarted(activity: Activity) {
+            onStartedList.forEach { it.onActivityStarted(activity) }
         }
 
         override fun onActivityResumed(activity: Activity) {
+            onResumedList.forEach { it.onActivityResumed(activity) }
         }
 
         override fun onActivityPaused(activity: Activity) {
+            onPausedList.forEach { it.onActivityPaused(activity) }
         }
 
         override fun onActivityStopped(activity: Activity) {
+            onStoppedList.forEach { it.onActivityStopped(activity) }
         }
 
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+            onSaveInstanceStateList.forEach { it.onActivitySaveInstanceState(activity, outState) }
         }
 
         override fun onActivityDestroyed(activity: Activity) {
-            mActivities.remove(activity)  // 活动销毁时从列表中移除
+            onDestroyedList.forEach { it.onActivityDestroyed(activity) }
+            mActivities.remove(activity)
         }
     }
 
@@ -52,7 +66,85 @@ object KActivityUtils {
      */
     @JvmStatic
     fun unregister(application: Application) {
+        onCreatedList.clear()
+        onStartedList.clear()
+        onResumedList.clear()
+        onPausedList.clear()
+        onStoppedList.clear()
+        onSaveInstanceStateList.clear()
+        onDestroyedList.clear()
+        mActivities.clear()
         application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)  // 取消注册生命周期回调
+    }
+
+    /**
+     * 只对 onCreated 回调
+     *
+     * @param onCreated
+     */
+    @JvmStatic
+    fun onCreatedCallback(onCreated: OnCreated) {
+        onCreatedList.add(onCreated)
+    }
+
+    /**
+     * 只对 onStarted 回调
+     *
+     * @param onStarted
+     */
+    @JvmStatic
+    fun onStartedCallback(onStarted: OnStarted) {
+        onStartedList.add(onStarted)
+    }
+
+    /**
+     * 只对 onResumed 回调
+     *
+     * @param onResumed
+     */
+    @JvmStatic
+    fun onResumedCallback(onResumed: OnResumed) {
+        onResumedList.add(onResumed)
+    }
+
+    /**
+     * 只对 onPaused 回调
+     *
+     * @param onPaused
+     */
+    @JvmStatic
+    fun onPausedCallback(onPaused: OnPaused) {
+        onPausedList.add(onPaused)
+    }
+
+    /**
+     * 只对 onStopped 回调
+     *
+     * @param onStopped
+     */
+    @JvmStatic
+    fun onStoppedCallback(onStopped: OnStopped) {
+        onStoppedList.add(onStopped)
+    }
+
+    /**
+     * 只对 onSaveInstanceState 回调
+     *
+     * @param onSaveInstanceState
+     */
+    @JvmStatic
+    fun onSaveInstanceCallback(onSaveInstanceState: OnSaveInstanceState) {
+        onSaveInstanceStateList.add(onSaveInstanceState)
+    }
+
+    /**
+     * 只对 onDestroyed 回调
+     *
+     * @param onDestroyed
+     */
+    @JvmStatic
+    fun onDestroyedCallback(onDestroyed: OnDestroyed) {
+        onDestroyedList.add(onDestroyed)
     }
 
     /**
@@ -136,13 +228,49 @@ object KActivityUtils {
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
     private fun getActivitiesByReflect(): Map<*, *> {
         val activityThreadClass = Class.forName("android.app.ActivityThread")
-        val currentActivityThreadMethod = activityThreadClass.getDeclaredMethod("currentActivityThread")
+        val currentActivityThreadMethod =
+            activityThreadClass.getDeclaredMethod("currentActivityThread")
         currentActivityThreadMethod.isAccessible = true
         val currentActivityThread = currentActivityThreadMethod.invoke(null)
 
         val activitiesField = activityThreadClass.getDeclaredField("mActivities")
         activitiesField.isAccessible = true
         return activitiesField.get(currentActivityThread) as Map<*, *>  // 获取当前线程的活动列表
+    }
+
+    @FunctionalInterface
+    fun interface OnCreated {
+        fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?)
+    }
+
+    @FunctionalInterface
+    fun interface OnStarted {
+        fun onActivityStarted(activity: Activity)
+    }
+
+    @FunctionalInterface
+    fun interface OnResumed {
+        fun onActivityResumed(activity: Activity)
+    }
+
+    @FunctionalInterface
+    fun interface OnPaused {
+        fun onActivityPaused(activity: Activity)
+    }
+
+    @FunctionalInterface
+    fun interface OnStopped {
+        fun onActivityStopped(activity: Activity)
+    }
+
+    @FunctionalInterface
+    fun interface OnSaveInstanceState {
+        fun onActivitySaveInstanceState(activity: Activity, outState: Bundle)
+    }
+
+    @FunctionalInterface
+    fun interface OnDestroyed {
+        fun onActivityDestroyed(activity: Activity)
     }
 }
 

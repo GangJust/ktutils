@@ -15,6 +15,7 @@ import javax.net.ssl.TrustManager
 object KHttpUtils {
     val ANDROUD_UA get() = System.getProperty("http.agent")
 
+    @Throws(IOException::class)
     private fun commonConnection(url: URL): HttpURLConnection {
         val connect: HttpURLConnection = url.openConnection() as HttpURLConnection
         connect.requestMethod = "GET"
@@ -82,7 +83,7 @@ object KHttpUtils {
      * @param listener 下载监听器
      */
     @JvmStatic
-    fun download(sourceUrl: String, output: OutputStream, listener: DownloadListener) {
+    fun download(sourceUrl: String, output: OutputStream, listener: DownloadListener? = null): Boolean {
         var connect: HttpURLConnection? = null
         var total = 0L
         var realCount = 0L
@@ -101,13 +102,13 @@ object KHttpUtils {
                     if (count < 0) break
                     output.write(buffer, 0, count)
                     realCount += count
-                    listener.downloading(realCount, total, false)
+                    listener?.downloading(realCount, total, null)
                 }
             }
-        } catch (e: IOException) {
+            return true
+        } catch (e: Exception) {
             e.printStackTrace()
-            listener.downloading(realCount, total, true)
-            KLogCat.e("发生异常:\n${e.stackTraceToString()}")
+            listener?.downloading(realCount, total, e)
         } finally {
             try {
                 output.flush()
@@ -115,23 +116,15 @@ object KHttpUtils {
                 connect?.disconnect()
             } catch (e: IOException) {
                 e.printStackTrace()
-                KLogCat.e("发生异常:\n${e.stackTraceToString()}")
+                listener?.downloading(realCount, total, e)
             }
         }
-    }
-
-    // kotlin
-    fun download(sourceUrl: String, output: OutputStream, listener: (real: Long, total: Long, isInterrupt: Boolean) -> Unit) {
-        download(sourceUrl, output, object : DownloadListener {
-            override fun downloading(real: Long, total: Long, isInterrupt: Boolean) {
-                listener.invoke(real, total, isInterrupt)
-            }
-        })
+        return false
     }
 
     @FunctionalInterface
-    interface DownloadListener {
-        fun downloading(real: Long, total: Long, isInterrupt: Boolean)
+    fun interface DownloadListener {
+        fun downloading(real: Long, total: Long, e: Throwable?)
     }
 
     /**

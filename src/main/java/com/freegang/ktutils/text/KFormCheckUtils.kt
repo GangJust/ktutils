@@ -17,8 +17,7 @@ object KFormCheckUtils {
     @JvmOverloads
     fun <T : TextView> checkEmpty(view: T, needCheckNullStr: Boolean = false): Boolean {
         if (view.text.isEmpty() or view.text.isBlank()) return true
-        if ((view.text == "null") and needCheckNullStr) return true
-        return false
+        return (view.text == "null") and needCheckNullStr
     }
 
     /**
@@ -30,8 +29,7 @@ object KFormCheckUtils {
     @JvmStatic
     fun <T : TextView> checkByRegex(view: T, regex: String): Boolean {
         if (regex.isBlank()) return false
-        if (view.text.contains(regex.toRegex())) return true
-        return false
+        return view.text.contains(regex.toRegex())
     }
 
     /**

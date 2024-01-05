@@ -185,6 +185,7 @@ object KTextUtils {
     fun random(length: Int): String {
         val charPool: List<Char> = (32..126).map { it.toChar() }
         return (1..length)
+            .asSequence()
             .map { Random.nextInt(0, charPool.size) }
             .map(charPool::get)
             .joinToString("")
@@ -203,13 +204,52 @@ object KTextUtils {
         val charPool: List<Char> = (32..126).map { it.toChar() }
         val length = Random.nextInt(min, max + 1)
         return (1..length)
+            .asSequence()
             .map { Random.nextInt(0, charPool.size) }
             .map(charPool::get)
             .joinToString("")
     }
 
+
     /**
-     * 根据指定长度随机生成一个数字字符串
+     * 根据指定的字符表随机生成一个指定长度的乱序字符串
+     *
+     * @param dict 提供的字符表
+     * @param length 字符串的长度
+     * @return 生成的随机字符串
+     */
+    @JvmStatic
+    fun random(dict: String, length: Int): String {
+        val dictLength = dict.length
+        val randomChars = CharArray(length)
+        for (i in 0 until length) {
+            val randomIndex = Random.nextInt(dictLength)
+            randomChars[i] = dict[randomIndex]
+        }
+        return String(randomChars)
+    }
+
+    /**
+     * 根据指定长度随机生成一个乱序字母字符串
+     *
+     * @param length 字符串的长度
+     * @return 生成的随机字母字符串
+     */
+    @JvmStatic
+    fun randomAlphabet(length: Int): String {
+        val alphabets = CharArray(length)
+        for (i in 0 until length) {
+            val randomInt = Random.nextInt(52)
+            alphabets[i] = when {
+                randomInt < 26 -> (randomInt + 97).toChar()
+                else -> ((randomInt - 26) + 65).toChar()
+            }
+        }
+        return String(alphabets)
+    }
+
+    /**
+     * 根据指定长度随机生成一个乱序数字串
      *
      * @param length 字符串的长度
      * @return 生成的随机数字字符串
@@ -221,40 +261,6 @@ object KTextUtils {
             numbers[i] = (Random.nextInt(0, 10) + 48).toChar()
         }
         return String(numbers)
-    }
-
-    /**
-     * 该方法用于确保在给定的字符串中每个字符只出现一次，如果提供了目标字符串，则确保目标字符串只出现一次。
-     *
-     * @param text 输入的字符串，如果为空则返回空字符串
-     * @param target 目标字符串，如果提供则确保只出现一次
-     * @return 返回处理后的字符串
-     *
-     * 示例：
-     * 例1: text = "aabbcc" -> return "abc"
-     * 例2: text = "aabbcc", target="a" -> return "abbcc"
-     */
-    @JvmStatic
-    @JvmOverloads
-    fun onlyOnce(text: String?, target: Char? = null): String {
-        text ?: return ""
-
-        val result = StringBuilder()
-        val seen = mutableSetOf<Char>()
-
-        for (ch in text) {
-            if (target != null && ch == target) {
-                if (!seen.contains(ch)) {
-                    result.append(ch)
-                    seen.add(ch)
-                }
-            } else if (!seen.contains(ch)) {
-                result.append(ch)
-                seen.add(ch)
-            }
-        }
-
-        return result.toString()
     }
 
     /**

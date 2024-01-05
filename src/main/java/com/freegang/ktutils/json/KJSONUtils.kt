@@ -1,5 +1,6 @@
 package com.freegang.ktutils.json
 
+import android.os.Bundle
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -7,8 +8,13 @@ import java.io.Reader
 import java.io.Writer
 
 @FunctionalInterface
-interface JSONObjectForeachFunction {
-    fun invoke(entry: Map.Entry<String, Any?>)
+fun interface JSONObjectForeachFunction {
+    fun invoke(key: String, value: Any?)
+}
+
+@FunctionalInterface
+fun interface JSONArrayForeachFunction {
+    fun invoke(index: Int, value: Any?)
 }
 
 object KJSONUtils {
@@ -136,12 +142,7 @@ object KJSONUtils {
         val iterator = json.keys().iterator()
         while (iterator.hasNext()) {
             val key = iterator.next()
-            block.invoke(object : Map.Entry<String, Any?> {
-                override val key: String
-                    get() = key
-                override val value: Any?
-                    get() = json.get(key)
-            })
+            block.invoke(key, json.get(key))
         }
     }
 
@@ -268,6 +269,13 @@ object KJSONUtils {
             list.add(toMap(getJSONObject(array, i)))
         }
         return list
+    }
+
+    @JvmStatic
+    fun forEach(json: JSONArray, block: JSONArrayForeachFunction) {
+        for (index in 0 until json.length()) {
+            block.invoke(index, json.get(index))
+        }
     }
 
     @JvmStatic
@@ -404,14 +412,6 @@ fun JSONObject.forEach(block: JSONObjectForeachFunction) {
     KJSONUtils.forEach(this, block)
 }
 
-inline fun JSONObject.forEach(crossinline block: (key: String, valeu: Any?) -> Unit) {
-    KJSONUtils.forEach(this, object : JSONObjectForeachFunction {
-        override fun invoke(entry: Map.Entry<String, Any?>) {
-            block.invoke(entry.key, entry.value)
-        }
-    })
-}
-
 fun JSONObject.write(out: Writer): Boolean {
     return try {
         out.use { it.write(this.toString()) }
@@ -476,6 +476,10 @@ fun JSONArray.getJSONArrayOrDefault(index: Int, default: JSONArray = JSONArray()
 
 fun JSONArray.toMaps(): List<Map<String, Any?>> {
     return KJSONUtils.toMaps(this)
+}
+
+fun JSONArray.forEach(block: JSONArrayForeachFunction) {
+    KJSONUtils.forEach(this, block)
 }
 
 fun JSONArray.write(out: Writer): Boolean {

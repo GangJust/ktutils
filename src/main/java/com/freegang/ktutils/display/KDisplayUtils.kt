@@ -44,6 +44,8 @@ object KDisplayUtils {
     }
 }
 
+val screenSize by lazy { KDisplayUtils.screenSize() }
+
 fun Context.dip2px(dpValue: Float): Int = KDisplayUtils.dip2px(this, dpValue)
 
 fun Context.px2dip(pxValue: Float): Int = KDisplayUtils.px2dip(this, pxValue)

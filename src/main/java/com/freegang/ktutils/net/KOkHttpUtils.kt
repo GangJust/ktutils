@@ -74,6 +74,7 @@ object KOkHttpUtils {
         return try {
             client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
+            e.printStackTrace()
             e.message ?: RESULT_NOTHING
         }
     }
@@ -125,6 +126,7 @@ object KOkHttpUtils {
         return try {
             client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
+            e.printStackTrace()
             e.message ?: RESULT_NOTHING
         }
     }
@@ -191,6 +193,7 @@ object KOkHttpUtils {
         return try {
             client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
+            e.printStackTrace()
             e.message ?: RESULT_NOTHING
         }
     }
@@ -253,6 +256,7 @@ object KOkHttpUtils {
             val response = client.newCall(request).execute()
             response.body?.string() ?: RESULT_NOTHING
         } catch (e: Exception) {
+            e.printStackTrace()
             RESULT_NOTHING
         }
     }
@@ -313,6 +317,7 @@ object KOkHttpUtils {
                 false
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

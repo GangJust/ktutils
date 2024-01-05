@@ -7,7 +7,7 @@ abstract class KRecyclerAdapter<RV : RecyclerView.ViewHolder, E : IRecyclerAdapt
     private val mItems = mutableListOf<E>()
 
     private fun checkIndex(index: Int) {
-        require(index in 0 until mItems.size) { "Index out of range: $index" }
+        require(index in 0 until mItems.size) { "Index out of range: $index, items size: ${mItems.size}" }
     }
 
     // add

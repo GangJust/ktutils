@@ -92,7 +92,7 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun formatDateToString(date: Date = current, pattern: String = PATTERN_FULL): String {
+    fun format(date: Date = current, pattern: String = PATTERN_FULL): String {
         val format = SimpleDateFormat(pattern, Locale.CHINA)
         return format.format(date)
     }
@@ -104,8 +104,8 @@ object KDateUtils {
      * @return 格式化后的日期字符串
      */
     @JvmStatic
-    fun formatDateToString(pattern: String = PATTERN_FULL): String {
-        return formatDateToString(current, pattern)
+    fun format(pattern: String = PATTERN_FULL): String {
+        return format(current, pattern)
     }
 
     /**
@@ -122,7 +122,7 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun formatDateToString(
+    fun format(
         year: Int,
         month: Int,
         day: Int,
@@ -151,7 +151,7 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun parseStringToDate(dateString: String, pattern: String = PATTERN_FULL): Date? {
+    fun parse(dateString: String, pattern: String = PATTERN_FULL): Date? {
         val format = SimpleDateFormat(pattern, Locale.CHINA)
         return try {
             format.parse(dateString)
@@ -326,7 +326,7 @@ object KDateUtils {
         val months = days / 30
 
         return when {
-            months >= 3 -> formatDateToString(Date(timeInMillis), "yyyy-MM-dd HH:mm")
+            months >= 3 -> format(Date(timeInMillis), "yyyy-MM-dd HH:mm")
             days >= 1 -> "$days 天前"
             hours >= 1 -> "$hours 小时前"
             minutes >= 1 -> "$minutes 分钟前"
@@ -415,12 +415,16 @@ object KDateUtils {
 
         @JvmOverloads
         fun buildFormat(pattern: String = KDateUtils.PATTERN_FULL): String {
-            return formatDateToString(date, pattern)
+            return format(date, pattern)
         }
     }
 }
 
 val Date.isLeapYear get() = KDateUtils.isLeapYear(this)
+
+fun Date.format(pattern: String = KDateUtils.PATTERN_FULL): String {
+    return KDateUtils.format(pattern)
+}
 
 fun Date.addYears(years: Int) = KDateUtils.addYears(this, years)
 
