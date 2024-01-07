@@ -9,17 +9,16 @@ import android.view.ViewGroup
 import android.view.Window
 
 object KActivityUtils {
-    private val mActivities = mutableListOf<Activity>()
-    private val onCreatedList = mutableListOf<OnCreated>()
-    private val onStartedList = mutableListOf<OnStarted>()
-    private val onResumedList = mutableListOf<OnResumed>()
-    private val onPausedList = mutableListOf<OnPaused>()
-    private val onStoppedList = mutableListOf<OnStopped>()
-    private val onSaveInstanceStateList = mutableListOf<OnSaveInstanceState>()
-    private val onDestroyedList = mutableListOf<OnDestroyed>()
+    private val mActivities = mutableSetOf<Activity>()
+    private val onCreatedList = mutableSetOf<OnCreated>()
+    private val onStartedList = mutableSetOf<OnStarted>()
+    private val onResumedList = mutableSetOf<OnResumed>()
+    private val onPausedList = mutableSetOf<OnPaused>()
+    private val onStoppedList = mutableSetOf<OnStopped>()
+    private val onSaveInstanceStateList = mutableSetOf<OnSaveInstanceState>()
+    private val onDestroyedList = mutableSetOf<OnDestroyed>()
     private val lifecycleCallbacks = object : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            mActivities.add(activity)
             onCreatedList.forEach { it.onActivityCreated(activity, savedInstanceState) }
         }
 
@@ -28,10 +27,12 @@ object KActivityUtils {
         }
 
         override fun onActivityResumed(activity: Activity) {
+            mActivities.add(activity)
             onResumedList.forEach { it.onActivityResumed(activity) }
         }
 
         override fun onActivityPaused(activity: Activity) {
+            mActivities.remove(activity)
             onPausedList.forEach { it.onActivityPaused(activity) }
         }
 
@@ -45,7 +46,6 @@ object KActivityUtils {
 
         override fun onActivityDestroyed(activity: Activity) {
             onDestroyedList.forEach { it.onActivityDestroyed(activity) }
-            mActivities.remove(activity)
         }
     }
 
@@ -167,8 +167,8 @@ object KActivityUtils {
      * @return 活动列表，如果列表为空，则通过反射获取
      */
     @JvmStatic
-    fun getActivities(): List<Activity> {
-        return mActivities.ifEmpty { getActivityListByRef() }  // 返回活动列表，如果为空则通过反射获取
+    fun getActivities(): Set<Activity> {
+        return mActivities.ifEmpty { getActivityListByRef() } // 返回活动列表，如果为空则通过反射获取
     }
 
     /**
@@ -205,9 +205,9 @@ object KActivityUtils {
      *
      * @return 活动列表
      */
-    private fun getActivityListByRef(): List<Activity> {
+    private fun getActivityListByRef(): Set<Activity> {
         val activities = getActivitiesByReflect()  // 使用反射获取活动列表
-        val activityList = mutableListOf<Activity>()
+        val activityList = mutableSetOf<Activity>()
         for (activityRecord in activities.values) {
             val activityRecordClass = activityRecord!!.javaClass
             val activityField = activityRecordClass.getDeclaredField("activity")

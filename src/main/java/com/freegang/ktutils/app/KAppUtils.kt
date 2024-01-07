@@ -553,7 +553,6 @@ object KAppUtils {
             ?: "unknown"
     }
 
-
     /**
      * 获取状态栏高度, 旧方式
      */
@@ -568,7 +567,6 @@ object KAppUtils {
             0
         }
     }
-
 
     /**
      * 获取底部导航栏高度, 旧方式

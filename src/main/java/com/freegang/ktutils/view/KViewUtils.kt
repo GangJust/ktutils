@@ -1223,13 +1223,13 @@ fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
 }
 
 fun View.removeInParent(): View? {
-    val parentView = this.parent.asOrNull<ViewGroup>() ?: return null
+    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return null
     parentView.removeView(this)
     return this
 }
 
 fun View.removeInParentIndex(): Int {
-    val parentView = this.parent.asOrNull<ViewGroup>() ?: return -1
+    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return -1
     val indexOfChild = parentView.indexOfChild(this)
     if (indexOfChild != -1) {
         parentView.removeViewAt(indexOfChild)
@@ -1246,7 +1246,7 @@ fun View.removeInParentIndex(): Int {
  * 注意：这个函数只会复制当前视图的ID和布局参数到新视图，如果当前视图有其他状态需要保留，需要手动进行复制。
  */
 fun View.replaceWith(view: View): Boolean {
-    val parentView = this.parent as? ViewGroup ?: return false
+    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return false
     val indexOfChild = parentView.indexOfChild(this)
     return if (indexOfChild != -1) {
         parentView.removeViewAt(indexOfChild)
