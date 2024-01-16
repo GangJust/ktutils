@@ -8,9 +8,9 @@ import java.lang.reflect.Method
 object KReflectUtils {
     private const val TAG = "KReflectUtils"
 
-    private val allFieldsCache = mutableMapOf<String, List<Field>>()
-    private val allMethodsCache = mutableMapOf<String, List<Method>>()
-    private val allConstructorsCache = mutableMapOf<String, List<Constructor<*>>>()
+    private val fieldsCache = mutableMapOf<String, List<Field>>()
+    private val methodsCache = mutableMapOf<String, List<Method>>()
+    private val constructorsCache = mutableMapOf<String, List<Constructor<*>>>()
 
     private val usingFieldsCache = mutableMapOf<String, Field>()
     private val usingMethodsCache = mutableMapOf<String, Method>()
@@ -18,16 +18,16 @@ object KReflectUtils {
     /**
      * 获取某个对象的所有字段, 包含其继承的父类字段, 同名字段顺序排列。
      *
-     * @param obj 目标对象
+     * @param any 目标对象
      * @return 所有字段列表
      */
     @JvmStatic
-    fun getAllFields(obj: Any): List<Field> {
-        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+    fun getFields(any: Any): List<Field> {
+        var currentClass: Class<*> = if (any is Class<*>) any else any.javaClass
         val key = currentClass.name
 
         // 读缓存
-        val fieldList = allFieldsCache[key] ?: emptyList()
+        val fieldList = fieldsCache[key] ?: emptyList()
         if (fieldList.isNotEmpty()) {
             return fieldList
         }
@@ -41,23 +41,23 @@ object KReflectUtils {
             }
             currentClass = currentClass.superclass
         }
-        allFieldsCache[key] = fields
+        fieldsCache[key] = fields
         return fields
     }
 
     /**
      * 获取某个对象的所有方法 包含其继承的父类方法, 同名方法顺序排列。
      *
-     * @param obj 目标对象
+     * @param any 目标对象
      * @return 所有方法列表
      */
     @JvmStatic
-    fun getAllMethods(obj: Any): List<Method> {
-        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+    fun getMethods(any: Any): List<Method> {
+        var currentClass: Class<*> = if (any is Class<*>) any else any.javaClass
         val key = currentClass.name
 
         // 读缓存
-        val methodList = allMethodsCache[key] ?: emptyList()
+        val methodList = methodsCache[key] ?: emptyList()
         if (methodList.isNotEmpty()) {
             return methodList
         }
@@ -71,23 +71,23 @@ object KReflectUtils {
             }
             currentClass = currentClass.superclass
         }
-        allMethodsCache[key] = methods
+        methodsCache[key] = methods
         return methods
     }
 
     /**
      * 获取一个对象的所有构造器（包括父类）。
      *
-     * @param obj 需要获取构造器的对象
+     * @param any 需要获取构造器的对象
      * @return 对象的所有构造器列表
      */
     @JvmStatic
-    fun getAllConstructors(obj: Any): List<Constructor<*>> {
-        var currentClass: Class<*> = if (obj is Class<*>) obj else obj.javaClass
+    fun getConstructors(any: Any): List<Constructor<*>> {
+        var currentClass: Class<*> = if (any is Class<*>) any else any.javaClass
         val key = currentClass.name
 
         // 读缓存
-        val methodList = allConstructorsCache[key] ?: emptyList()
+        val methodList = constructorsCache[key] ?: emptyList()
         if (methodList.isNotEmpty()) {
             return methodList
         }
@@ -101,7 +101,7 @@ object KReflectUtils {
             }
             currentClass = currentClass.superclass
         }
-        allConstructorsCache[key] = constructors
+        constructorsCache[key] = constructors
         return constructors
     }
 
@@ -122,10 +122,10 @@ object KReflectUtils {
         type: Class<*>? = null,
     ): List<Field> {
         if (name == null && type == null) {
-            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
         }
 
-        val allFields = getAllFields(obj)
+        val allFields = getFields(obj)
         val filteredFields = mutableListOf<Field>()
 
         for (field in allFields) {
@@ -168,7 +168,7 @@ object KReflectUtils {
         type: Class<*>? = null,
     ): Field? {
         if (name == null && type == null) {
-            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
         }
 
         val clazz = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
@@ -200,7 +200,7 @@ object KReflectUtils {
         type: Class<*>? = null,
     ): List<Field> {
         if (name == null && type == null) {
-            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
         }
 
         val filteredFields = mutableListOf<Field>()
@@ -245,7 +245,7 @@ object KReflectUtils {
         type: Class<*>? = null,
     ): Field? {
         if (name == null && type == null) {
-            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getAllFields' method.")
+            throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
         }
 
         val key = "$fields$name@${type?.name}"
@@ -297,9 +297,9 @@ object KReflectUtils {
         vararg paramTypes: Class<*>?,
     ): List<Method> {
         if (name == null && returnType == null && paramTypes.isEmpty()) {
-            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
         }
-        val allMethods = getAllMethods(obj)
+        val allMethods = getMethods(obj)
         val filteredMethods = mutableListOf<Method>()
         for (method in allMethods) {
             if (name != null && returnType != null && paramTypes.isNotEmpty()) {
@@ -370,7 +370,7 @@ object KReflectUtils {
         vararg paramTypes: Class<*>?,
     ): Method? {
         if (name == null && returnType == null && paramTypes.isEmpty()) {
-            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
         }
         val clazz = if (obj.javaClass == Class::class.java) obj as Class<*> else obj.javaClass
         val key =
@@ -403,7 +403,7 @@ object KReflectUtils {
         vararg paramTypes: Class<*>?,
     ): List<Method> {
         if (name == null && returnType == null && paramTypes.isEmpty()) {
-            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
         }
         val filteredMethods = mutableListOf<Method>()
         for (method in methods) {
@@ -475,7 +475,7 @@ object KReflectUtils {
         vararg paramTypes: Class<*>?,
     ): Method? {
         if (name == null && returnType == null && paramTypes.isEmpty()) {
-            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getAllMethods' method.")
+            throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
         }
         val key =
             "$methods$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
@@ -585,7 +585,7 @@ fun Any.fields(
     type: Class<*>? = null,
 ): List<Field> {
     return if (name == null && type == null) {
-        KReflectUtils.getAllFields(this)
+        KReflectUtils.getFields(this)
     } else {
         KReflectUtils.findFields(this, name, type)
     }
@@ -635,7 +635,7 @@ fun Any.methods(
     vararg paramTypes: Class<*>?,
 ): List<Method> {
     return if (name == null && returnType == null && paramTypes.isEmpty()) {
-        KReflectUtils.getAllMethods(this)
+        KReflectUtils.getMethods(this)
     } else {
         KReflectUtils.findMethods(this, name, returnType, *paramTypes)
     }
