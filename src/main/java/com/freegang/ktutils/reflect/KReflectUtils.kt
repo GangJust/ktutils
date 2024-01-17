@@ -12,8 +12,11 @@ object KReflectUtils {
     private val methodsCache = mutableMapOf<String, List<Method>>()
     private val constructorsCache = mutableMapOf<String, List<Constructor<*>>>()
 
-    private val usingFieldsCache = mutableMapOf<String, Field>()
-    private val usingMethodsCache = mutableMapOf<String, Method>()
+    private val usingFieldCache = mutableMapOf<String, Field>()
+    private val usingMethodCache = mutableMapOf<String, Method>()
+
+    private val usingFieldListCache = mutableMapOf<String, List<Field>>()
+    private val usingMethodListCache = mutableMapOf<String, List<Method>>()
 
     private fun getAnyClass(any: Any): Class<*> {
         return when (any) {
@@ -148,8 +151,17 @@ object KReflectUtils {
         name: String? = null,
         type: Class<*>? = null,
     ): List<Field> {
+        if (fields.isEmpty()) {
+            return emptyList()
+        }
+
         if (name == null && type == null) {
             throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
+        }
+
+        val key = "${fields.hashCode()}#$name@${type?.hashCode()}"
+        if (usingFieldListCache.containsKey(key)) {
+            return usingFieldListCache[key] ?: emptyList()
         }
 
         var sequence = fields.asSequence()
@@ -162,7 +174,9 @@ object KReflectUtils {
             sequence = sequence.filter { compareType(it, type) }
         }
 
-        return sequence.toList()
+        val toList = sequence.toList()
+        usingFieldListCache[key] = toList
+        return toList
     }
 
     /**
@@ -187,13 +201,13 @@ object KReflectUtils {
 
         val clazz = getAnyClass(any)
 
-        val key = "${clazz.name}#$name@${type?.name}"
-        if (usingFieldsCache.containsKey(key)) {
-            return usingFieldsCache[key]
+        val key = "${clazz.hashCode()}#$name@${type?.hashCode()}"
+        if (usingFieldCache.containsKey(key)) {
+            return usingFieldCache[key]
         }
 
         val field = findFields(any, name, type).firstOrNull() ?: return null
-        usingFieldsCache[key] = field
+        usingFieldCache[key] = field
         return field
     }
 
@@ -217,13 +231,13 @@ object KReflectUtils {
             throw IllegalArgumentException("Please provide at least one item for 'name' and 'type', otherwise you should use the 'getFields' method.")
         }
 
-        val key = "$fields$name@${type?.name}"
-        if (usingFieldsCache.containsKey(key)) {
-            return usingFieldsCache[key]
+        val key = "$fields$name@${type?.hashCode()}"
+        if (usingFieldCache.containsKey(key)) {
+            return usingFieldCache[key]
         }
 
         val field = findFields(fields, name, type).firstOrNull() ?: return null
-        usingFieldsCache[key] = field
+        usingFieldCache[key] = field
         return field
     }
 
@@ -236,7 +250,12 @@ object KReflectUtils {
         }
 
         // 基本数据类型比较
-        return isCompatible(type, targetType)
+        if (isCompatible(type, targetType)) {
+            return true
+        }
+
+        // 继承关系比较
+        return isAssignableFrom(type, targetType)
     }
 
     /**
@@ -278,8 +297,17 @@ object KReflectUtils {
         returnType: Class<*>? = null,
         vararg paramTypes: Class<*>?,
     ): List<Method> {
+        if (methods.isEmpty()) {
+            return emptyList()
+        }
+
         if (name == null && returnType == null && paramTypes.isEmpty()) {
             throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
+        }
+
+        val key = "${methods.hashCode()}#$name@${returnType?.hashCode()}[${paramTypes.joinToString { "${it?.hashCode()}" }}]"
+        if (usingMethodListCache.containsKey(key)) {
+            return usingMethodListCache[key] ?: emptyList()
         }
 
         var sequence = methods.asSequence()
@@ -296,7 +324,9 @@ object KReflectUtils {
             sequence = sequence.filter { compareParamTypes(it, paramTypes) }
         }
 
-        return sequence.toList()
+        val toList = sequence.toList()
+        usingMethodListCache[key] = toList
+        return toList
     }
 
     /**
@@ -322,13 +352,13 @@ object KReflectUtils {
         }
 
         val clazz = getAnyClass(any)
-        val key = "${clazz.name}#$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
-        if (usingMethodsCache.containsKey(key)) {
-            return usingMethodsCache[key]
+        val key = "${clazz.hashCode()}#$name@${returnType?.hashCode()}[${paramTypes.joinToString { "${it?.hashCode()}" }}]"
+        if (usingMethodCache.containsKey(key)) {
+            return usingMethodCache[key]
         }
 
         val method = findMethods(any, name, returnType, *paramTypes).firstOrNull() ?: return null
-        usingMethodsCache[key] = method
+        usingMethodCache[key] = method
         return method
     }
 
@@ -354,13 +384,13 @@ object KReflectUtils {
             throw IllegalArgumentException("Please provide at least one of the 'name', 'returnType', and 'paramTypes', otherwise you should use the' getMethods' method.")
         }
 
-        val key = "$methods$name@${returnType?.name}[${paramTypes.joinToString { "${it?.name}" }}]"
-        if (usingMethodsCache.containsKey(key)) {
-            return usingMethodsCache[key]
+        val key = "${methods.hashCode()}$name@${returnType?.hashCode()}[${paramTypes.joinToString { "${it?.hashCode()}" }}]"
+        if (usingMethodCache.containsKey(key)) {
+            return usingMethodCache[key]
         }
 
         val method = findMethods(methods, name, returnType, *paramTypes).firstOrNull() ?: return null
-        usingMethodsCache[key] = method
+        usingMethodCache[key] = method
         return method
     }
 
@@ -373,7 +403,12 @@ object KReflectUtils {
         }
 
         // 基本数据类型比较
-        return isCompatible(returnType, targetReturnType)
+        if (isCompatible(returnType, targetReturnType)) {
+            return true
+        }
+
+        // 继承关系比较
+        return isAssignableFrom(returnType, targetReturnType)
     }
 
     private fun compareParamTypes(method: Method, targetParamTypes: Array<out Class<*>?>): Boolean {
@@ -395,6 +430,11 @@ object KReflectUtils {
 
             // 基本数据类型比较
             if (isCompatible(type, targetType)) {
+                continue
+            }
+
+            // 继承关系比较
+            if (isAssignableFrom(type, targetType)) {
                 continue
             }
 
@@ -428,7 +468,6 @@ object KReflectUtils {
             Double::class.javaPrimitiveType -> Double::class.javaObjectType
             else -> primitiveClass
         }
-
     }
 
     private fun isAssignableFrom(c1: Class<*>, c2: Class<*>): Boolean {

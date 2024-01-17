@@ -18,8 +18,8 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.freegang.ktutils.extension.asOrNull
-import com.freegang.ktutils.reflect.fieldGetFirst
-import com.freegang.ktutils.reflect.methodInvokeFirst
+import com.freegang.ktutils.reflect.fieldGet
+import com.freegang.ktutils.reflect.methodInvoke
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.security.MessageDigest
@@ -512,8 +512,8 @@ object KAppUtils {
     fun getDalvikInstructionSet(): String {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvokeFirst(name = "getRuntime")
-            return runtime?.methodInvokeFirst("vmInstructionSet")?.asOrNull<String>() ?: "unknown"
+            val runtime = forName.methodInvoke(name = "getRuntime")
+            return runtime?.methodInvoke("vmInstructionSet")?.asOrNull<String>() ?: "unknown"
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -527,8 +527,8 @@ object KAppUtils {
     fun is64BitDalvik(): Boolean {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvokeFirst(name = "getRuntime")
-            return runtime?.methodInvokeFirst("is64Bit")?.asOrNull<Boolean>() ?: false
+            val runtime = forName.methodInvoke(name = "getRuntime")
+            return runtime?.methodInvoke("is64Bit")?.asOrNull<Boolean>() ?: false
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -549,7 +549,7 @@ object KAppUtils {
      */
     @JvmStatic
     fun getSecurityPatchLevel(): String {
-        return Build.VERSION::class.java.fieldGetFirst(name = "SECURITY_PATCH")?.asOrNull<String>()
+        return Build.VERSION::class.java.fieldGet(name = "SECURITY_PATCH")?.asOrNull<String>()
             ?: "unknown"
     }
 
