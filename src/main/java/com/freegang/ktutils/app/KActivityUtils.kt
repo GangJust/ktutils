@@ -17,8 +17,10 @@ object KActivityUtils {
     private val onStoppedList = mutableSetOf<OnStopped>()
     private val onSaveInstanceStateList = mutableSetOf<OnSaveInstanceState>()
     private val onDestroyedList = mutableSetOf<OnDestroyed>()
+
     private val lifecycleCallbacks = object : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            mActivities.add(activity)
             onCreatedList.forEach { it.onActivityCreated(activity, savedInstanceState) }
         }
 
@@ -27,12 +29,10 @@ object KActivityUtils {
         }
 
         override fun onActivityResumed(activity: Activity) {
-            mActivities.add(activity)
             onResumedList.forEach { it.onActivityResumed(activity) }
         }
 
         override fun onActivityPaused(activity: Activity) {
-            mActivities.remove(activity)
             onPausedList.forEach { it.onActivityPaused(activity) }
         }
 
@@ -45,6 +45,7 @@ object KActivityUtils {
         }
 
         override fun onActivityDestroyed(activity: Activity) {
+            mActivities.remove(activity)
             onDestroyedList.forEach { it.onActivityDestroyed(activity) }
         }
     }
@@ -66,6 +67,15 @@ object KActivityUtils {
      */
     @JvmStatic
     fun unregister(application: Application) {
+        clear()
+        application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)  // 取消注册生命周期回调
+    }
+
+    /**
+     * 清空所有已注册的监听器，包括活动列表
+     */
+    @JvmStatic
+    fun clear() {
         onCreatedList.clear()
         onStartedList.clear()
         onResumedList.clear()
@@ -74,7 +84,6 @@ object KActivityUtils {
         onSaveInstanceStateList.clear()
         onDestroyedList.clear()
         mActivities.clear()
-        application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)  // 取消注册生命周期回调
     }
 
     /**

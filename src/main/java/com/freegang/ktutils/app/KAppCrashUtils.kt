@@ -1,13 +1,11 @@
 package com.freegang.ktutils.app
 
-import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.os.Build
 import android.os.Looper
 import android.os.Process
 import android.widget.Toast
-import com.freegang.ktutils.app.KAppCrashUtils.CrashCallback
 import com.freegang.ktutils.log.KLogCat
 import kotlin.system.exitProcess
 
@@ -20,9 +18,12 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
     private var mIntent: Intent? = null
     private var mMessage: String? = null
     private var mCallback: CrashCallback? = null
+    private var mCrashMessage: CrashMessage = CrashMessage()
 
     companion object {
         private val instance: KAppCrashUtils = KAppCrashUtils()
+
+        const val CRASH_MESSAGE = "CRASH_MESSAGE"
 
         @JvmStatic
         @JvmOverloads
@@ -60,26 +61,17 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             Toast.makeText(mApp, mMessage, Toast.LENGTH_SHORT).show()
             Looper.loop()
         }.start()
-        return mCallback?.callback(e) ?: true
+        return mCallback?.callback(e, mCrashMessage) ?: true
     }
 
     /// 结束应用
     private fun exitAppOrStartErrActivity(e: Throwable) {
-        // 构建错误信息
-        val errMessage = "错误信息: ${e.message}\n" +
-                "出现时间: ${KLogCat.dateTimeFormat.format(System.currentTimeMillis())}\n" +
-                "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
-                "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
-                "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
-                "应用架构: ${mApp!!.abiBit}\n" +
-                "Google安全补丁级别: ${mApp!!.securityPatchLevel}\n" +
-                "Dalvik虚拟机: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
-                "堆栈信息: ${e.stackTraceToString()}"
-        KLogCat.e(errMessage)
+        val crashMessage = buildCrashMessage(e)
+        KLogCat.e(crashMessage)
 
         // 传递错误信息
         if (mIntent!!.component != null) {
-            mIntent!!.putExtra("errMessage", errMessage)
+            mIntent!!.putExtra(CRASH_MESSAGE, crashMessage)
             mIntent!!.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             mApp!!.startActivity(mIntent)
@@ -98,8 +90,33 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
         }
     }
 
+    private fun buildCrashMessage(e: Throwable): String {
+        // 构建错误信息
+        val defaultCrashMessage = "错误信息: ${e.message}\n" +
+                "出现时间: ${KLogCat.dateTimeFormat.format(System.currentTimeMillis())}\n" +
+                "设备信息: ${Build.MANUFACTURER} ${Build.MODEL}\n" +
+                "系统版本: Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})\n" +
+                "应用版本: ${mApp!!.appLabelName} ${mApp!!.appVersionName} (${mApp!!.appVersionCode})\n" +
+                "应用架构: ${mApp!!.abiBit}\n" +
+                "Google安全补丁级别: ${mApp!!.securityPatchLevel}\n" +
+                "Dalvik虚拟机: instructionSet=${mApp!!.dalvikInstructionSet}; is64Bit=${mApp!!.is64BitDalvik}\n" +
+                "堆栈信息: ${e.stackTraceToString()}"
+
+        return mCrashMessage.crashMessage ?: defaultCrashMessage
+    }
+
     @FunctionalInterface
     fun interface CrashCallback {
-        fun callback(e: Throwable): Boolean
+        fun callback(e: Throwable, msg: CrashMessage): Boolean
+    }
+
+    class CrashMessage {
+        private var mCrashMessage: String? = null
+
+        val crashMessage get() = mCrashMessage
+
+        fun setCrashMessage(message: String) {
+            this.mCrashMessage = message
+        }
     }
 }
