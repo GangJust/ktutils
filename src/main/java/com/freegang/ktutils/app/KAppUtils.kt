@@ -358,6 +358,20 @@ object KAppUtils {
     }
 
     /**
+     * 判断当前应用程序是否处于前台运行状态
+     * @param context 上下文环境。通常是Activity或Application。
+     */
+    @JvmStatic
+    fun isAppInForeground(context: Context): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningAppProcesses = activityManager.runningAppProcesses
+        return runningAppProcesses?.any {
+            it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                    it.processName == context.packageName
+        } ?: false
+    }
+
+    /**
      * 卸载指定包名的应用程序。
      *
      * @param context 上下文环境。通常是Activity或Application。
@@ -381,7 +395,6 @@ object KAppUtils {
         // 启动这个Intent
         context.startActivity(intent)
     }
-
 
     /**
      * 安装指定Uri的APK文件。
