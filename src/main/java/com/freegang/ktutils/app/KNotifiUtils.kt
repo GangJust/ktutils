@@ -12,6 +12,8 @@ import androidx.core.app.NotificationCompat
 interface IProgressNotification {
     fun setFinishedText(finishedText: String)
 
+    fun setFailedText(failedText: String)
+
     fun notifyProgress(step: Int, inProgressText: String)
 }
 
@@ -51,7 +53,6 @@ object KNotifiUtils {
             setSmallIcon(context.applicationInfo.icon)
             setContentTitle(title)
             setContentText(text)
-            setStyle(NotificationCompat.BigTextStyle().bigText("aavavavavav"))
             if (intent != null) {
                 setContentIntent(intent)
             }
@@ -138,6 +139,7 @@ object KNotifiUtils {
         channelName: String = "渠道名",
         title: String = "正在下载..",
         inProgressText: String = "下载中%s%%",
+        failedText: String = "下载失败!",
         finishedText: String = "下载完成!",
         intent: PendingIntent? = null,
         listener: ProgressNotificationListener,
@@ -166,37 +168,7 @@ object KNotifiUtils {
         }
 
         // 回调,由调用者设置进度
-        listener.on(ProgressNotification(notifyId, inProgressText, finishedText, manager, notify))
-    }
-
-
-    // kotlin
-    fun showProgressNotification(
-        context: Context,
-        notifyId: Int,
-        channelId: String = "渠道ID",
-        channelName: String = "渠道名",
-        title: String = "正在下载..",
-        inProgressText: String = "下载中%s%%",
-        finishedText: String = "下载完成!",
-        intent: PendingIntent? = null,
-        listener: (notify: ProgressNotification) -> Unit,
-    ) {
-        showProgressNotification(
-            context = context,
-            notifyId = notifyId,
-            channelId = channelId,
-            channelName = channelName,
-            title = title,
-            inProgressText = inProgressText,
-            finishedText = finishedText,
-            intent = intent,
-            listener = object : ProgressNotificationListener {
-                override fun on(notify: ProgressNotification) {
-                    listener.invoke(notify)
-                }
-            },
-        )
+        listener.on(ProgressNotification(notifyId, inProgressText, failedText, finishedText, manager, notify))
     }
 
 
@@ -205,6 +177,7 @@ object KNotifiUtils {
         private val notifyId: Int = 1,
         private var inProgressText: String,
         private var finishedText: String,
+        private var failedText: String,
         private val manager: NotificationManager,
         private val notify: NotificationCompat.Builder,
     ) : IProgressNotification {
@@ -218,6 +191,17 @@ object KNotifiUtils {
             this.finishedText = finishedText
             notify.setProgress(100, 100, false)
             notify.setContentText(this.finishedText)
+            manager.notify(notifyId, notify.build())
+        }
+
+        /**
+         * 由调用者主动设置完成文本
+         * @param failedText 下载完成后展示的文本, 默认为: "下载失败!"
+         */
+        override fun setFailedText(failedText: String) {
+            this.failedText = failedText
+            notify.setProgress(0, 0, true) // 不确定状态
+            notify.setContentText(this.failedText)
             manager.notify(notifyId, notify.build())
         }
 
@@ -237,8 +221,7 @@ object KNotifiUtils {
         }
     }
 
-    @FunctionalInterface
-    interface ProgressNotificationListener {
+    fun interface ProgressNotificationListener {
         fun on(notify: ProgressNotification)
     }
 }

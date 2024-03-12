@@ -32,7 +32,19 @@ import java.lang.reflect.Field
 import java.util.*
 import kotlin.collections.ArrayDeque
 
+@FunctionalInterface
+fun interface ViewFunction {
+    fun callView(view: View)
+}
+
+@FunctionalInterface
+fun interface ViewWhereFunction {
+    fun callView(view: View): Boolean
+}
+
 object KViewUtils {
+    // 记录快速点击
+    private val fastClickRecords: MutableMap<String, Long> = HashMap()
 
     /**
      * 设置 ViewGroup 及其所有子视图的可见性为 [View.VISIBLE]，即全部显示。
@@ -200,6 +212,7 @@ object KViewUtils {
         return resultList
     }
 
+
     //
     /**
      * 设置视图及其所有子视图的启用状态。
@@ -227,7 +240,6 @@ object KViewUtils {
             }
         }
     }
-
 
     /**
      * 判断给定的 ViewGroup 及其所有子视图是否全部可用。
@@ -324,6 +336,7 @@ object KViewUtils {
             "${View.NO_ID}"
         }
     }
+
 
     //
     /**
@@ -444,6 +457,7 @@ object KViewUtils {
         }
     }
 
+
     //
     /**
      * 将某个View直接转换为Bitmap
@@ -456,6 +470,46 @@ object KViewUtils {
         view.draw(canvas)
         return bitmap
     }
+
+    /**
+     * 判断是否为快速点击
+     * @url https://zhuanlan.zhihu.com/p/34841081
+     *
+     * @param interval 自定义点击间隔时间。
+     * @return 如果两次点击时间间隔小于指定的点击间隔，则返回true; 否则返回false。
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun isFastClick(interval: Long = 200L): Boolean {
+        if (fastClickRecords.size > 1000) fastClickRecords.clear()
+        // 本方法被调用的文件名和行号作为标记
+        val ste = Throwable().stackTrace[1]
+        val key = ste.fileName + ste.lineNumber
+        var lastClickTime = fastClickRecords[key]
+        val thisClickTime = System.currentTimeMillis()
+        fastClickRecords[key] = thisClickTime
+        lastClickTime = lastClickTime ?: 0
+        val timeDuration = thisClickTime - lastClickTime
+        return timeDuration < interval
+    }
+
+    /**
+     * 代理某个View的点击事件，避免快速点击
+     * @param view 目标View。
+     * @param interval 间隔时间, 毫秒。
+     * @param l 需要响应的点击事件
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun setEnhanceOnClickListener(view: View, interval: Long = 200L, l: View.OnClickListener) {
+        view.setOnClickListener {
+            if (isFastClick(interval))
+                return@setOnClickListener
+
+            l.onClick(it)
+        }
+    }
+
 
     //
     /**
@@ -563,16 +617,56 @@ object KViewUtils {
      *              如果这个布尔值为 true，那么遍历将立即停止。否则，遍历将继续。
      */
     @JvmStatic
-    fun forEachWhereParent(
-        view: View,
-        block: ViewWhereFunction,
-    ) {
+    fun forEachWhereParent(view: View, block: ViewWhereFunction) {
         var parent: ViewParent? = view.parent
         while (parent != null) {
             if (parent is View && block.callView(parent)) {
                 return
             }
             parent = parent.parent
+        }
+    }
+
+    /**
+     * 用指定的视图替换当前视图。
+     *
+     * @param view 用于替换当前视图的新视图。
+     * @return 如果替换成功，返回true；如果当前视图没有父视图或者在父视图中找不到当前视图，返回false。
+     *
+     * 注意：这个方法只会复制当前视图的ID和布局参数到新视图，如果当前视图有其他状态需要保留，需要手动进行复制。
+     */
+    @JvmStatic
+    fun replaceWith(view: View, newView: View): Boolean {
+        val parentView = view.parent?.asOrNull<ViewGroup>() ?: return false
+        val indexOfChild = parentView.indexOfChild(view)
+        return if (indexOfChild != -1) {
+            parentView.removeViewAt(indexOfChild)
+            newView.apply {
+                id = view.id
+                layoutParams = view.layoutParams
+            }
+            parentView.addView(newView, indexOfChild)
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
+     * 获取相对于当前View的某个位置的兄弟View。
+     *
+     * @param relativeIndex 相对于当前View的位置索引。正数表示当前View后面的兄弟View，负数表示当前View前面的兄弟View。
+     * @return 如果存在位于relativeIndex位置的兄弟View，则返回该View，否则返回null。
+     */
+    @JvmStatic
+    fun getSiblingViewAt(view: View, relativeIndex: Int): View? {
+        val parent = view.parent?.asOrNull<ViewGroup>() ?: return null
+        val indexOfChild = parent.indexOfChild(view)
+        val targetIndex = indexOfChild + relativeIndex
+        return if (targetIndex in 0 until parent.childCount) {
+            parent[targetIndex]
+        } else {
+            null
         }
     }
 
@@ -641,10 +735,7 @@ object KViewUtils {
      * @param view 要转换的View
      * @return View的JSONObject表示
      */
-    private fun getViewJsonItem(
-        index: Int,
-        view: View,
-    ): JSONObject {
+    private fun getViewJsonItem(index: Int, view: View): JSONObject {
         val jsonObject = JSONObject()
         val pkg = view.javaClass.`package`
         jsonObject.put("index", index)
@@ -1073,16 +1164,6 @@ object KViewUtils {
             return build.toString()
         }
     }
-
-    @FunctionalInterface
-    fun interface ViewFunction {
-        fun callView(view: View)
-    }
-
-    @FunctionalInterface
-    fun interface ViewWhereFunction {
-        fun callView(view: View): Boolean
-    }
 }
 
 ///
@@ -1112,15 +1193,15 @@ fun View.forEachWhereParent(block: View.() -> Boolean) {
     KViewUtils.forEachWhereParent(this, block)
 }
 
-fun View.forEachChild(block: View.() -> Unit) {
+fun View.forEachChild(block: (view: View) -> Unit) {
     KViewUtils.forEachChild(this, block)
 }
 
-fun View.forEachWhereChild(block: View.() -> Boolean) {
+fun View.forEachWhereChild(block: (view: View) -> Boolean) {
     KViewUtils.forEachWhereChild(this, block)
 }
 
-inline fun <reified T : View> View.firstParentOrNull(clazz: Class<T>): T? {
+fun <T : View> View.firstParentOrNull(clazz: Class<out T>): T? {
     var view: View? = null
     KViewUtils.forEachWhereParent(this) {
         if (clazz.isInstance(it)) {
@@ -1129,53 +1210,64 @@ inline fun <reified T : View> View.firstParentOrNull(clazz: Class<T>): T? {
         }
         false
     }
-    return view as T?
+    return view?.let { clazz.cast(it) }
 }
 
-inline fun <reified T : View> View.firstParentOrNull(crossinline block: (T) -> Boolean): T? {
-    var view: View? = null
+fun <T : View> View.firstParentOrNull(clazz: Class<out T>, where: (view: T) -> Boolean): T? {
+    var view: T? = null
     KViewUtils.forEachWhereParent(this) {
-        if (it is T && block.invoke(it)) {
-            view = it
+        if (!clazz.isInstance(it))
+            return@forEachWhereParent false
+
+        val cast = clazz.cast(it)!! //~
+        if (where.invoke(cast)) {
+            view = cast
             return@forEachWhereParent true
+        }
+
+        false
+    }
+
+    return view
+}
+
+fun <T : View> View.firstOrNull(clazz: Class<out T>): T? {
+    var view: View? = null
+    KViewUtils.forEachWhereChild(this) {
+        if (clazz.isInstance(it)) {
+            view = it
+            return@forEachWhereChild true
         }
         false
     }
-    return view as T?
+    return view?.let { clazz.cast(it) }
 }
 
-inline fun <reified T : View> View.filter(crossinline block: (T) -> Boolean): Sequence<T> {
-    val views = mutableListOf<T>()
-    KViewUtils.forEachChild(this) {
-        if (it is T && block.invoke(it)) {
-            views.add(it)
+fun <T : View> View.firstOrNull(clazz: Class<out T>, where: (view: T) -> Boolean): T? {
+    var view: T? = null
+    KViewUtils.forEachWhereChild(this) {
+        if (!clazz.isInstance(it))
+            return@forEachWhereChild false
+
+        val cast = clazz.cast(it)!! //~
+        if (where.invoke(cast)) {
+            view = cast
+            return@forEachWhereChild true
         }
+
+        false
+    }
+
+    return view
+}
+
+fun View.filter(where: (view: View) -> Boolean): Sequence<View> {
+    val views = mutableListOf<View>()
+    KViewUtils.forEachChild(this) {
+        if (where.invoke(it))
+            views.add(it)
     }
     return views.asSequence()
-}
-
-inline fun <reified T : View> View.firstOrNull(clazz: Class<T>): T? {
-    var view: View? = null
-    KViewUtils.forEachWhereChild(this) {
-        if (clazz.isInstance(it)) {
-            view = it
-            return@forEachWhereChild true
-        }
-        false
-    }
-    return view as T?
-}
-
-inline fun <reified T : View> View.firstOrNull(crossinline block: (T) -> Boolean): T? {
-    var view: View? = null
-    KViewUtils.forEachWhereChild(this) {
-        if (it is T && block.invoke(it)) {
-            view = it
-            return@forEachWhereChild true
-        }
-        false
-    }
-    return view as T?
 }
 
 fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
@@ -1197,26 +1289,17 @@ fun View.setLayoutHeight(needHeight: Int) {
     }
 }
 
-fun <V : View> V.setEnhanceOnClickListener(onClickListener: (v: V) -> Unit) {
-    // val key = "${this::class.simpleName}[${left},${top},${right}${bottom}]@${hashCode()}"
-    var lastClickTime = 0L
-    this.setOnClickListener {
-        if (System.currentTimeMillis() - lastClickTime < 500L) {
-            lastClickTime = System.currentTimeMillis()
-            return@setOnClickListener
-        }
-        lastClickTime = System.currentTimeMillis()
-        onClickListener.invoke(this)
-    }
+fun View.setEnhanceOnClickListener(interval: Long = 200L, l: View.OnClickListener) {
+    KViewUtils.setEnhanceOnClickListener(this, interval, l)
 }
 
-fun <V : View> V.postRunning(block: V.() -> Unit) {
+fun <V : View> V.postRunning(block: (view: V) -> Unit) {
     this.post {
         block.invoke(this)
     }
 }
 
-fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: V.() -> Unit) {
+fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: (view: V) -> Unit) {
     this.postDelayed(delayInMillis) {
         block.invoke(this)
     }
@@ -1237,45 +1320,12 @@ fun View.removeInParentIndex(): Int {
     return indexOfChild
 }
 
-/**
- * 用指定的视图替换当前视图。
- *
- * @param view 用于替换当前视图的新视图。
- * @return 如果替换成功，返回true；如果当前视图没有父视图或者在父视图中找不到当前视图，返回false。
- *
- * 注意：这个函数只会复制当前视图的ID和布局参数到新视图，如果当前视图有其他状态需要保留，需要手动进行复制。
- */
-fun View.replaceWith(view: View): Boolean {
-    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return false
-    val indexOfChild = parentView.indexOfChild(this)
-    return if (indexOfChild != -1) {
-        parentView.removeViewAt(indexOfChild)
-        view.apply {
-            id = this@replaceWith.id
-            layoutParams = this@replaceWith.layoutParams
-        }
-        parentView.addView(view, indexOfChild)
-        true
-    } else {
-        false
-    }
+fun View.replaceWith(newView: View) {
+    KViewUtils.replaceWith(this, newView)
 }
 
-/**
- * 获取相对于当前View的某个位置的兄弟View。
- *
- * @param relativeIndex 相对于当前View的位置索引。正数表示当前View后面的兄弟View，负数表示当前View前面的兄弟View。
- * @return 如果存在位于relativeIndex位置的兄弟View，则返回该View，否则返回null。
- */
 fun View.getSiblingViewAt(relativeIndex: Int): View? {
-    val parent = this.parent?.asOrNull<ViewGroup>() ?: return null
-    val indexOfChild = parent.indexOfChild(this)
-    val targetIndex = indexOfChild + relativeIndex
-    return if (targetIndex in 0 until parent.childCount) {
-        parent[targetIndex]
-    } else {
-        null
-    }
+    return KViewUtils.getSiblingViewAt(this, relativeIndex)
 }
 
 val View.parentView

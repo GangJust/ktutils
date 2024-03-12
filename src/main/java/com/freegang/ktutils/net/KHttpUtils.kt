@@ -1,7 +1,6 @@
 package com.freegang.ktutils.net
 
 import android.os.Build
-import com.freegang.ktutils.log.KLogCat
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
@@ -64,13 +63,11 @@ object KHttpUtils {
             connect.disconnect()
         } catch (e: Exception) {
             e.printStackTrace()
-            KLogCat.e("发生异常:\n${e.stackTraceToString()}")
         } finally {
             try {
                 connect?.disconnect()
             } catch (e: IOException) {
                 e.printStackTrace()
-                KLogCat.e("发生异常:\n${e.stackTraceToString()}")
             }
         }
         return body
@@ -114,7 +111,7 @@ object KHttpUtils {
                 output.flush()
                 output.close()
                 connect?.disconnect()
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 listener?.downloading(realCount, total, e)
             }
@@ -122,7 +119,6 @@ object KHttpUtils {
         return false
     }
 
-    @FunctionalInterface
     fun interface DownloadListener {
         fun downloading(real: Long, total: Long, e: Throwable?)
     }
