@@ -6,7 +6,14 @@ import android.os.Build
 import android.os.Looper
 import android.os.Process
 import android.widget.Toast
+import com.freegang.extension.abiBit
 import com.freegang.extension.activeActivity
+import com.freegang.extension.appLabelName
+import com.freegang.extension.appVersionCode
+import com.freegang.extension.appVersionName
+import com.freegang.extension.dalvikInstructionSet
+import com.freegang.extension.is64BitDalvik
+import com.freegang.extension.securityPatchLevel
 import com.freegang.ktutils.log.KLogCat
 import kotlin.system.exitProcess
 

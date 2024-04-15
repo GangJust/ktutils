@@ -3,8 +3,8 @@ package com.freegang.ktutils.log
 import android.app.Application
 import android.util.Log
 import com.freegang.extension.child
+import com.freegang.extension.iterateAndTransform
 import com.freegang.extension.need
-import com.freegang.ktutils.other.iterateAndTransform
 import java.io.File
 import java.io.FileWriter
 import java.text.SimpleDateFormat

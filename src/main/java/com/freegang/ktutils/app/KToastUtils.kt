@@ -12,8 +12,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
+import com.freegang.extension.dip2px
 import com.freegang.extension.isDarkMode
-import com.freegang.ktutils.display.dip2px
 
 object KToastUtils {
     private var mToast: Toast? = null

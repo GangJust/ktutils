@@ -17,9 +17,9 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.freegang.ktutils.extension.asOrNull
-import com.freegang.ktutils.reflect.fieldGet
-import com.freegang.ktutils.reflect.methodInvoke
+import com.freegang.extension.asOrNull
+import com.freegang.extension.fieldGet
+import com.freegang.extension.methodInvoke
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.security.MessageDigest
