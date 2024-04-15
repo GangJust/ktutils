@@ -2,8 +2,8 @@ package com.freegang.ktutils.log
 
 import android.app.Application
 import android.util.Log
-import com.freegang.ktutils.io.child
-import com.freegang.ktutils.io.need
+import com.freegang.extension.child
+import com.freegang.extension.need
 import com.freegang.ktutils.other.iterateAndTransform
 import java.io.File
 import java.io.FileWriter
@@ -50,12 +50,19 @@ class KLogCat {
      * @param tag 日志标签
      * @param msg 日志内容
      */
-    private fun println(priority: Int, tag: String, vararg msg: String) {
+    private fun println(priority: Int, tag: String, vararg msg: String?) {
         /// 静默模式
         if (silence) return
 
         // 最长的字符串
-        val maxReduce = if (msg.isEmpty()) "        " else msg.reduce { acc, s -> if (acc.length > s.length) acc else s }
+        val defaultStr = "        "
+        val maxReduce: String =
+            if (msg.isEmpty())
+                defaultStr
+            else
+                msg.reduce { acc, s ->
+                    if ("$acc".length > "$s".length) acc else s
+                } ?: "null"
 
         // 边框构建器
         val border = if (maxReduce.length >= maxBorderSize) {
@@ -79,12 +86,16 @@ class KLogCat {
         Log.println(priority, tag, topBorder)
         // 标题
         if (showTitle) {
-            Log.println(priority, tag, "$borderBar $tag $borderSolid Level[${getLevelString(priority)}]")
+            Log.println(
+                priority,
+                tag,
+                "$borderBar $tag $borderSolid Level[${getLevelString(priority)}]"
+            )
             Log.println(priority, tag, "$borderStart$border")
         }
         // 内容
         msg.forEach {
-            writeStorage(priority, tag, it)
+            writeStorage(priority, tag, "$it")
             Log.println(priority, tag, "$contentLeftBorder$it")
             // 中间分隔线
             if (msg[msg.lastIndex] != it && showDivider) {
@@ -165,8 +176,13 @@ class KLogCat {
         val application = application ?: return null
         return try {
             val appName = application.resources.getString(application.applicationInfo.labelRes)
-            val versionName = application.packageManager.getPackageInfo(application.packageName, 0).versionName ?: ""
-            File(getStorageFolder(), "${appName}_${versionName}_".plus(dateFormat.format(date)).plus(".log"))
+            val versionName =
+                application.packageManager.getPackageInfo(application.packageName, 0).versionName
+                    ?: ""
+            File(
+                getStorageFolder(),
+                "${appName}_${versionName}_".plus(dateFormat.format(date)).plus(".log")
+            )
         } catch (e: Exception) {
             File(getStorageFolder(), dateFormat.format(date).plus(".log"))
         }
@@ -306,17 +322,17 @@ class KLogCat {
          * VERBOSE = 2
          */
         @JvmStatic
-        fun v(vararg msg: String) {
+        fun v(vararg msg: String?) {
             instance.println(Log.VERBOSE, instance.tag, *msg)
         }
 
         @JvmStatic
-        fun tagV(tag: String, msg: String) {
+        fun tagV(tag: String, msg: String?) {
             instance.println(Log.VERBOSE, tag, msg)
         }
 
         @JvmStatic
-        fun tagV(tag: String, msg: Array<String>) {
+        fun tagV(tag: String, msg: Array<String?>) {
             instance.println(Log.VERBOSE, tag, *msg)
         }
 
@@ -324,17 +340,17 @@ class KLogCat {
          * DEBUG = 3
          */
         @JvmStatic
-        fun d(vararg msg: String) {
+        fun d(vararg msg: String?) {
             instance.println(Log.DEBUG, instance.tag, *msg)
         }
 
         @JvmStatic
-        fun tagD(tag: String, msg: String) {
+        fun tagD(tag: String, msg: String?) {
             instance.println(Log.DEBUG, tag, msg)
         }
 
         @JvmStatic
-        fun tagD(tag: String, msg: Array<String>) {
+        fun tagD(tag: String, msg: Array<String?>) {
             instance.println(Log.DEBUG, tag, *msg)
         }
 
@@ -342,17 +358,17 @@ class KLogCat {
          * INFO = 4
          */
         @JvmStatic
-        fun i(vararg msg: String) {
+        fun i(vararg msg: String?) {
             instance.println(Log.INFO, instance.tag, *msg)
         }
 
         @JvmStatic
-        fun tagI(tag: String, msg: String) {
+        fun tagI(tag: String, msg: String?) {
             instance.println(Log.INFO, tag, msg)
         }
 
         @JvmStatic
-        fun tagI(tag: String, msg: Array<String>) {
+        fun tagI(tag: String, msg: Array<String?>) {
             instance.println(Log.INFO, tag, *msg)
         }
 
@@ -360,17 +376,17 @@ class KLogCat {
          * WARN = 5
          */
         @JvmStatic
-        fun w(vararg msg: String) {
+        fun w(vararg msg: String?) {
             instance.println(Log.WARN, instance.tag, *msg)
         }
 
         @JvmStatic
-        fun tagW(tag: String, msg: String) {
+        fun tagW(tag: String, msg: String?) {
             instance.println(Log.WARN, tag, msg)
         }
 
         @JvmStatic
-        fun tagW(tag: String, msg: Array<String>) {
+        fun tagW(tag: String, msg: Array<String?>) {
             instance.println(Log.WARN, tag, *msg)
         }
 
@@ -378,17 +394,17 @@ class KLogCat {
          * ERROR = 6
          */
         @JvmStatic
-        fun e(vararg msg: String) {
+        fun e(vararg msg: String?) {
             instance.println(Log.ERROR, instance.tag, *msg)
         }
 
         @JvmStatic
-        fun tagE(tag: String, msg: String) {
+        fun tagE(tag: String, msg: String?) {
             instance.println(Log.ERROR, tag, msg)
         }
 
         @JvmStatic
-        fun tagE(tag: String, msg: Array<String>) {
+        fun tagE(tag: String, msg: Array<String?>) {
             instance.println(Log.ERROR, tag, *msg)
         }
 

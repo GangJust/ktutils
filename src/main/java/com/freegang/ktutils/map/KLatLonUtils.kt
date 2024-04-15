@@ -56,6 +56,7 @@ object KLatLonUtils {
      * @param lon 经度值
      * @return 经纬度是否合理，合理返回 true，否则返回 false
      */
+    @JvmStatic
     fun isLatLngValid(lat: Double, lon: Double): Boolean {
         val validLatRange = -90.0..90.0
         val validLonRange = -180.0..180.0

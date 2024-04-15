@@ -51,9 +51,8 @@ object KAppUtils {
         try {
             val activityThread = Class.forName("android.app.ActivityThread")
             val thread = activityThread.getMethod("currentActivityThread").invoke(null)
-            val app =
-                activityThread.getMethod("getApplication").invoke(thread)
-                    ?: throw NullPointerException("u should init first")
+            val app = activityThread.getMethod("getApplication").invoke(thread)
+                ?: throw NullPointerException("u should init first")
             return app as Application
         } catch (e: NoSuchMethodException) {
             e.printStackTrace()
@@ -67,6 +66,8 @@ object KAppUtils {
         throw NullPointerException("should be initialized first, please refer to: #KAppUtils.setApplication()")
     }
 
+
+    ///
     /**
      * 获取应用程序的名称。
      *
@@ -431,8 +432,9 @@ object KAppUtils {
         permission: String,
         also: ((permission: String) -> Unit)? = null,
     ): Boolean {
-        val packageInfo = getPackageInfo(context, context.packageName, PackageManager.GET_PERMISSIONS)
-            ?: throw NullPointerException("Unable to obtain packageInfo!")
+        val packageInfo =
+            getPackageInfo(context, context.packageName, PackageManager.GET_PERMISSIONS)
+                ?: throw NullPointerException("Unable to obtain packageInfo!")
         val permissions = packageInfo.requestedPermissions
         return permissions.contains(permission)
             .also { if (it) also?.invoke(permission) }
@@ -449,7 +451,10 @@ object KAppUtils {
         context: Context,
         permission: String,
     ): Boolean {
-        return ContextCompat.checkSelfPermission(context, permission) == PermissionChecker.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(
+            context,
+            permission
+        ) == PermissionChecker.PERMISSION_GRANTED
     }
 
     /**
@@ -615,26 +620,3 @@ object KAppUtils {
         } else 0
     }
 }
-
-///
-val Any.is64BitDalvik get() = KAppUtils.is64BitDalvik()
-
-val Any.dalvikInstructionSet get() = KAppUtils.getDalvikInstructionSet()
-
-val Any.securityPatchLevel get() = KAppUtils.getSecurityPatchLevel()
-
-val Context.abiBit get() = KAppUtils.getAbiBit(this)
-
-val Context.appLabelName get() = KAppUtils.getAppLabelName(this)
-
-val Context.appVersionName get() = KAppUtils.getVersionName(this)
-
-val Context.appVersionCode get() = KAppUtils.getVersionCode(this)
-
-val Context.isDarkMode get() = KAppUtils.isDarkMode(this)
-
-val Context.statusBarHeight get() = KAppUtils.getStatusBarHeight(this)
-
-val Context.navigationBarHeight get() = KAppUtils.getNavigationBarHeight(this)
-
-val Context.navBarInteractionMode get() = KAppUtils.getNavBarInteractionMode(this)

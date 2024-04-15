@@ -13,13 +13,13 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.PermissionChecker
-import com.freegang.ktutils.io.storageRootPath
+import com.freegang.extension.storageRootPath
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * 媒体操作工具类, delete(删除)、update(更新)暂未实现, 待后。
+ * 媒体操作工具类。
  *
  * 如果想要确切查看媒体数据库表结构, 通常Android手机媒体数据库路径位于: /data/data/com.android.providers.media/databases/
  *
@@ -28,7 +28,8 @@ import java.io.OutputStream
 object KMediaUtils {
 
     /**
-     * 判断是否具有媒体读取权限
+     * 判断是否具有媒体读取权限。
+     *
      * @param context Context
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -397,7 +398,7 @@ object KMediaUtils {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, formatPath) //api 29
+            put(MediaStore.MediaColumns.RELATIVE_PATH, formatPath) // api 29
         }
         return resolver.insert(mediaUri, contentValues)
     }
@@ -550,32 +551,4 @@ object KMediaUtils {
     ): Uri? {
         return FileProvider.getUriForFile(context.applicationContext, authority, file)
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun Context.hasMediaPermission(): Boolean {
-    return KMediaUtils.hasMediaPermission(this)
-}
-
-fun Context.getImageRealPath(uri: Uri): String? = KMediaUtils.getImageRealPath(this, uri)
-
-fun Context.getVideoRealPath(uri: Uri): String? = KMediaUtils.getVideoRealPath(this, uri)
-
-fun Context.getAudioRealPath(uri: Uri): String? = KMediaUtils.getAudioRealPath(this, uri)
-
-fun Context.getMediaRealPath(uri: Uri): String? = KMediaUtils.getMediaRealPath(this, uri)
-
-fun Context.getFileProviderUri(
-    file: File,
-    authority: String? = null,
-): Uri? {
-    val defaultAuthority = authority ?: "${applicationContext.packageName}.fileprovider"
-    return KMediaUtils.getFileProviderUri(this, file, defaultAuthority)
-}
-
-fun File.getFileProviderUri(
-    context: Context,
-    authority: String = "${context.applicationContext.packageName}.fileprovider",
-): Uri? {
-    return KMediaUtils.getFileProviderUri(context, this, authority)
 }

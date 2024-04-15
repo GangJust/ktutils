@@ -1,11 +1,12 @@
-package com.freegang.ktutils.text
+package com.freegang.ktutils.view
 
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
+import com.freegang.ktutils.text.KTextUtils
 
-/// 表单验证工具类
-object KFormCheckUtils {
+/// 表单工具类
+object KFormUtils {
 
     /**
      * 检查某个TextView文本是否为空
@@ -24,7 +25,7 @@ object KFormCheckUtils {
      * 按正则表达式检查某个TextView文本
      *
      * @param view T extends TextView
-     * @param regex 正则表达式公式
+     * @param regex 正则表达式
      */
     @JvmStatic
     fun <T : TextView> checkByRegex(view: T, regex: String): Boolean {
@@ -41,7 +42,11 @@ object KFormCheckUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun <T : TextView> checkIsNumber(view: T, msg: CharSequence, isPositive: Boolean = true) {
+    fun <T : TextView> checkIsNumber(
+        view: T,
+        msg: CharSequence,
+        isPositive: Boolean = true,
+    ) {
         val regex = if (isPositive) Regex("^\\d*\\.?\\d+\$") else Regex("^-?\\d*\\.?\\d+\$")
         view.addTextChangedListener {
             if (!regex.matches("${it}0")) {
@@ -61,7 +66,11 @@ object KFormCheckUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun <T : TextView> checkIsIntegerNumber(view: T, msg: CharSequence, isPositive: Boolean = true) {
+    fun <T : TextView> checkIsIntegerNumber(
+        view: T,
+        msg: CharSequence,
+        isPositive: Boolean = true
+    ) {
         val regex = if (isPositive) Regex("^\\d*$") else Regex("^-?\\d*\$")
         view.addTextChangedListener {
             if (!regex.matches("$it")) {

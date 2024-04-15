@@ -6,6 +6,8 @@ import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import com.freegang.extension.child
+import com.freegang.extension.toFile
 import java.io.File
 
 object KStorageUtils {
@@ -94,31 +96,4 @@ object KStorageUtils {
         // 外置存储器读写权限 Android 11-
         return permission
     }
-}
-
-///
-/**
- * 获取外置存储器的根路径，通常是：/storage/emulated/0/
- */
-val Context.storageRootPath: String
-    get() = KStorageUtils.getStoragePath(this)
-
-/**
- * 获取外置存储器的根文件对象，通常是：/storage/emulated/0/
- */
-val Context.storageRootFile: File
-    get() = KStorageUtils.getStoragePath(this).toFile()
-
-/**
- * 检查外置存储器是否可读写
- */
-fun Context.hasOperationStorage(directory: File? = null): Boolean {
-    return KStorageUtils.hasOperationStorage(this, directory)
-}
-
-/**
- * 检查是否具有外置存储管理或读写权限
- */
-fun Context.hasStoragePermission(): Boolean {
-    return KStorageUtils.hasStoragePermission(this)
 }

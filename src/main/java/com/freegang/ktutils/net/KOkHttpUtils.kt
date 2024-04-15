@@ -171,6 +171,72 @@ object KOkHttpUtils {
     }
 
     /**
+     * 发送一个 PUT 请求，并返回响应的字符串结果
+     * @param url 请求的 URL
+     * @param body 请求的请求体
+     * @return 响应的字符串结果，如果请求失败则返回空字符串
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun put(
+        url: String,
+        body: RequestBody,
+        headers: Headers = Headers.headersOf(),
+    ): String {
+        val request = Request.Builder()
+            .headers(headers)
+            .put(body)
+            .url(url)
+            .build()
+
+        return try {
+            client.newCall(request).execute().body?.string() ?: RESULT_NOTHING
+        } catch (e: Exception) {
+            e.printStackTrace()
+            e.message ?: RESULT_NOTHING
+        }
+    }
+
+    /**
+     * 发送一个 PUT 请求，并返回响应的字符串结果
+     * @param url 请求的 URL
+     * @param params 请求的参数，以 Map 的形式传递
+     * @return 响应的字符串结果，如果请求失败则返回空字符串
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun putMap(
+        url: String,
+        params: Map<String, String>,
+        headers: Headers = Headers.headersOf(),
+    ): String {
+        val formBodyBuilder = FormBody.Builder()
+        for ((key, value) in params) {
+            formBodyBuilder.add(key, value)
+        }
+        val formBody = formBodyBuilder.build()
+        return put(url, formBody, headers)
+    }
+
+    /**
+     * 发送一个 PUT 请求，并返回响应的字符串结果
+     * @param url 请求的 URL
+     * @param json 请求的 JSON 数据
+     * @return 响应的字符串结果，如果请求失败则返回空字符串
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun putJson(
+        url: String,
+        json: String,
+        headers: Headers = Headers.headersOf(),
+    ): String {
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val requestBody = json.toRequestBody(mediaType)
+        return put(url, requestBody, headers)
+    }
+
+    /**
      * 发送一个请求，并返回响应的字符串结果
      * @param url 请求的 URL
      * @param requestBody 请求体
@@ -364,7 +430,7 @@ object KOkHttpUtils {
     /**
      * 上传进度回调接口
      */
-    interface UploadProgressListener {
+    fun interface UploadProgressListener {
         /**
          * 上传进度回调方法
          * @param filename 当前上传的文件名
@@ -378,7 +444,7 @@ object KOkHttpUtils {
     /**
      * 下载进度回调接口
      */
-    interface DownloadProgressListener {
+    fun interface DownloadProgressListener {
         /**
          * 下载进度回调方法
          * @param bytesRead 已下载的字节数

@@ -5,6 +5,12 @@ import java.io.File
 object KFileLockUtils {
     private val lockedFiles = mutableListOf<String>()
 
+    /**
+     * 加锁
+     *
+     * @param file 需要加锁的文件
+     * @return 加锁是否成功
+     */
     fun lock(file: File): Boolean {
         val filePath = file.absolutePath
         if (lockedFiles.contains(filePath)) {
@@ -23,6 +29,12 @@ object KFileLockUtils {
         }
     }
 
+    /**
+     * 解锁
+     *
+     * @param file 需要解锁的文件
+     * @return 解锁是否成功
+     */
     fun unlock(file: File): Boolean {
         val filePath = file.absolutePath
         if (!file.exists()) {
@@ -37,6 +49,12 @@ object KFileLockUtils {
         }
     }
 
+    /**
+     * 判断文件是否被加锁
+     *
+     * @param file 需要判断的文件
+     * @return 是否被加锁
+     */
     fun locked(file: File): Boolean {
         return file.exists() // 如果文件存在，则表示已经加锁，否则表示未加锁
     }

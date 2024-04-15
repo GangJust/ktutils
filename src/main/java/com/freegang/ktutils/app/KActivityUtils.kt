@@ -282,9 +282,3 @@ object KActivityUtils {
         fun onActivityDestroyed(activity: Activity)
     }
 }
-
-val Any.activeActivity get() = KActivityUtils.getActiveActivity()
-
-val Activity.contentView get() = this.window.decorView.findViewById<ViewGroup>(Window.ID_ANDROID_CONTENT)
-
-val Window.contentView get() = this.decorView.findViewById<ViewGroup>(Window.ID_ANDROID_CONTENT)

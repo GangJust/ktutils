@@ -1,6 +1,13 @@
 package com.freegang.ktutils.collection
 
 object KCollectionUtils {
+    /**
+     * 返回元素的第一个索引，如果数组不包含元素，则返回-1。
+     */
+    @JvmStatic
+    fun <T> indexOf(array: Array<T>, value: T): Int {
+        return array.indexOf(value)
+    }
 
     /**
      * 只是为了方便java调用
@@ -31,6 +38,28 @@ object KCollectionUtils {
     }
 
     /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun <T> filter(
+        c: Collection<T>,
+        predicate: Predicate<T>,
+    ): List<T> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun <T> filter(
+        c: Array<T>,
+        predicate: Predicate<T>,
+    ): List<T> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
      * 返回在第一个集合中存在但不在第二个集合中存在的元素的集合。
      *
      * @param c1 第一个集合
@@ -40,7 +69,7 @@ object KCollectionUtils {
     @JvmStatic
     fun <T> except(c1: Collection<T>, c2: Collection<T>): Collection<T> {
         // 使用集合运算符 `minus` 获取在 c1 中存在但不在 c2 中存在的元素
-        return c1.minus(c2)
+        return c1.minus(c2.toSet())
     }
 
     /**
@@ -53,7 +82,7 @@ object KCollectionUtils {
     @JvmStatic
     fun <T> intersection(c1: Collection<T>, c2: Collection<T>): Collection<T> {
         // 使用集合运算符 `intersect` 获取两个集合的交集
-        return c1.intersect(c2)
+        return c1.intersect(c2.toSet())
     }
 
     /**
@@ -85,49 +114,15 @@ object KCollectionUtils {
         return c.map { transformMap.map(it) }
     }
 
-    @FunctionalInterface
-    interface Transform<T> {
+    fun interface Transform<T> {
         fun transform(t: T): CharSequence
     }
 
-    @FunctionalInterface
-    interface TransformMap<T, R> {
+    fun interface TransformMap<T, R> {
         fun map(t: T): R
     }
-}
 
-// 某个数字是否在集合索引范围内
-fun Collection<*>.inIndex(index: Int): Boolean {
-    return (index >= 0) and (index < this.size)
-}
-
-// 某个数字是否在数组索引范围内
-fun Array<*>.inIndex(index: Int): Boolean {
-    return (index >= 0) and (index < this.size)
-}
-
-// 获取某个值或返回null
-inline fun <reified T> Array<T>.getOrNull(index: Int): T? {
-    return if (index in indices) {
-        get(index)
-    } else {
-        null
+    fun interface Predicate<T> {
+        fun predicate(value: T): Boolean
     }
-}
-
-// 某个集合不为空, 则返回它的DSL扩展
-inline fun <reified T : Collection<*>> T.ifNotEmpty(block: T.() -> Unit) {
-    if (isEmpty()) return
-    block.invoke(this)
-}
-
-inline fun <reified T : Sequence<*>> T.ifNotEmpty(block: T.() -> Unit) {
-    if (any()) return
-    block.invoke(this)
-}
-
-// 某个数组不为空, 则返回它的DSL扩展
-inline fun <T> Array<T>.ifNotEmpty(block: Array<T>.() -> Unit) {
-    if (isEmpty()) return
-    block.invoke(this)
 }

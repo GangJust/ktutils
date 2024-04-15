@@ -1,7 +1,6 @@
 package com.freegang.ktutils.app
 
 import android.content.Context
-import android.content.res.AssetManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -65,20 +64,4 @@ object KAssetsUtils {
      */
     @JvmStatic
     val assetsAbsolutePath: String get() = "file:///android_asset/"
-}
-
-fun Context.readAssetsAsText(fileName: String): String {
-    return KAssetsUtils.readAsText(this, fileName)
-}
-
-fun Context.readAssetsAsBytes(fileName: String): ByteArray {
-    return KAssetsUtils.readAsBytes(this, fileName)
-}
-
-fun AssetManager.readAssetsAsText(fileName: String): String {
-    return this.open(fileName).readBytes().decodeToString()
-}
-
-fun AssetManager.readAssetsAsBytes(fileName: String): ByteArray {
-    return this.open(fileName).readBytes()
 }

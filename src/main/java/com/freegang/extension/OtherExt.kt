@@ -1,17 +1,14 @@
-package com.freegang.ktutils.extension
+package com.freegang.extension
 
-import android.view.MotionEvent
-
+/**
+ * 类型转换，如果转换失败则返回null
+ */
 inline fun <reified T> Any.asOrNull(): T? {
     return if (this is T) {
         this
     } else {
         null
     }
-}
-
-fun MotionEvent.actionToString(): String {
-    return MotionEvent.actionToString(this.action)
 }
 
 /**

@@ -1,8 +1,4 @@
-package com.freegang.ktutils.other
-
-object KNumUtils {
-
-}
+package com.freegang.extension
 
 /**
  * 从当前整数到指定的结束整数进行迭代，并在每次迭代时执行指定的动作。
@@ -57,5 +53,3 @@ inline fun <T> Int.iterateAndTransform(
     }
     return result
 }
-
-

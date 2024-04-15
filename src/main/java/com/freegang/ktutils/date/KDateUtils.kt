@@ -420,21 +420,6 @@ object KDateUtils {
     }
 }
 
-val Date.isLeapYear get() = KDateUtils.isLeapYear(this)
-
-fun Date.format(pattern: String = KDateUtils.PATTERN_FULL): String {
-    return KDateUtils.format(pattern)
-}
-
-fun Date.addYears(years: Int) = KDateUtils.addYears(this, years)
-
-fun Date.addDays(days: Int) = KDateUtils.addDays(this, days)
-
-fun Date.addHours(hours: Int) = KDateUtils.addHours(this, hours)
-
-fun Date.addMinutes(minutes: Int) = KDateUtils.addMinutes(this, minutes)
-
-fun Date.addSeconds(seconds: Int) = KDateUtils.addSeconds(this, seconds)
 
 
 

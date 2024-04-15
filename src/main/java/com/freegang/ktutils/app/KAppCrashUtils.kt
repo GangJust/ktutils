@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Looper
 import android.os.Process
 import android.widget.Toast
+import com.freegang.extension.activeActivity
 import com.freegang.ktutils.log.KLogCat
 import kotlin.system.exitProcess
 
@@ -70,11 +71,11 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
         KLogCat.e(crashMessage)
 
         // 传递错误信息
-        if (mIntent!!.component != null) {
-            mIntent!!.putExtra(CRASH_MESSAGE, crashMessage)
-            mIntent!!.flags =
+        if (mIntent?.component != null) {
+            mIntent?.putExtra(CRASH_MESSAGE, crashMessage)
+            mIntent?.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-            mApp!!.startActivity(mIntent)
+            mApp?.startActivity(mIntent)
             Process.killProcess(Process.myPid())
             exitProcess(1)
         } else {
@@ -84,7 +85,7 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            mApp!!.activeActivity?.finishAffinity()
+            mApp?.activeActivity?.finishAffinity()
             Process.killProcess(Process.myPid())
             exitProcess(1)
         }

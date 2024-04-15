@@ -16,16 +16,16 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.core.view.get
+import androidx.core.view.isVisible
 import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
 import androidx.core.view.marginTop
-import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
+import com.freegang.extension.asOrNull
+import com.freegang.extension.px2dip
 import com.freegang.ktutils.color.KColorUtils
-import com.freegang.ktutils.display.px2dip
-import com.freegang.ktutils.extension.asOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.reflect.Field
@@ -45,6 +45,11 @@ fun interface ViewWhereFunction {
 object KViewUtils {
     // 记录快速点击
     private val fastClickRecords: MutableMap<String, Long> = HashMap()
+
+    @JvmStatic
+    fun visibility(view: View, v: Boolean) {
+        view.isVisible = v
+    }
 
     /**
      * 设置 ViewGroup 及其所有子视图的可见性为 [View.VISIBLE]，即全部显示。
@@ -481,7 +486,9 @@ object KViewUtils {
     @JvmStatic
     @JvmOverloads
     fun isFastClick(interval: Long = 200L): Boolean {
-        if (fastClickRecords.size > 1000) fastClickRecords.clear()
+        if (fastClickRecords.size > 1000)
+            fastClickRecords.clear()
+
         // 本方法被调用的文件名和行号作为标记
         val ste = Throwable().stackTrace[1]
         val key = ste.fileName + ste.lineNumber
@@ -539,7 +546,7 @@ object KViewUtils {
     }
 
     /**
-     * 遍历 View 及其子 View
+     * 遍历 View 及其子 View。
      *
      * @param view 需要遍历的 View
      * @param block 遍历回调函数，接收一个 View 参数
@@ -565,7 +572,7 @@ object KViewUtils {
     }
 
     /**
-     * 条件遍历 View 及其子 View
+     * 条件遍历 View 及其子 View。
      *
      * @param view 需要遍历的 View
      * @param block 遍历回调函数，接收一个 View 参数，返回一个 Boolean 如果为 `true` 则直接从树遍历中结束
@@ -892,7 +899,8 @@ object KViewUtils {
     }
 
     /**
-     * 构建View节点树
+     * 构建View节点树，记得合理释放[ViewNode.destroy]。
+     *
      * @param view ViewGroup
      * @return ViewNode viewGroup作为根节点
      */
@@ -1165,187 +1173,3 @@ object KViewUtils {
         }
     }
 }
-
-///
-fun View.toViewJson(indentSpaces: Int = 0): String {
-    return KViewUtils.toViewJson(this, indentSpaces)
-}
-
-fun View.getViewTree(): KViewUtils.ViewNode {
-    return KViewUtils.buildViewTree(this)
-}
-
-fun View.toViewTreeString(
-    indent: Int = 4,
-    format: (KViewUtils.ViewNode) -> String = { it.toString() },
-): String {
-    val viewTree = KViewUtils.buildViewTree(this)
-    val deepToString = viewTree.deepToString(indent, format)
-    viewTree.destroy()
-    return deepToString
-}
-
-fun View.forEachParent(block: View.() -> Unit) {
-    KViewUtils.forEachParent(this, block)
-}
-
-fun View.forEachWhereParent(block: View.() -> Boolean) {
-    KViewUtils.forEachWhereParent(this, block)
-}
-
-fun View.forEachChild(block: (view: View) -> Unit) {
-    KViewUtils.forEachChild(this, block)
-}
-
-fun View.forEachWhereChild(block: (view: View) -> Boolean) {
-    KViewUtils.forEachWhereChild(this, block)
-}
-
-fun <T : View> View.firstParentOrNull(clazz: Class<out T>): T? {
-    var view: View? = null
-    KViewUtils.forEachWhereParent(this) {
-        if (clazz.isInstance(it)) {
-            view = it
-            return@forEachWhereParent true
-        }
-        false
-    }
-    return view?.let { clazz.cast(it) }
-}
-
-fun <T : View> View.firstParentOrNull(clazz: Class<out T>, where: (view: T) -> Boolean): T? {
-    var view: T? = null
-    KViewUtils.forEachWhereParent(this) {
-        if (!clazz.isInstance(it))
-            return@forEachWhereParent false
-
-        val cast = clazz.cast(it)!! //~
-        if (where.invoke(cast)) {
-            view = cast
-            return@forEachWhereParent true
-        }
-
-        false
-    }
-
-    return view
-}
-
-fun <T : View> View.firstOrNull(clazz: Class<out T>): T? {
-    var view: View? = null
-    KViewUtils.forEachWhereChild(this) {
-        if (clazz.isInstance(it)) {
-            view = it
-            return@forEachWhereChild true
-        }
-        false
-    }
-    return view?.let { clazz.cast(it) }
-}
-
-fun <T : View> View.firstOrNull(clazz: Class<out T>, where: (view: T) -> Boolean): T? {
-    var view: T? = null
-    KViewUtils.forEachWhereChild(this) {
-        if (!clazz.isInstance(it))
-            return@forEachWhereChild false
-
-        val cast = clazz.cast(it)!! //~
-        if (where.invoke(cast)) {
-            view = cast
-            return@forEachWhereChild true
-        }
-
-        false
-    }
-
-    return view
-}
-
-fun View.filter(where: (view: View) -> Boolean): Sequence<View> {
-    val views = mutableListOf<View>()
-    KViewUtils.forEachChild(this) {
-        if (where.invoke(it))
-            views.add(it)
-    }
-    return views.asSequence()
-}
-
-fun View.setLayoutSize(needWidth: Int, needHeight: Int) {
-    layoutParams = layoutParams?.apply {
-        width = needWidth
-        height = needHeight
-    }
-}
-
-fun View.setLayoutWidth(needWidth: Int) {
-    layoutParams = layoutParams?.apply {
-        width = needWidth
-    }
-}
-
-fun View.setLayoutHeight(needHeight: Int) {
-    layoutParams = layoutParams?.apply {
-        height = needHeight
-    }
-}
-
-fun View.setEnhanceOnClickListener(interval: Long = 200L, l: View.OnClickListener) {
-    KViewUtils.setEnhanceOnClickListener(this, interval, l)
-}
-
-fun <V : View> V.postRunning(block: (view: V) -> Unit) {
-    this.post {
-        block.invoke(this)
-    }
-}
-
-fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: (view: V) -> Unit) {
-    this.postDelayed(delayInMillis) {
-        block.invoke(this)
-    }
-}
-
-fun View.removeInParent(): View? {
-    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return null
-    parentView.removeView(this)
-    return this
-}
-
-fun View.removeInParentIndex(): Int {
-    val parentView = this.parent?.asOrNull<ViewGroup>() ?: return -1
-    val indexOfChild = parentView.indexOfChild(this)
-    if (indexOfChild != -1) {
-        parentView.removeViewAt(indexOfChild)
-    }
-    return indexOfChild
-}
-
-fun View.replaceWith(newView: View) {
-    KViewUtils.replaceWith(this, newView)
-}
-
-fun View.getSiblingViewAt(relativeIndex: Int): View? {
-    return KViewUtils.getSiblingViewAt(this, relativeIndex)
-}
-
-val View.parentView
-    get() = this.parent?.asOrNull<ViewGroup>()
-
-val View.idName
-    get() = KViewUtils.getIdName(this)
-
-val View.idHex
-    get() = KViewUtils.getIdHex(this)
-
-val View.isDisplay: Boolean
-    get() {
-        // val screenSize = KDisplayUtils.screenSize()
-        // val temp = IntArray(2) { 0 }
-        // this.getLocationOnScreen(temp)
-        // return (temp[0] >= 0 && temp[0] <= screenSize.width) && (temp[1] >= 0 && temp[1] <= screenSize.height)
-        val rect = Rect()
-        return getLocalVisibleRect(rect)
-    }
-
-val View.toBitmap
-    get() = KViewUtils.viewToBitmap(this)
