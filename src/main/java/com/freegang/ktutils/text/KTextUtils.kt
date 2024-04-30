@@ -3,6 +3,54 @@ package com.freegang.ktutils.text
 import kotlin.random.Random
 
 object KTextUtils {
+
+    /**
+     * 判断字符串是否为 null 或 `null` 字符串，若需要对 `null、空字符串和全空格字符串` 判断，见 [isEmpty]。
+     *
+     * @param text 字符串，可以为空。
+     * @return 字符串是否为空。
+     */
+    @JvmStatic
+    fun <S : CharSequence> isNull(text: S?): Boolean {
+        if (text == null) return true
+        return "$text" == "null"
+    }
+
+    /**
+     * 判断字符串是否不为 null 或 `null` 字符串，与 [isNull] 方法相反。
+     *
+     * @param text 字符串，可以为空。
+     * @return 字符串是否为空。
+     */
+    @JvmStatic
+    fun <S : CharSequence> isNotNull(text: S?): Boolean {
+        return !isNull(text)
+    }
+
+    /**
+     * 判断字符串是否为空字符串和全空格字符，若需要对 `null、空字符串和全空格字符串` 判断，见 [isEmpty]。
+     *
+     * @param text 字符串，可以为空。
+     * @return 字符串是否为空。
+     */
+    @JvmStatic
+    fun <S : CharSequence> isBlank(text: S?): Boolean {
+        if (text == null) return false
+        return "$text".isBlank()
+    }
+
+    /**
+     * 判断字符串是否不为空字符串和全空格字符，与 [isBlank] 方法相反。
+     *
+     * @param text 字符串，可以为空。
+     * @return 字符串是否为空。
+     */
+    @JvmStatic
+    fun <S : CharSequence> isNotBlank(text: S?): Boolean {
+        if (text == null) return false
+        return "$text".isBlank()
+    }
+
     /**
      * 判断字符串是否为空，包括 null、空字符串和全空格字符串。
      *
@@ -16,7 +64,7 @@ object KTextUtils {
     }
 
     /**
-     * 判断字符串是否不为空，与 isEmpty 方法相反。
+     * 判断字符串是否不为空，与 [isEmpty] 方法相反。
      *
      * @param text 字符串，可以为空。
      * @return 字符串是否不为空。

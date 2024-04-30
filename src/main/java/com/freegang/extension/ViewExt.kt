@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.postDelayed
 import com.freegang.ktutils.view.KViewUtils
 import com.freegang.ktutils.view.KViewUtils.ViewNode
 
@@ -48,7 +47,7 @@ fun View.toViewTreeString(
  *
  * @param block 对每个指定类型的父View执行的操作。这个操作接受一个父View作为参数，直到它的为null为止
  */
-fun View.forEachParent(block: View.() -> Unit) {
+fun View.forEachParent(block: (view: View) -> Unit) {
     KViewUtils.forEachParent(this, block)
 }
 
@@ -58,7 +57,7 @@ fun View.forEachParent(block: View.() -> Unit) {
  * @param block 对每个指定类型的父View执行的操作。这个操作接受一个父View作为参数，并返回一个布尔值。
  *              如果这个布尔值为 true，那么遍历将立即停止。否则，遍历将继续。
  */
-fun View.forEachWhereParent(block: View.() -> Boolean) {
+fun View.forEachWhereParent(block: (view: View) -> Boolean) {
     KViewUtils.forEachWhereParent(this, block)
 }
 
@@ -227,9 +226,7 @@ fun View.setEnhanceOnClickListener(interval: Long = 200L, l: View.OnClickListene
  * @param block 执行的操作
  */
 fun <V : View> V.postRunning(block: (view: V) -> Unit) {
-    this.post {
-        block.invoke(this)
-    }
+    post { block.invoke(this) }
 }
 
 /**
@@ -239,9 +236,7 @@ fun <V : View> V.postRunning(block: (view: V) -> Unit) {
  * @param block 延迟执行的操作
  */
 fun <V : View> V.postDelayedRunning(delayInMillis: Long, block: (view: V) -> Unit) {
-    this.postDelayed(delayInMillis) {
-        block.invoke(this)
-    }
+    postDelayed({ block.invoke(this) }, delayInMillis)
 }
 
 /**
@@ -284,6 +279,19 @@ fun View.getSiblingViewAt(relativeIndex: Int): View? {
 }
 
 /**
+ * 获取View可见性的字符串表示。
+ * @param visibility 可见性
+ */
+fun View.visibilityToString(visibility: Int): String {
+    return when (visibility) {
+        View.VISIBLE -> "VISIBLE"
+        View.INVISIBLE -> "INVISIBLE"
+        View.GONE -> "GONE"
+        else -> "UNKNOWN"
+    }
+}
+
+/**
  * View在Window上的位置。
  */
 val View.locationInWindow: Point
@@ -312,6 +320,24 @@ val View.localVisibleRect: Rect
         this.getLocalVisibleRect(rect)
         return rect
     }
+
+/**
+ * 获取 View 的点击事件监听器。
+ */
+val View.getOnClickListener: View.OnClickListener?
+    get() = KViewUtils.getOnClickListener(this)
+
+/**
+ * 获取 View 的长按事件监听器。
+ */
+val View.getOnLongClickListener: View.OnLongClickListener?
+    get() = KViewUtils.getOnLongClickListener(this)
+
+/**
+ * 获取 View 的触摸事件监听器。
+ */
+val View.getOnTouchListener: View.OnTouchListener?
+    get() = KViewUtils.getOnTouchListener(this)
 
 /**
  * View的父View。

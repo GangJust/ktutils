@@ -247,37 +247,30 @@ object KActivityUtils {
         return activitiesField.get(currentActivityThread) as Map<*, *>  // 获取当前线程的活动列表
     }
 
-    @FunctionalInterface
     fun interface OnCreated {
         fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?)
     }
 
-    @FunctionalInterface
     fun interface OnStarted {
         fun onActivityStarted(activity: Activity)
     }
 
-    @FunctionalInterface
     fun interface OnResumed {
         fun onActivityResumed(activity: Activity)
     }
 
-    @FunctionalInterface
     fun interface OnPaused {
         fun onActivityPaused(activity: Activity)
     }
 
-    @FunctionalInterface
     fun interface OnStopped {
         fun onActivityStopped(activity: Activity)
     }
 
-    @FunctionalInterface
     fun interface OnSaveInstanceState {
         fun onActivitySaveInstanceState(activity: Activity, outState: Bundle)
     }
 
-    @FunctionalInterface
     fun interface OnDestroyed {
         fun onActivityDestroyed(activity: Activity)
     }

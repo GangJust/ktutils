@@ -32,12 +32,10 @@ import java.lang.reflect.Field
 import java.util.*
 import kotlin.collections.ArrayDeque
 
-@FunctionalInterface
 fun interface ViewFunction {
     fun callView(view: View)
 }
 
-@FunctionalInterface
 fun interface ViewWhereFunction {
     fun callView(view: View): Boolean
 }
@@ -49,6 +47,20 @@ object KViewUtils {
     @JvmStatic
     fun visibility(view: View, v: Boolean) {
         view.isVisible = v
+    }
+
+    @JvmStatic
+    fun show(view: View) {
+        view.visibility = View.VISIBLE
+    }
+
+    @JvmStatic
+    fun hide(view: View) {
+        view.visibility = View.GONE
+    }
+
+    fun invisible(view: View) {
+        view.visibility = View.INVISIBLE
     }
 
     /**
@@ -995,13 +1007,22 @@ object KViewUtils {
             build.append("className=", view.javaClass.name, ", ")
             build.append("package=", view.javaClass.`package`?.name, ", ")
             build.append("superClass=", view.javaClass.superclass.name, ", ")
+            runCatching {
+                build.append("resType=", view.resources.getResourceTypeName(view.id), ", ")
+            }
             build.append("id=", view.id, ", ")
             build.append("idHex=", getIdHex(view), ", ")
             build.append("idName=", getIdName(view), ", ")
             build.append("context=", view.context, ", ")
             build.append("width=", view.context.px2dip(view.width.toFloat()), "dp, ")
             build.append("height=", view.context.px2dip(view.height.toFloat()), "dp, ")
-            build.append("desc=", view.contentDescription, ", ")
+            build.append("contentDesc=", view.contentDescription, ", ")
+            runCatching {
+                build.append("accessNodeContentDesc=", view.createAccessibilityNodeInfo().contentDescription, ", ")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                build.append("stateDesc=", view.stateDescription, ", ")
+            }
             build.append("alpha=", view.alpha, ", ")
             val paddingStartDp = view.context.px2dip(view.paddingStart.toFloat())
             val paddingTopDp = view.context.px2dip(view.paddingTop.toFloat())

@@ -113,7 +113,6 @@ class KAppCrashUtils : Thread.UncaughtExceptionHandler {
         return mCrashMessage.crashMessage ?: defaultCrashMessage
     }
 
-    @FunctionalInterface
     fun interface CrashCallback {
         fun callback(e: Throwable, msg: CrashMessage): Boolean
     }
