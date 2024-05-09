@@ -3,11 +3,6 @@ package com.freegang.ktutils.view
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Point
-import android.graphics.PointF
-import android.graphics.Rect
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.ShapeDrawable
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
@@ -17,14 +12,19 @@ import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.core.view.get
 import androidx.core.view.isVisible
-import androidx.core.view.marginBottom
-import androidx.core.view.marginEnd
-import androidx.core.view.marginStart
-import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.freegang.extension.asOrNull
+import com.freegang.extension.locationInSurface
+import com.freegang.extension.locationInWindow
+import com.freegang.extension.locationOnScreen
+import com.freegang.extension.marginToString
+import com.freegang.extension.paddingToString
+import com.freegang.extension.positionRect
 import com.freegang.extension.px2dip
+import com.freegang.extension.simpleString
+import com.freegang.extension.toShortString
+import com.freegang.extension.visibilityToString
 import com.freegang.ktutils.color.KColorUtils
 import org.json.JSONArray
 import org.json.JSONObject
@@ -701,12 +701,12 @@ object KViewUtils {
         if (view !is ViewGroup) return getViewJsonItem(0, view).toString()
 
         // 创建根JSONObject
-        val rootJsonObject = getViewJsonItem(0, view)
+        val rootJson = getViewJsonItem(0, view)
         val jsonArray = JSONArray()
-        rootJsonObject.put("children", jsonArray)
+        rootJson.put("children", jsonArray)
         // 创建存放JSONArray的栈
-        val jsonStack = Stack<JSONArray>()
-        jsonStack.push(jsonArray)
+        val jsonArrayStack = Stack<JSONArray>()
+        jsonArrayStack.push(jsonArray)
 
         // 创建存放ViewGroup的栈
         val viewStack = Stack<ViewGroup>()
@@ -715,7 +715,7 @@ object KViewUtils {
         // 循环处理ViewGroup及其子View
         while (!viewStack.isEmpty()) {
             // 弹出当前的JSONArray和ViewGroup
-            val currentJSONArray = jsonStack.pop()
+            val currentJsonArray = jsonArrayStack.pop()
             val currentViewGroup = viewStack.pop()
 
             // 遍历子View
@@ -729,22 +729,22 @@ object KViewUtils {
                     // 如果子View是ViewGroup，则创建子View的JSONArray，并将子View的JSONObject添加到当前的JSONArray中
                     val childJsonArray = JSONArray()
                     jsonObject.put("children", childJsonArray)
-                    currentJSONArray.put(jsonObject)
+                    currentJsonArray.put(jsonObject)
                     // 将子View的JSONArray入栈，将子ViewGroup入栈
-                    jsonStack.push(childJsonArray)
+                    jsonArrayStack.push(childJsonArray)
                     viewStack.push(child)
                 } else {
                     // 如果子View不是ViewGroup，则直接将子View的JSONObject添加到当前的JSONArray中
-                    currentJSONArray.put(jsonObject)
+                    currentJsonArray.put(jsonObject)
                 }
             }
         }
 
         // 返回根JSONObject的字符串表示
         return if (indentSpaces == 0) {
-            return rootJsonObject.toString()
+            return rootJson.toString()
         } else {
-            rootJsonObject.toString(indentSpaces)
+            rootJson.toString(indentSpaces)
         }
     }
 
@@ -759,7 +759,7 @@ object KViewUtils {
         val pkg = view.javaClass.`package`
         jsonObject.put("index", index)
         jsonObject.put("className", view.javaClass.name)
-        jsonObject.put("package", pkg?.name ?: "")
+        jsonObject.put("package", "${pkg?.name}")
         jsonObject.put("superClass", view.javaClass.superclass.name)
         jsonObject.put("id", view.id)
         jsonObject.put("idHex", getIdHex(view))
@@ -769,68 +769,29 @@ object KViewUtils {
         jsonObject.put("height", "${view.context.px2dip(view.height.toFloat())}")
         jsonObject.put("descr", "${view.contentDescription}")
         jsonObject.put("alpha", "${view.alpha}")
-
-        val paddingStartDp = view.context.px2dip(view.paddingStart.toFloat())
-        val paddingTopDp = view.context.px2dip(view.paddingTop.toFloat())
-        val paddingEndDp = view.context.px2dip(view.paddingEnd.toFloat())
-        val paddingBottomDp = view.context.px2dip(view.paddingBottom.toFloat())
-        jsonObject.put(
-            "paddingLTRB",
-            "[${paddingStartDp}dp, ${paddingTopDp}dp, ${paddingEndDp}dp, ${paddingBottomDp}dp]"
-        )
-
-        val marginStartDp = view.context.px2dip(view.marginStart.toFloat())
-        val marginTopDp = view.context.px2dip(view.marginTop.toFloat())
-        val marginEndDp = view.context.px2dip(view.marginEnd.toFloat())
-        val marginBottomDp = view.context.px2dip(view.marginBottom.toFloat())
-        jsonObject.put(
-            "marginLTRB",
-            "[${marginStartDp}dp, ${marginTopDp}dp, ${marginEndDp}dp, ${marginBottomDp}dp]"
-        )
-
-        when (view.visibility) {
-            View.VISIBLE -> jsonObject.put("visibility", "VISIBLE")
-            View.GONE -> jsonObject.put("visibility", "GONE")
-            View.INVISIBLE -> jsonObject.put("visibility", "INVISIBLE")
-        }
+        jsonObject.put("paddingLTRB", view.paddingToString())
+        jsonObject.put("marginLTRB", view.marginToString())
+        jsonObject.put("visibility", view.visibilityToString())
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val foreground = view.foreground
-            if (foreground is ColorDrawable) {
-                jsonObject.put(
-                    "foreground",
-                    "ColorDrawable(${KColorUtils.colorIntToHex(foreground.color)})"
-                )
-            } else {
-                jsonObject.put("foreground", "$foreground")
-            }
+            jsonObject.put("foreground", "${view.foreground?.simpleString()}")
         }
-        val background = view.background
-        if (background is ColorDrawable) {
-            jsonObject.put(
-                "background",
-                "ColorDrawable(color: ${KColorUtils.colorIntToHex(background.color)})"
-            )
-        } else if (background is ShapeDrawable) {
-            jsonObject.put(
-                "background",
-                "ShapeDrawable(color: ${KColorUtils.colorIntToHex(background.paint.color)})"
-            )
-        } else {
-            jsonObject.put("background", "$background")
-        }
+
+        jsonObject.put("background", "${view.background?.simpleString()}")
 
         // 文本框
         if (view is TextView) {
             jsonObject.put("text", "${view.text}")
             jsonObject.put("hint", "${view.hint}")
             jsonObject.put("textSize", "${view.context.px2dip(view.textSize)}dp")
-            if (view.typeface.isBold) {
-                jsonObject.put("textStyle", "bold")
-            } else if (view.typeface.isItalic) {
-                jsonObject.put("textStyle", "italic")
-            } else {
-                jsonObject.put("textStyle", "normal")
+            view.typeface?.let {
+                if (it.isBold) {
+                    jsonObject.put("textStyle", "bold")
+                } else if (it.isItalic) {
+                    jsonObject.put("textStyle", "italic")
+                } else {
+                    jsonObject.put("textStyle", "normal")
+                }
             }
             jsonObject.put("currentTextColor", KColorUtils.colorIntToHex(view.currentTextColor))
             jsonObject.put(
@@ -848,9 +809,11 @@ object KViewUtils {
                 jsonObject.put("singleLine", view.isSingleLine)
             }
         }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             jsonObject.put("tooltipText", "${view.tooltipText}")
         }
+
         jsonObject.put("enabled", "${view.isEnabled}")
         jsonObject.put("pressed", "${view.isPressed}")
         jsonObject.put("hovered", "${view.isHovered}")
@@ -859,7 +822,8 @@ object KViewUtils {
         jsonObject.put("selected", "${view.isSelected}")
         jsonObject.put("clickable", "${view.isClickable}")
         jsonObject.put("longClickable", "${view.isLongClickable}")
-        // 点击事件
+
+        // 事件
         val clickListener = getOnClickListener(view)
         if (clickListener != null) {
             jsonObject.put("onClickListener", clickListener)
@@ -872,6 +836,7 @@ object KViewUtils {
         if (onTouchListener != null) {
             jsonObject.put("onTouchListener", onTouchListener)
         }
+
         // 列表类适配器
         if (view is ViewPager) {
             jsonObject.put("ViewPagerAdapter", "${view.adapter}")
@@ -883,314 +848,18 @@ object KViewUtils {
         if (view is RecyclerView) {
             jsonObject.put("RecyclerViewAdapter", "${view.adapter}")
         }
+
         jsonObject.put("tag", "${view.tag}")
-        jsonObject.put("viewPosition", "${view.x}, ${view.y}")
-        jsonObject.put("pivotPosition", "${view.pivotX}, ${view.pivotY}")
-        jsonObject.put("rotationPosition", "${view.rotationX}, ${view.rotationY}")
-        val outOnScreen = IntArray(2) { 0 }
-        view.getLocationOnScreen(outOnScreen)
-        jsonObject.put("locationOnScreen", "${outOnScreen[0]}, ${outOnScreen[1]}")
+        jsonObject.put("viewPosition", "[${view.x}, ${view.y}]")
+        jsonObject.put("pivotPosition", "[${view.pivotX}, ${view.pivotY}]")
+        jsonObject.put("rotationPosition", "[${view.rotationX}, ${view.rotationY}]")
+
+        jsonObject.put("locationOnScreen", view.locationOnScreen.toShortString())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val outInSurface = IntArray(2) { 0 }
-            view.getLocationInSurface(outOnScreen)
-            jsonObject.put("locationInSurface", "${outInSurface[0]}, ${outInSurface[1]}")
+            jsonObject.put("locationInSurface", view.locationInSurface.toShortString())
         }
-        val outInWindow = IntArray(2) { 0 }
-        view.getLocationInWindow(outInWindow)
-        jsonObject.put("locationInWindow", "${outInWindow[0]}, ${outInWindow[1]}")
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val outRect = Rect()
-            view.getClipBounds(outRect)
-            jsonObject.put("clipBounds", outRect.toShortString())
-        } else {
-            jsonObject.put("clipBounds", "${view.clipBounds?.toShortString()}")
-        }
-        jsonObject.put("rect", Rect(view.left, view.top, view.right, view.bottom).toShortString())
+        jsonObject.put("locationInWindow", view.locationInWindow.toShortString())
+        jsonObject.put("rect", view.positionRect.toShortString())
         return jsonObject
-    }
-
-    /**
-     * 构建View节点树，记得合理释放[ViewNode.destroy]。
-     *
-     * @param view ViewGroup
-     * @return ViewNode viewGroup作为根节点
-     */
-    @JvmStatic
-    fun buildViewTree(view: View): ViewNode {
-        if (view !is ViewGroup) return ViewNode(null, view, 0, mutableListOf())
-
-        val root = ViewNode(view, view, 0, mutableListOf())
-        val stack = Stack<ViewNode>()
-        stack.push(root)
-        while (!stack.isEmpty()) {
-            val current = stack.pop()
-            val currentView = current.view
-            if (currentView is ViewGroup) {
-                for (i in currentView.childCount - 1 downTo 0) {
-                    val child = currentView.getChildAt(i)
-                    val childNode = ViewNode(currentView, child, current.depth + 1, mutableListOf())
-                    current.children.add(0, childNode) // 添加到当前节点的子节点列表头部
-                    stack.push(childNode)
-                }
-            }
-        }
-        return root
-    }
-
-    data class ViewNode(
-        var parent: ViewGroup? = null,  // 父视图
-        var view: View? = null,  // 当前视图
-        var depth: Int = 1,  // 当前树的深度
-        var children: MutableList<ViewNode> = mutableListOf(), // 子节点
-    ) {
-
-        // 销毁当前节点下的所有视图树
-        fun destroy() {
-            destroy(this)
-        }
-
-        private fun destroy(node: ViewNode) {
-            val stack = Stack<ViewNode>()
-            stack.push(node)
-            while (!stack.isEmpty()) {
-                val current = stack.pop()
-                for (childNode in current.children) {
-                    stack.push(childNode)
-                }
-                current.parent = null
-                current.children.clear()
-                current.view = null
-            }
-        }
-
-        // 当前节点下的所有视图树深度遍历到字符串
-        fun deepToString(
-            indent: Int = 4,
-            format: (ViewNode) -> String = { it.toString() },
-        ): String {
-            val buffer = StringBuffer()
-            deepChildren("|-", indent, this) { trunk, node ->
-                buffer.append("$trunk${format(node)}\n")
-            }
-            return buffer.toString()
-        }
-
-        fun deepChildren(
-            trunk: String = "|-",
-            indent: Int = 4,
-            node: ViewNode,
-            block: (trunk: String, node: ViewNode) -> Unit
-        ) {
-            var indentTrunk = ""
-            for (i in 0 until indent) indentTrunk += "-"
-
-            val stack = Stack<Pair<ViewNode, Int>>()
-            stack.push(Pair(node, 0))
-            while (!stack.isEmpty()) {
-                val (current, level) = stack.pop()
-                val currentTrunk = if (level == 0) trunk else trunk + indentTrunk.repeat(level)
-                block.invoke(currentTrunk, current)
-                val size = current.children.size
-                for (i in size - 1 downTo 0) {
-                    stack.push(Pair(current.children[i], level + 1))
-                }
-            }
-        }
-
-        override fun toString(): String {
-            val view = view
-                ?: return "ViewNode{parent=${parent}, view=null, depth=${depth}, hashCode=${this.hashCode()}}"
-
-            val build = StringBuilder()
-            build.append("ViewNode{")
-            build.append("className=", view.javaClass.name, ", ")
-            build.append("package=", view.javaClass.`package`?.name, ", ")
-            build.append("superClass=", view.javaClass.superclass.name, ", ")
-            runCatching {
-                build.append("resType=", view.resources.getResourceTypeName(view.id), ", ")
-            }
-            build.append("id=", view.id, ", ")
-            build.append("idHex=", getIdHex(view), ", ")
-            build.append("idName=", getIdName(view), ", ")
-            build.append("context=", view.context, ", ")
-            build.append("width=", view.context.px2dip(view.width.toFloat()), "dp, ")
-            build.append("height=", view.context.px2dip(view.height.toFloat()), "dp, ")
-            build.append("contentDesc=", view.contentDescription, ", ")
-            runCatching {
-                build.append("accessNodeContentDesc=", view.createAccessibilityNodeInfo().contentDescription, ", ")
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                build.append("stateDesc=", view.stateDescription, ", ")
-            }
-            build.append("alpha=", view.alpha, ", ")
-            val paddingStartDp = view.context.px2dip(view.paddingStart.toFloat())
-            val paddingTopDp = view.context.px2dip(view.paddingTop.toFloat())
-            val paddingEndDp = view.context.px2dip(view.paddingEnd.toFloat())
-            val paddingBottomDp = view.context.px2dip(view.paddingBottom.toFloat())
-            build.append("paddingLTRB=")
-                .append("[")
-                .append(paddingStartDp, "dp, ")
-                .append(paddingTopDp, "dp, ")
-                .append(paddingEndDp, "dp, ")
-                .append(paddingBottomDp, "dp")
-                .append("], ")
-            val marginStartDp = view.context.px2dip(view.marginStart.toFloat())
-            val marginTopDp = view.context.px2dip(view.marginTop.toFloat())
-            val marginEndDp = view.context.px2dip(view.marginEnd.toFloat())
-            val marginBottomDp = view.context.px2dip(view.marginBottom.toFloat())
-            build.append("marginLTRB")
-                .append("[")
-                .append(marginStartDp, "dp, ")
-                .append(marginTopDp, "dp, ")
-                .append(marginEndDp, "dp, ")
-                .append(marginBottomDp, "dp")
-                .append("], ")
-            when (view.visibility) {
-                View.VISIBLE -> build.append("visibility=VISIBLE, ")
-                View.GONE -> build.append("visibility=GONE, ")
-                View.INVISIBLE -> build.append("visibility=INVISIBLE, ")
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                when (val foreground = view.foreground) {
-                    is ColorDrawable -> {
-                        build.append("foreground=ColorDrawable(")
-                            .append(KColorUtils.colorIntToHex(foreground.color))
-                            .append("), ")
-                    }
-
-                    is ShapeDrawable -> {
-                        build.append("foreground=ShapeDrawable(color: ")
-                            .append(KColorUtils.colorIntToHex(foreground.paint.color))
-                            .append("), ")
-                    }
-
-                    else -> {
-                        build.append("foreground=", foreground, ", ")
-                    }
-                }
-            }
-            when (val background = view.background) {
-                is ColorDrawable -> {
-                    build.append("background=ColorDrawable(")
-                        .append(KColorUtils.colorIntToHex(background.color))
-                        .append("), ")
-                }
-
-                is ShapeDrawable -> {
-                    build.append("background=ShapeDrawable(color: ")
-                        .append(KColorUtils.colorIntToHex(background.paint.color))
-                        .append("), ")
-                }
-
-                else -> {
-                    build.append("background=", background, ", ")
-                }
-            }
-            // 文本框
-            if (view is TextView) {
-                build.append("text=", view.text, ", ")
-                build.append("hint=", view.hint, ", ")
-                build.append("textSize=", view.context.px2dip(view.textSize), "dp, ")
-                if (view.typeface.isBold) {
-                    build.append("textStyle=bold, ")
-                } else if (view.typeface.isItalic) {
-                    build.append("textStyle=italic, ")
-                } else {
-                    build.append("textStyle=normal, ")
-                }
-                build.append(
-                    "currentTextColor=",
-                    KColorUtils.colorIntToHex(view.currentTextColor),
-                    ", "
-                )
-                build.append(
-                    "currentHintTextColor=",
-                    KColorUtils.colorIntToHex(view.currentHintTextColor),
-                    ", "
-                )
-                build.append(
-                    "highlightColor=",
-                    KColorUtils.colorIntToHex(view.highlightColor),
-                    ", "
-                )
-                build.append("selectable=", view.isTextSelectable, ", ")
-                build.append("minHeight=", view.minHeight, ", ")
-                build.append("maxHeight=", view.maxHeight)
-                build.append("lineHeight=", view.lineHeight, ", ")
-                build.append("minLines=", view.minLines, ", ")
-                build.append("maxLines=", view.maxLines, ", ")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    build.append("singleLine=", view.isSingleLine, ", ")
-                }
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                build.append("tooltipText=", view.tooltipText, ", ")
-            }
-            build.append("enabled=", view.isEnabled, ", ")
-            build.append("pressed=", view.isPressed, ", ")
-            build.append("hovered=", view.isHovered, ", ")
-            build.append("focusable=", view.isFocusable, ", ")
-            build.append("focused=", view.isFocused, ", ")
-            build.append("selected=", view.isSelected, ", ")
-            build.append("clickable=", view.isClickable, ", ")
-            build.append("longClickable=", view.isLongClickable, ", ")
-            // 点击事件
-            val clickListener = getOnClickListener(view)
-            if (clickListener != null) {
-                build.append("onClickListener=", clickListener, ", ")
-            }
-            val longClickListener = getOnLongClickListener(view)
-            if (longClickListener != null) {
-                build.append("longClickListener=", longClickListener, ", ")
-            }
-            val onTouchListener = getOnTouchListener(view)
-            if (onTouchListener != null) {
-                build.append("onTouchListener=", onTouchListener, ", ")
-            }
-            // 列表类适配器
-            if (view is ViewPager) {
-                build.append("ViewPagerAdapter", view.adapter, ", ")
-                build.append("ViewPagerCurrentItem", view.currentItem, ", ")
-            }
-            if (view is ListView) {
-                build.append("ListViewAdapter", view.adapter, ", ")
-            }
-            if (view is RecyclerView) {
-                build.append("RecyclerViewAdapter", view.adapter, ", ")
-            }
-            build.append("tag=", view.tag, ", ")
-            build.append("viewPosition=", PointF(view.x, view.y), ", ")
-            build.append("pivotPosition=", PointF(view.pivotX, view.pivotY), ", ")
-            build.append("rotationPosition=", PointF(view.rotationX, view.rotationY), ", ")
-            val outOnScreen = IntArray(2) { 0 }
-            view.getLocationOnScreen(outOnScreen)
-            build.append("locationOnScreen=", Point(outOnScreen[0], outOnScreen[1]), ", ")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val outInSurface = IntArray(2) { 0 }
-                view.getLocationInSurface(outOnScreen)
-                build.append("locationInSurface=", Point(outInSurface[0], outInSurface[1]), ", ")
-            }
-            val outInWindow = IntArray(2) { 0 }
-            view.getLocationInWindow(outInWindow)
-            build.append("locationInWindow=", Point(outInWindow[0], outInWindow[1]), ", ")
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val outRect = Rect()
-                view.getClipBounds(outRect)
-                build.append("locationInWindow=", outRect.toShortString(), ", ")
-            } else {
-                build.append("clipBounds=", view.clipBounds?.toShortString(), ", ")
-            }
-            build.append(
-                "rect=",
-                Rect(view.left, view.top, view.right, view.bottom).toShortString(),
-                ", "
-            )
-            build.append("childrenSize=", children.size, ", ")
-            build.append("}")
-
-            return build.toString()
-        }
     }
 }

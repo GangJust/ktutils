@@ -2,10 +2,15 @@ package com.freegang.extension
 
 import android.graphics.Point
 import android.graphics.Rect
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
+import androidx.core.view.marginTop
 import com.freegang.ktutils.view.KViewUtils
-import com.freegang.ktutils.view.KViewUtils.ViewNode
 
 /**
  * 将View转换为JSON字符串表示。
@@ -14,32 +19,6 @@ import com.freegang.ktutils.view.KViewUtils.ViewNode
  */
 fun View.toViewJson(indentSpaces: Int = 0): String {
     return KViewUtils.toViewJson(this, indentSpaces)
-}
-
-/**
- * 构建View节点树，记得合理释放[ViewNode.destroy]。
- *
- * @return ViewNode viewGroup作为根节点
- */
-fun View.getViewTree(): KViewUtils.ViewNode {
-    return KViewUtils.buildViewTree(this)
-}
-
-/**
- * 将View节点树转换为字符串表示。
- *
- * @param indent 缩进空格数
- * @param format 格式化函数
- * @return 转换后的字符串
- */
-fun View.toViewTreeString(
-    indent: Int = 4,
-    format: (KViewUtils.ViewNode) -> String = { it.toString() },
-): String {
-    val viewTree = KViewUtils.buildViewTree(this)
-    val deepToString = viewTree.deepToString(indent, format)
-    viewTree.destroy()
-    return deepToString
 }
 
 /**
@@ -280,15 +259,37 @@ fun View.getSiblingViewAt(relativeIndex: Int): View? {
 
 /**
  * 获取View可见性的字符串表示。
- * @param visibility 可见性
  */
-fun View.visibilityToString(visibility: Int): String {
+fun View.visibilityToString(): String {
     return when (visibility) {
         View.VISIBLE -> "VISIBLE"
         View.INVISIBLE -> "INVISIBLE"
         View.GONE -> "GONE"
         else -> "UNKNOWN"
     }
+}
+
+/**
+ * 获取View内间距的字符串表示。
+ */
+fun View.paddingToString(): String {
+    val paddingStartDp = context.px2dip(paddingStart.toFloat())
+    val paddingTopDp = context.px2dip(paddingTop.toFloat())
+    val paddingEndDp = context.px2dip(paddingEnd.toFloat())
+    val paddingBottomDp = context.px2dip(paddingBottom.toFloat())
+    return "[${paddingStartDp}dp, ${paddingTopDp}dp, ${paddingEndDp}dp, ${paddingBottomDp}dp]"
+}
+
+/**
+ * 获取View外间距的字符串表示。
+ */
+fun View.marginToString(): String {
+    val marginStartDp = context.px2dip(marginStart.toFloat())
+    val marginTopDp = context.px2dip(marginTop.toFloat())
+    val marginEndDp = context.px2dip(marginEnd.toFloat())
+    val marginBottomDp = context.px2dip(marginBottom.toFloat())
+
+    return "[${marginStartDp}dp, ${marginTopDp}dp, ${marginEndDp}dp, ${marginBottomDp}dp]"
 }
 
 /**
@@ -312,6 +313,17 @@ val View.locationOnScreen: Point
     }
 
 /**
+ * ViewSurface在屏幕上的位置。
+ */
+val View.locationInSurface: Point
+    @RequiresApi(Build.VERSION_CODES.Q)
+    get() {
+        val position = IntArray(2)
+        this.getLocationInSurface(position)
+        return Point(position[0], position[1])
+    }
+
+/**
  * View的全局可见性，可通过它判断该View是否在屏幕上显示。
  */
 val View.localVisibleRect: Rect
@@ -319,6 +331,15 @@ val View.localVisibleRect: Rect
         val rect = Rect()
         this.getLocalVisibleRect(rect)
         return rect
+    }
+
+/**
+ * View相对于其ParentView的位置
+ */
+val View.positionRect: Rect
+    get() {
+        toString()
+        return Rect(left, top, right, bottom)
     }
 
 /**

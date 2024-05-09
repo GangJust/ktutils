@@ -5,8 +5,6 @@ import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
-import android.view.ViewGroup
-import android.view.Window
 
 object KActivityUtils {
     private val mActivities = mutableSetOf<Activity>()
@@ -246,6 +244,7 @@ object KActivityUtils {
         activitiesField.isAccessible = true
         return activitiesField.get(currentActivityThread) as Map<*, *>  // 获取当前线程的活动列表
     }
+
 
     fun interface OnCreated {
         fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?)
