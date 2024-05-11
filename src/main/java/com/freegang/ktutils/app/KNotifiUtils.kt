@@ -32,6 +32,7 @@ object KNotifiUtils {
         channelName: String = "渠道名",
         title: String,
         text: String,
+        subText: String? = null,
         intent: PendingIntent? = null,
         ongoing: Boolean = false,
         actions: Array<NotificationCompat.Action> = emptyArray()
@@ -53,9 +54,8 @@ object KNotifiUtils {
             setSmallIcon(context.applicationInfo.icon)
             setContentTitle(title)
             setContentText(text)
-            if (intent != null) {
-                setContentIntent(intent)
-            }
+            subText?.let { setSubText(it) }
+            intent?.let { setContentIntent(it) }
             for (action in actions) {
                 addAction(action)
             }
@@ -67,7 +67,10 @@ object KNotifiUtils {
     /**
      * 显示自定义布局通知
      */
-    fun showNotification(
+    @SuppressLint("WrongConstant")
+    @JvmStatic
+    @JvmOverloads
+    fun showCustomNotification(
         context: Context,
         notifyId: Int,
         channelId: String = "渠道ID",
@@ -93,9 +96,7 @@ object KNotifiUtils {
             setOngoing(ongoing)
             setAutoCancel(!ongoing) // 自动取消
             setSmallIcon(context.applicationInfo.icon)
-            if (intent != null) {
-                setContentIntent(intent)
-            }
+            intent?.let { setContentIntent(it) }
             setStyle(NotificationCompat.DecoratedCustomViewStyle())
             contentView?.let { setCustomContentView(it) }
             bigContentView?.let { setCustomBigContentView(it) }
@@ -108,6 +109,7 @@ object KNotifiUtils {
     /**
      * 取消某个通知
      */
+    @JvmStatic
     fun cancelNotification(
         context: Context,
         notifyId: Int,
@@ -119,6 +121,7 @@ object KNotifiUtils {
     /**
      * 取消所有通知
      */
+    @JvmStatic
     fun cancelAllNotification(
         context: Context,
     ) {
@@ -162,9 +165,7 @@ object KNotifiUtils {
             setContentText(inProgressText.format(0))
             setProgress(100, 0, false)
             // notify.setProgress(0, 0, true) //不确定状态
-            if (intent != null) {
-                setContentIntent(intent)
-            }
+            intent?.let { setContentIntent(it) }
         }
 
         // 回调,由调用者设置进度
