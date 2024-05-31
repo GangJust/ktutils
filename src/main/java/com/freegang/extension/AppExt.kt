@@ -28,6 +28,18 @@ val Context.abiBit
     get() = KAppUtils.getAbiBit(this)
 
 /**
+ * 获取当前app icon id
+ */
+val Context.appIconId
+    get() = KAppUtils.getAppIconId(this)
+
+/**
+ * 获取当前app logo id
+ */
+val Context.appLogoId
+    get() = KAppUtils.getAppLogoId(this)
+
+/**
  * 获取当前app名称
  */
 val Context.appLabelName

@@ -69,6 +69,34 @@ object KAppUtils {
 
     ///
     /**
+     * 获取应用icon id
+     *
+     * @param context 上下文对象，用于获取资源和包信息。
+     * @param packageName 要获取应用名称的包名，默认为当前应用的包名。
+     * @return 应用程序的icon。
+     */
+    @JvmStatic
+    fun getAppIconId(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Int {
+        val packageInfo = getPackageInfo(context, packageName)
+        return packageInfo?.applicationInfo?.icon ?: 0
+    }
+
+    /**
+     * 获取应用logo id
+     */
+    @JvmStatic
+    fun getAppLogoId(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Int {
+        val packageInfo = getPackageInfo(context, packageName)
+        return packageInfo?.applicationInfo?.logo ?: 0
+    }
+
+    /**
      * 获取应用程序的名称。
      *
      * @param context 上下文对象，用于获取资源和包信息。

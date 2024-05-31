@@ -79,6 +79,21 @@ fun Context.getSpFloat(
 }
 
 /**
+ * 获取 Set<String> 类型数据
+ *
+ * @param key key
+ * @param default 默认值
+ * @param spName SharedPreferences 名称
+ */
+fun Context.getSpStringSet(
+    key: String,
+    default: Set<String> = emptySet(),
+    spName: String = KSPUtils.DEFAULT_SP_NAME,
+): Set<String> {
+    return KSPUtils.getStringSet(this, key, default, spName)
+}
+
+/**
  * 保存 String 类型数据
  *
  * @param key key
@@ -151,6 +166,21 @@ fun Context.putSpFloat(
     spName: String = KSPUtils.DEFAULT_SP_NAME,
 ) {
     KSPUtils.putFloat(this, key, value, spName)
+}
+
+/**
+ * 保存 Set<String> 类型数据
+ *
+ * @param key key
+ * @param value value
+ * @param spName SharedPreferences 名称
+ */
+fun Context.putSpStringSet(
+    key: String,
+    value: Set<String>,
+    spName: String = KSPUtils.DEFAULT_SP_NAME,
+) {
+    KSPUtils.putStringSet(this, key, value, spName)
 }
 
 /**
