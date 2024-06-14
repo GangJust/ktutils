@@ -1,5 +1,6 @@
 package com.freegang.ktutils.adapter
 
+import android.annotation.SuppressLint
 import androidx.recyclerview.widget.RecyclerView
 
 abstract class KRecyclerAdapter<RV : RecyclerView.ViewHolder, E : IRecyclerAdapter.Item> :
@@ -169,9 +170,8 @@ abstract class KRecyclerAdapter<RV : RecyclerView.ViewHolder, E : IRecyclerAdapt
         return mItems[position]
     }
 
-    override fun getItems(): List<E> {
-        return mItems
-    }
+    override val items: List<E>
+        get() = mItems
 
     override fun getSubsetItems(range: IntRange): List<E> {
         return mItems.subList(maxOf(0, range.first), minOf(mItems.size, range.last + 1))
@@ -181,6 +181,12 @@ abstract class KRecyclerAdapter<RV : RecyclerView.ViewHolder, E : IRecyclerAdapt
     override fun getSubsetItems(first: Int, last: Int): List<E> {
         return mItems.subList(maxOf(0, first), minOf(mItems.size, last + 1))
             .toList()
+    }
+
+    // refresh
+    @SuppressLint("NotifyDataSetChanged")
+    override fun refresh() {
+        notifyDataSetChanged()
     }
 
     // count

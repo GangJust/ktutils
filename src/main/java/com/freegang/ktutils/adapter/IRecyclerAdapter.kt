@@ -142,7 +142,7 @@ interface IRecyclerAdapter<E> {
      * 获取列表中的所有项目。
      * Get all items in the list.
      */
-    fun getItems(): List<E>
+    val items: List<E>
 
     /**
      * 获取列表中给定范围的项目。
@@ -156,12 +156,18 @@ interface IRecyclerAdapter<E> {
      */
     fun getSubsetItems(first: Int, last: Int): List<E>
 
+    /**
+     * 刷新列表
+     * Refresh List
+     */
+    fun refresh()
+
     // entity interfaces
     /**
      * 适配器列表项，所有Item都应该实现该接口。
      * adapter list items, all items should implement the interface.
      */
     interface Item {
-        
+
     }
 }
