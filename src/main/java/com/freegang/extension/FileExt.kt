@@ -5,6 +5,15 @@ import java.io.File
 import java.io.IOException
 
 /**
+ * 重定义文件类型
+ *
+ * @param suffix 新的后缀名
+ */
+fun File.redefineSuffix(suffix: String): File {
+    return KFileUtils.redefineSuffix(this, suffix)
+}
+
+/**
  * 强制删除文件或目录。
  * 如果文件或目录不存在，则不进行任何操作。
  * 如果删除目录时发生异常，将会打印堆栈轨迹。

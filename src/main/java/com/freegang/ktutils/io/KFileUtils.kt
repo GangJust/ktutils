@@ -4,7 +4,26 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 
+enum class FileKind(val headHex: String, val suffix: String) {
+    JPG("ffd8ffe000104a4649460001", ".jpg"),
+    PNG("89504e470d0a1a0a00000D", ".png"),
+    HEIC("0000001C6674797068656963", ".heic"),
+    GIF("47494638396126026f01", ".gif"),
+    WEBP("52494646ea33000057454250", ".webp"),
+}
+
 object KFileUtils {
+    /**
+     * 获取文件的类型
+     *
+     * @param bytes 文件的字节数组
+     */
+    @JvmStatic
+    fun getFileKind(bytes: ByteArray): FileKind? {
+        val headHex = bytes.joinToString("") { String.format("%02x", it) }
+        return FileKind.values().firstOrNull { headHex.startsWith(it.headHex, true) }
+    }
+
     /**
      * 强制删除文件或目录，即使文件或目录不存在也不会抛出异常。
      *
@@ -203,4 +222,17 @@ object KFileUtils {
     fun getSuffix(filename: String): String {
         return filename.substringAfterLast(".", "")
     }
+
+    /**
+     * 重定义文件类型
+     *
+     * @param file 被操作的文件
+     * @param suffix 新的后缀名
+     * @return 重定义后的文件
+     */
+    @JvmStatic
+    fun redefineSuffix(file: File, suffix: String): File {
+        return File(file.parent, file.nameWithoutExtension.plus(suffix))
+    }
+
 }

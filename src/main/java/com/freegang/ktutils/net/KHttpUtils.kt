@@ -1,9 +1,12 @@
 package com.freegang.ktutils.net
 
 import android.os.Build
+import com.freegang.extension.redefineSuffix
+import com.freegang.ktutils.io.KFileUtils
+import com.freegang.ktutils.log.KLogCat
+import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
-import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -80,7 +83,7 @@ object KHttpUtils {
      * @param listener 下载监听器
      */
     @JvmStatic
-    fun download(sourceUrl: String, output: OutputStream, listener: DownloadListener? = null): Boolean {
+    fun download(sourceUrl: String, file: File, listener: DownloadListener? = null): Boolean {
         var connect: HttpURLConnection? = null
         var total = 0L
         var realCount = 0L
@@ -91,30 +94,40 @@ object KHttpUtils {
             } else {
                 connect.contentLength.toLong()
             }
-            val input = connect.inputStream
+            val input = connect.inputStream.buffered()  // 非BufferedInputStream不支持mark/reset
             input.use {
-                val buffer = ByteArray(4096)
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    output.write(buffer, 0, count)
-                    realCount += count
-                    listener?.downloading(realCount, total, null)
+                input.mark(0) // 标记当前位置
+
+                // 读取文件头，判断文件类型
+                val head = ByteArray(32)
+                input.read(head)
+                val kind = KFileUtils.getFileKind(head)
+                val newFile = if (kind != null) {
+                    file.redefineSuffix(kind.suffix)
+                } else {
+                    file
+                }
+
+                input.reset() // 重置到标记位置
+
+                // 开始下载
+                val output = newFile.outputStream()
+                output.use {
+                    while (true) {
+                        val buffer = ByteArray(4096)
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        output.write(buffer, 0, count)
+                        realCount += count
+                        listener?.downloading(realCount, total, null)
+                    }
                 }
             }
             return true
         } catch (e: Exception) {
+            KLogCat.e(e)
             e.printStackTrace()
             listener?.downloading(realCount, total, e)
-        } finally {
-            try {
-                output.flush()
-                output.close()
-                connect?.disconnect()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                listener?.downloading(realCount, total, e)
-            }
         }
         return false
     }
