@@ -58,6 +58,18 @@ val Context.appVersionCode
     get() = KAppUtils.getVersionCode(this)
 
 /**
+ * 获取当前app首次安装时间
+ */
+val Context.appFirstInstallTime
+    get() = KAppUtils.getFirstInstallTime(this)
+
+/**
+ * 获取当前app最后一次更新时间
+ */
+val Context.appLastUpdateTime
+    get() = KAppUtils.getLastUpdateTime(this)
+
+/**
  * 判断当前是否处于深色模式
  */
 val Context.isDarkMode

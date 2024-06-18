@@ -159,6 +159,40 @@ object KAppUtils {
     }
 
     /**
+     * 返回某个App的首次安装时间
+     *
+     * @param context 上下文对象，用于获取资源和包信息。
+     * @param packageName 包名(需要App已安装)
+     * @return Long
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun getFirstInstallTime(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Long {
+        val packageInfo = getPackageInfo(context, packageName)
+        return packageInfo?.firstInstallTime ?: 0
+    }
+
+    /**
+     * 返回某个App的最后更新时间
+     *
+     * @param context 上下文对象，用于获取资源和包信息。
+     * @param packageName 包名(需要App已安装)
+     * @return Long
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun getLastUpdateTime(
+        context: Context,
+        packageName: String = context.packageName,
+    ): Long {
+        val packageInfo = getPackageInfo(context, packageName)
+        return packageInfo?.lastUpdateTime ?: 0
+    }
+
+    /**
      * 返回某个App的基本信息
      *
      * @param context 上下文对象，用于获取资源和包信息。
