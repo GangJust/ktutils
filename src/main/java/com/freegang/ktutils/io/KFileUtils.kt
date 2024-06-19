@@ -1,5 +1,6 @@
 package com.freegang.ktutils.io
 
+import com.freegang.extension.superSplit
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -98,8 +99,8 @@ object KFileUtils {
      * 将文件名转换为安全的文件名，确保文件名不超过255个字节。
      *
      * @param filename 原始文件名
-     * @param suffix 指定后缀名, 默认空字符串则按一般文件的后缀分割符 `小数点(.)` 为后缀
-     * @return 安全的文件名, 如果处理失败, 则返回原文件名
+     * @param suffix 指定后缀名, 默认空字符串为文件名的自带后缀名
+     * @return 安全的文件名
      */
     @JvmStatic
     @JvmOverloads
@@ -107,29 +108,25 @@ object KFileUtils {
         var actualSuffix = suffix
         if (actualSuffix.isBlank()) {
             val lastIndexOf = filename.lastIndexOf(".")
-            val hasSuffix =
-                (lastIndexOf != -1) && (lastIndexOf != 0) && (lastIndexOf != filename.length)
+            val hasSuffix = (lastIndexOf != -1) && (lastIndexOf != 0)
+                    && (lastIndexOf != filename.length) //.开头的文件名不算
             actualSuffix = if (hasSuffix) filename.substring(lastIndexOf) else ""
         }
 
         val maxLength = 255
         val actualSuffixByteSize = actualSuffix.toByteArray().size
-        val stringList = filename.removeSuffix(actualSuffix).split("")
-        var countLength = 0
+        val stringList = filename.removeSuffix(actualSuffix).superSplit()
+        var countLength = actualSuffixByteSize
         var secureFilename = ""
-        for (i in stringList.indices) {
-            val item = stringList[i]
+        for (item in stringList) {
             if (item.isEmpty()) continue
-            countLength += item.toByteArray().size
-            if (countLength + actualSuffixByteSize >= maxLength) break
+            val itemSize = item.toByteArray().size
+            countLength += itemSize
+            if (countLength >= maxLength - itemSize) break
             secureFilename = secureFilename.plus(item)
         }
 
-        return try {
-            secureFilename.plus(actualSuffix)
-        } catch (e: Exception) {
-            return filename
-        }
+        return secureFilename.plus(actualSuffix)
     }
 
     /**

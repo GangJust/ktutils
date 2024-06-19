@@ -57,6 +57,15 @@ fun <S : CharSequence> S.right(delimiter: String, default: String): String {
 }
 
 /**
+ * 增强版拆分字符串, 支持emoji表情
+ *
+ * @return 拆分后的字符串列表
+ */
+fun <S : CharSequence> S.superSplit(): List<String> {
+    return KTextUtils.superSplit(this)
+}
+
+/**
  * 对给定的文本进行省略处理，返回指定长度的字符串。
  *
  * @param length 最大长度，表示要截取的字符数。

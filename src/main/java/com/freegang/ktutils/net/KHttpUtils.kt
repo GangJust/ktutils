@@ -3,7 +3,6 @@ package com.freegang.ktutils.net
 import android.os.Build
 import com.freegang.extension.redefineSuffix
 import com.freegang.ktutils.io.KFileUtils
-import com.freegang.ktutils.log.KLogCat
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
@@ -122,12 +121,14 @@ object KHttpUtils {
                     }
                 }
             }
+
+            return newFile
         } catch (e: Exception) {
             e.printStackTrace()
             listener?.downloading(realCount, total, e)
         }
 
-        return newFile
+        return null
     }
 
     fun interface DownloadListener {

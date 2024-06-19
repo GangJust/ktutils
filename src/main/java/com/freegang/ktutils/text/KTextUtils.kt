@@ -174,6 +174,27 @@ object KTextUtils {
     }
 
     /**
+     * 增强版拆分字符串, 支持emoji表情
+     *
+     * @param text 被操作的字符串
+     * @return 拆分后的字符串列表
+     */
+    @JvmStatic
+    fun <S : CharSequence> superSplit(text: S?): List<String> {
+        text ?: return emptyList()
+
+        val list = mutableListOf<String>()
+        var i = 0
+        while (i < text.length) {
+            val codePoint = Character.codePointAt(text, i)
+            val charCount = Character.charCount(codePoint)
+            list.add(text.substring(i, i + charCount))
+            i += charCount
+        }
+        return list
+    }
+
+    /**
      * 禁止某个字符串中的某些字符连续出现，如果出现则只保留该字符的唯一出现 (字符串去重)。
      *
      * @param text 输入的字符串，可为空。如果为空，则返回空字符串。
