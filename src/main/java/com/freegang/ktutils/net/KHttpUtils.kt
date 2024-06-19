@@ -83,7 +83,8 @@ object KHttpUtils {
      * @param listener 下载监听器
      */
     @JvmStatic
-    fun download(sourceUrl: String, file: File, listener: DownloadListener? = null): Boolean {
+    fun download(sourceUrl: String, file: File, listener: DownloadListener? = null): File? {
+        var newFile: File? = null
         var connect: HttpURLConnection? = null
         var total = 0L
         var realCount = 0L
@@ -96,23 +97,21 @@ object KHttpUtils {
             }
             val input = connect.inputStream.buffered()  // 非BufferedInputStream不支持mark/reset
             input.use {
-                input.mark(0) // 标记当前位置
-
                 // 读取文件头，判断文件类型
                 val head = ByteArray(32)
                 input.read(head)
                 val kind = KFileUtils.getFileKind(head)
-                val newFile = if (kind != null) {
+                newFile = if (kind != null) {
                     file.redefineSuffix(kind.suffix)
                 } else {
                     file
                 }
 
-                input.reset() // 重置到标记位置
-
                 // 开始下载
-                val output = newFile.outputStream()
+                val output = newFile!!.outputStream()
                 output.use {
+                    it.write(head) // 写入文件头
+
                     while (true) {
                         val buffer = ByteArray(4096)
                         val count = input.read(buffer)
@@ -123,13 +122,12 @@ object KHttpUtils {
                     }
                 }
             }
-            return true
         } catch (e: Exception) {
-            KLogCat.e(e)
             e.printStackTrace()
             listener?.downloading(realCount, total, e)
         }
-        return false
+
+        return newFile
     }
 
     fun interface DownloadListener {

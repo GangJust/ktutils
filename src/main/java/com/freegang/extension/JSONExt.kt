@@ -108,8 +108,13 @@ fun JSONObject.write(out: Writer): Boolean {
     }
 }
 
-val JSONObject.isEmpty: Boolean
-    get() = KJSONUtils.isEmpty(this)
+fun JSONObject.isEmpty(): Boolean {
+    return KJSONUtils.isEmpty(this)
+}
+
+fun JSONObject?.isNullOrEmpty(): Boolean {
+    return this == null || KJSONUtils.isEmpty(this)
+}
 
 
 /// Extended Json Array ///
@@ -179,66 +184,95 @@ fun JSONArray.write(out: Writer): Boolean {
     }
 }
 
-val JSONArray.isEmpty: Boolean
-    get() = KJSONUtils.isEmpty(this)
+fun JSONArray.isEmpty(): Boolean {
+    return KJSONUtils.isEmpty(this)
+}
+
+fun JSONArray?.isNullOrEmpty(): Boolean {
+    return this == null || KJSONUtils.isEmpty(this)
+}
 
 fun JSONArray.firstJsonObject(default: JSONObject = JSONObject()): JSONObject {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getJSONObject(this, 0)
 }
 
 fun JSONArray.firstStringOrDefault(default: String = ""): String {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getString(this, 0, default)
 }
 
 fun JSONArray.firstIntOrDefault(default: Int = 0): Int {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getInt(this, 0, default)
 }
 
 fun JSONArray.firstLongOrDefault(default: Long = 0L): Long {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getLong(this, 0, default)
 }
 
 fun JSONArray.firstDoubleOrDefault(default: Double = 0.0): Double {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getDouble(this, 0, default)
 }
 
 fun JSONArray.firstBooleanOrDefault(default: Boolean = false): Boolean {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getBoolean(this, 0, default)
 }
 
 fun JSONArray.lastJsonObject(default: JSONObject = JSONObject()): JSONObject {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getJSONObject(this, this.length() - 1)
 }
 
 fun JSONArray.lastStringOrDefault(default: String = ""): String {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getString(this, this.length() - 1, default)
 }
 
 fun JSONArray.lastIntOrDefault(default: Int = 0): Int {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getInt(this, this.length() - 1, default)
 }
 
 fun JSONArray.lastLongOrDefault(default: Long = 0L): Long {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getLong(this, this.length() - 1, default)
 }
 
 fun JSONArray.lastDoubleOrDefault(default: Double = 0.0): Double {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getDouble(this, this.length() - 1, default)
 }
 
 fun JSONArray.lastBooleanOrDefault(default: Boolean = false): Boolean {
-    if (this.length() == 0 || this.isEmpty) return default
+    if (this.length() == 0 || KJSONUtils.isEmpty(this))
+        return default
+
     return KJSONUtils.getBoolean(this, this.length() - 1, default)
 }
 
