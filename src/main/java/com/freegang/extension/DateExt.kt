@@ -14,7 +14,7 @@ val Date.isLeapYear
  * 对日期进行格式化
  */
 fun Date.format(pattern: String = KDateUtils.PATTERN_FULL): String {
-    return KDateUtils.format(pattern)
+    return KDateUtils.format(this, pattern)
 }
 
 /**
