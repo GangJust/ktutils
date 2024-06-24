@@ -28,6 +28,118 @@ object KCollectionUtils {
      */
     @JvmStatic
     @JvmOverloads
+    fun joinToString(
+        arr: ByteArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Byte>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: CharArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Char>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: ShortArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Short>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: IntArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Int>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: LongArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Long>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: FloatArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Float>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: DoubleArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Double>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun joinToString(
+        arr: BooleanArray,
+        separator: CharSequence = ", ",
+        transform: Transform<Boolean>? = null
+    ): String {
+        transform ?: return arr.joinToString(separator = separator)
+        return arr.joinToString(separator = separator) { transform.transform(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    @JvmOverloads
     fun <T> joinToString(
         arr: Array<T>,
         separator: CharSequence = ", ",
@@ -45,6 +157,94 @@ object KCollectionUtils {
         c: Collection<T>,
         predicate: Predicate<T>,
     ): List<T> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: ByteArray,
+        predicate: Predicate<Byte>,
+    ): List<Byte> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: CharArray,
+        predicate: Predicate<Char>,
+    ): List<Char> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: ShortArray,
+        predicate: Predicate<Short>,
+    ): List<Short> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: IntArray,
+        predicate: Predicate<Int>,
+    ): List<Int> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: LongArray,
+        predicate: Predicate<Long>,
+    ): List<Long> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: FloatArray,
+        predicate: Predicate<Float>,
+    ): List<Float> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: DoubleArray,
+        predicate: Predicate<Double>,
+    ): List<Double> {
+        return c.filter { predicate.predicate(it) }
+    }
+
+    /**
+     * 只是为了方便java调用
+     */
+    @JvmStatic
+    fun filter(
+        c: BooleanArray,
+        predicate: Predicate<Boolean>,
+    ): List<Boolean> {
         return c.filter { predicate.predicate(it) }
     }
 

@@ -224,6 +224,33 @@ object KTextUtils {
     }
 
     /**
+     * 如果字符串以给定的前缀开头，则删除该前缀并返回处理后的字符串。
+     * 否则，返回原始字符串。
+     *
+     * @param text 输入的字符串，可为空。如果为空，则返回空字符串。
+     * @param prefix 前缀
+     */
+    @JvmStatic
+    fun <S : CharSequence> removePrefix(text: S?, prefix: String): String {
+        text ?: return ""
+        return "$text".removePrefix(prefix)
+    }
+
+    /**
+     * 如果字符串以给定的后缀开头，则删除该后缀并返回处理后的字符串。
+     * 否则，返回原始字符串。
+     *
+     * @param text 输入的字符串，可为空。如果为空，则返回空字符串。
+     * @param suffix 后缀
+     */
+    @JvmStatic
+    fun <S : CharSequence> removeSuffix(text: S?, suffix: String): String {
+        text ?: return ""
+        return "$text".removeSuffix(suffix)
+    }
+
+
+    /**
      * 对给定的文本进行省略处理，返回指定长度的字符串。
      *
      * @param text 要进行省略处理的文本，可以为null。
@@ -239,28 +266,6 @@ object KTextUtils {
         val ellipsis = "..."
         val truncatedText = text.subSequence(0, length).toString()
         return truncatedText + ellipsis
-    }
-
-    /**
-     * 将字符串数组按指定字符串做分割符并拼接为一个字符串。see: [Array.joinToString]
-     *
-     * @param texts 字符串数组
-     * @param s 用作拼接的字符串
-     */
-    @JvmStatic
-    fun <S : CharSequence> splicing(texts: Array<S>, s: String): String {
-        return texts.joinToString(s)
-    }
-
-    /**
-     * 将字符串集合按指定字符串做分割符并拼接为一个字符串。see: [Collection.joinToString]
-     *
-     * @param texts 字符串集合
-     * @param s 用作拼接的字符串
-     */
-    @JvmStatic
-    fun <S : CharSequence> splicing(texts: Collection<S>, s: String): String {
-        return texts.joinToString(s)
     }
 
     /**
