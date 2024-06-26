@@ -28,7 +28,7 @@ import java.io.OutputStream
 object KMediaUtils {
 
     /**
-     * 判断是否具有媒体读取权限。
+     * 判断是否具有媒体读取权限，需要 Api 33 以上，并且视频、音频、图片权限都具备。
      *
      * @param context Context
      */
@@ -37,8 +37,8 @@ object KMediaUtils {
     fun hasMediaPermission(context: Context): Boolean {
         return arrayOf(
             Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.READ_MEDIA_IMAGES,
             Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.READ_MEDIA_IMAGES,
         ).all {
             ContextCompat.checkSelfPermission(context, it) == PermissionChecker.PERMISSION_GRANTED
         }
@@ -144,7 +144,7 @@ object KMediaUtils {
         context: Context,
         path: String,
         filename: String,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val uri = queryOrInsert(
             context,
@@ -154,10 +154,8 @@ object KMediaUtils {
             "image/*"
         )
         if (uri != null) {
-            runCatching {
-                openOutputStream(context, uri).use {
-                    callback.invoke(it)
-                }
+            openOutputStream(context, uri).use {
+                callback.invoke(it)
             }
         }
     }
@@ -175,7 +173,7 @@ object KMediaUtils {
     fun insertOrUpdateImage(
         context: Context,
         file: File,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val childPath = file.absolutePath.removePrefix(context.storageRootPath)
         val path = childPath.substringBeforeLast("/")
@@ -203,7 +201,7 @@ object KMediaUtils {
         context: Context,
         path: String,
         filename: String,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val uri = queryOrInsert(
             context,
@@ -213,10 +211,8 @@ object KMediaUtils {
             "video/*"
         )
         if (uri != null) {
-            runCatching {
-                openOutputStream(context, uri).use {
-                    callback.invoke(it)
-                }
+            openOutputStream(context, uri).use {
+                callback.invoke(it)
             }
         }
     }
@@ -234,7 +230,7 @@ object KMediaUtils {
     fun insertOrUpdateVideo(
         context: Context,
         file: File,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val childPath = file.absolutePath.removePrefix(context.storageRootPath)
         val path = childPath.substringBeforeLast("/")
@@ -262,7 +258,7 @@ object KMediaUtils {
         context: Context,
         path: String,
         filename: String,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val uri = queryOrInsert(
             context,
@@ -272,10 +268,8 @@ object KMediaUtils {
             "audio/*"
         )
         if (uri != null) {
-            runCatching {
-                openOutputStream(context, uri).use {
-                    callback.invoke(it)
-                }
+            openOutputStream(context, uri).use {
+                callback.invoke(it)
             }
         }
     }
@@ -293,7 +287,7 @@ object KMediaUtils {
     fun insertOrUpdateAudio(
         context: Context,
         file: File,
-        callback: (OutputStream?) -> Unit
+        callback: (OutputStream?) -> Unit,
     ) {
         val childPath = file.absolutePath.removePrefix(context.storageRootPath)
         val path = childPath.substringBeforeLast("/")
@@ -327,10 +321,8 @@ object KMediaUtils {
     ) {
         val uri = queryOrInsert(context, path, filename, MediaStore.Downloads.EXTERNAL_CONTENT_URI)
         if (uri != null) {
-            runCatching {
-                openOutputStream(context, uri, mode).use {
-                    callback.invoke(it)
-                }
+            openOutputStream(context, uri, mode).use {
+                callback.invoke(it)
             }
         }
     }
@@ -402,7 +394,6 @@ object KMediaUtils {
         }
         return resolver.insert(mediaUri, contentValues)
     }
-
 
     /**
      * 新增或更新媒体记录, 如果存在则返回, 否则插入记录, 请注意该方法需要媒体读取权限(Api 33必要)。
@@ -517,8 +508,7 @@ object KMediaUtils {
         uri: Uri,
         mode: String = "w",
     ): OutputStream? {
-        val resolver = context.applicationContext.contentResolver
-        return resolver.openOutputStream(uri, mode)
+        return context.applicationContext.contentResolver.openOutputStream(uri, mode)
     }
 
     /**
@@ -532,15 +522,14 @@ object KMediaUtils {
         context: Context,
         uri: Uri,
     ): InputStream? {
-        val resolver = context.applicationContext.contentResolver
-        return resolver.openInputStream(uri)
+        return context.applicationContext.contentResolver.openInputStream(uri)
     }
 
     /**
      * 获取某个文件的 FileProviderUri 形式
      * @param context Context
      * @param file 文件
-     * @param authority 由 AndroidManifset.xml <provider android:name="androidx.core.content.FileProvider" ...> 指定的 `authorities` 节点
+     * @param authority see: https://blog.csdn.net/AoXue2017/article/details/126105906
      */
     @JvmStatic
     @JvmOverloads

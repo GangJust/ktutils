@@ -25,8 +25,8 @@ object KDisplayUtils {
      * @return 转换结果，px值
      */
     @JvmStatic
-    fun dip2px(context: Context, dpValue: Float): Int {
-        val scale = context.resources.displayMetrics.density
+    fun dip2px(dpValue: Float): Int {
+        val scale = Resources.getSystem().displayMetrics.density
         return (dpValue * scale + 0.5f).toInt()
     }
 
@@ -38,8 +38,8 @@ object KDisplayUtils {
      * @return 转换结果，dp值
      */
     @JvmStatic
-    fun px2dip(context: Context, pxValue: Float): Int {
-        val scale = context.resources.displayMetrics.density
+    fun px2dip(pxValue: Float): Int {
+        val scale = Resources.getSystem().displayMetrics.density
         return (pxValue / scale + 0.5f).toInt()
     }
 }

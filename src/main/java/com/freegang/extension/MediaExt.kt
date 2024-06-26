@@ -57,30 +57,14 @@ fun Context.getMediaRealPath(uri: Uri): String? {
 }
 
 /**
- * 使用FileProvider获取文件的Uri。
+ * 通知媒体库更新。
  *
- * @param file 获取Uri的文件。
- * @param authority FileProvider 的权限。
- * @return 文件的 Uri。
+ * @param path 文件路径。
+ * @param callback 回调函数。
  */
-fun Context.getFileProviderUri(
-    file: File,
-    authority: String? = null,
-): Uri? {
-    val defaultAuthority = authority ?: "${applicationContext.packageName}.fileprovider"
-    return KMediaUtils.getFileProviderUri(this, file, defaultAuthority)
-}
-
-/**
- * 使用 FileProvider 获取文件的 URI。
- *
- * @param file 获取 Uri 的文件。
- * @param authority FileProvider 的权限。
- * @return 文件的 Uri。
- */
-fun File.getFileProviderUri(
-    context: Context,
-    authority: String = "${context.applicationContext.packageName}.fileprovider",
-): Uri? {
-    return KMediaUtils.getFileProviderUri(context, this, authority)
+fun Context.notifyMediaUpdate(
+    path: String,
+    callback: ((path: String, uri: Uri) -> Unit)? = null,
+) {
+    KMediaUtils.notifyMediaUpdate(this, path, callback)
 }

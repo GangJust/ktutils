@@ -765,8 +765,8 @@ object KViewUtils {
         jsonObject.put("idHex", getIdHex(view))
         jsonObject.put("idName", getIdName(view))
         jsonObject.put("context", "${view.context}")
-        jsonObject.put("width", "${view.context.px2dip(view.width.toFloat())}")
-        jsonObject.put("height", "${view.context.px2dip(view.height.toFloat())}")
+        jsonObject.put("width", "${view.width.px2dip()}")
+        jsonObject.put("height", "${view.height.px2dip()}")
         jsonObject.put("descr", "${view.contentDescription}")
         jsonObject.put("alpha", "${view.alpha}")
         jsonObject.put("paddingLTRB", view.paddingToString())
@@ -783,7 +783,7 @@ object KViewUtils {
         if (view is TextView) {
             jsonObject.put("text", "${view.text}")
             jsonObject.put("hint", "${view.hint}")
-            jsonObject.put("textSize", "${view.context.px2dip(view.textSize)}dp")
+            jsonObject.put("textSize", "${view.textSize.px2dip()}dp")
             view.typeface?.let {
                 if (it.isBold) {
                     jsonObject.put("textStyle", "bold")

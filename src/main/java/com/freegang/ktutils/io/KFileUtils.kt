@@ -5,11 +5,15 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 
-enum class FileKind(val headHex: String, val suffix: String) {
+enum class FileKind(
+    val headHex: String,
+    val suffix: String,
+) {
+    // image
     JPG("ffd8ffe000104a4649460001", ".jpg"),
-    PNG("89504e470d0a1a0a00000D", ".png"),
+    PNG("89504e470d0a1a0a0000000d", ".png"),
     HEIC("0000001C6674797068656963", ".heic"),
-    GIF("47494638396126026f01", ".gif"),
+    GIF("47494638376132013a01f700", ".gif"),
     WEBP("52494646ea33000057454250", ".webp"),
 }
 

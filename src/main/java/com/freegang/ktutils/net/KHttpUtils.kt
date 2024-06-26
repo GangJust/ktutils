@@ -97,7 +97,7 @@ object KHttpUtils {
             val input = connect.inputStream.buffered()  // 非BufferedInputStream不支持mark/reset
             input.use {
                 // 读取文件头，判断文件类型
-                val head = ByteArray(32)
+                val head = ByteArray(16)
                 input.read(head)
                 val kind = KFileUtils.getFileKind(head)
                 newFile = if (kind != null) {

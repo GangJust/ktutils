@@ -1,7 +1,10 @@
 package com.freegang.extension
 
 import android.content.Context
+import android.net.Uri
 import com.freegang.ktutils.app.KAppUtils
+import com.freegang.ktutils.media.KMediaUtils
+import java.io.File
 
 /**
  * 判断当前dalvik虚拟机是否64位
@@ -92,3 +95,48 @@ val Context.navigationBarHeight
  */
 val Context.navBarInteractionMode
     get() = KAppUtils.getNavBarInteractionMode(this)
+
+/**
+ * 获取当前app版本名称和版本号
+ *
+ * @param spacer 版本名称和版本号之间的分隔符
+ * @param reverse 是否反转版本名称和版本号的位置
+ */
+fun Context.appVersion(
+    spacer: String = "-",
+    reverse: Boolean = false,
+): String {
+    return if (reverse) {
+        "${KAppUtils.getVersionCode(this)}${spacer}${KAppUtils.getVersionName(this)}"
+    } else {
+        "${KAppUtils.getVersionName(this)}${spacer}${KAppUtils.getVersionCode(this)}"
+    }
+}
+
+/**
+ * 使用FileProvider获取文件的Uri。
+ *
+ * @param file 获取Uri的文件。
+ * @param authority FileProvider 的权限。
+ * @return 文件的 Uri。
+ */
+fun Context.getFileProviderUri(
+    file: File,
+    authority: String = "${applicationContext.packageName}.fileprovider",
+): Uri? {
+    return KMediaUtils.getFileProviderUri(this, file, authority)
+}
+
+/**
+ * 使用 FileProvider 获取文件的 URI。
+ *
+ * @param file 获取 Uri 的文件。
+ * @param authority FileProvider 的权限。
+ * @return 文件的 Uri。
+ */
+fun File.getFileProviderUri(
+    context: Context,
+    authority: String = "${context.applicationContext.packageName}.fileprovider",
+): Uri? {
+    return KMediaUtils.getFileProviderUri(context, this, authority)
+}

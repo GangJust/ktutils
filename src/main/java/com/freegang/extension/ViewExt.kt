@@ -273,10 +273,10 @@ fun View.visibilityToString(): String {
  * 获取View内间距的字符串表示。
  */
 fun View.paddingToString(): String {
-    val paddingStartDp = context.px2dip(paddingStart.toFloat())
-    val paddingTopDp = context.px2dip(paddingTop.toFloat())
-    val paddingEndDp = context.px2dip(paddingEnd.toFloat())
-    val paddingBottomDp = context.px2dip(paddingBottom.toFloat())
+    val paddingStartDp = paddingStart.px2dip()
+    val paddingTopDp = paddingTop.px2dip()
+    val paddingEndDp = paddingEnd.px2dip()
+    val paddingBottomDp = paddingBottom.px2dip()
     return "[${paddingStartDp}dp, ${paddingTopDp}dp, ${paddingEndDp}dp, ${paddingBottomDp}dp]"
 }
 
@@ -284,10 +284,10 @@ fun View.paddingToString(): String {
  * 获取View外间距的字符串表示。
  */
 fun View.marginToString(): String {
-    val marginStartDp = context.px2dip(marginStart.toFloat())
-    val marginTopDp = context.px2dip(marginTop.toFloat())
-    val marginEndDp = context.px2dip(marginEnd.toFloat())
-    val marginBottomDp = context.px2dip(marginBottom.toFloat())
+    val marginStartDp = marginStart.px2dip()
+    val marginTopDp = marginTop.px2dip()
+    val marginEndDp = marginEnd.px2dip()
+    val marginBottomDp = marginBottom.px2dip()
 
     return "[${marginStartDp}dp, ${marginTopDp}dp, ${marginEndDp}dp, ${marginBottomDp}dp]"
 }

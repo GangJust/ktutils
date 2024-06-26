@@ -101,11 +101,11 @@ object KToastUtils {
 
             val backgroundColor = if (isDarkMode) "#FF333333" else "#FFD3D3D3"
             val textColor = if (isDarkMode) "#FFD3D3D3" else "#FF333333"
-            val paddingHorizontal = context.dip2px(16f)
-            val paddingVertical = context.dip2px(12f)
+            val paddingHorizontal = 16f.dip2px()
+            val paddingVertical = 12f.dip2px()
             val cornerRadius = 24f
             val shadowColor = "#22666666" // semi-transparent black for shadow
-            val shadowRadius = context.dip2px(0.5f)
+            val shadowRadius = 0.5f.dip2px()
 
             // Create a new LinearLayout to be used as the Toast's view
             val linearLayout = LinearLayout(context).apply {

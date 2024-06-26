@@ -3,11 +3,12 @@ package com.freegang.ktutils.media
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.OutputStream
-
 
 /**
  * SAF读写工具类, 需要授权某个目录。请手动加入以下依赖：
@@ -19,11 +20,22 @@ import java.io.OutputStream
  */
 object KDocumentUtils {
 
+    // 原始数据流
+    const val MIME_TYPE_OCTET_STREAM = "application/octet-stream"
+
     /**
      * 保留(持久化)指定 目录/文件 的访问控制权限。
+     * ```
+     * // MainActivity
+     * val launcher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) {uri->
+     *     Log.d("TAG", "Uri: $uri")
+     *     KDocumentUtils.takePersistableUriPermission(this, uri!!)
+     * }
+     * launcher.launch(null)
+     * ```
      *
      * @param context 应用程序上下文。用于获取 ContentResolver 实例。
-     * @param uri 被授予访问控制权限的 目录/文件
+     * @param uri 被授予访问控制权限的 目录/文件。
      */
     @JvmStatic
     fun takePersistableUriPermission(context: Context, uri: Uri) {
@@ -33,143 +45,68 @@ object KDocumentUtils {
     }
 
     /**
-     * 在指定的父目录下创建子目录。
+     * 获取指定目录下的指定文件。
      *
-     * @param context 应用程序上下文。用于获取 DocumentFile 实例。
-     * @param parentTreeUri 父目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param directoryName 要创建的子目录的名称。
-     * @return 如果子目录成功创建，返回表示该子目录的 DocumentFile 实例；否则，返回 null。
-     */
-    @JvmStatic
-    fun createSubdirectory(
-        context: Context,
-        parentTreeUri: Uri,
-        directoryName: String,
-    ): DocumentFile? {
-        // 使用 SAF 的 DocumentFile.fromTreeUri 方法获取表示父目录的 DocumentFile 实例
-        val parentDirectory = DocumentFile.fromTreeUri(context, parentTreeUri)
-
-        // 使用 DocumentFile 的 createDirectory 方法创建子目录
-        // 如果子目录成功创建，createDirectory 方法将返回一个新的 DocumentFile 实例，表示新创建的子目录
-        // 如果子目录未能创建，createDirectory 方法将返回 null
-        return parentDirectory?.createDirectory(directoryName)
-    }
-
-    /**
-     * 获取指定目录下指定子文件夹的 Uri。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 和 DocumentFile 实例。
+     * @param context 应用程序上下文。
      * @param parentTreeUri 要搜索的目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param directoryName 要搜索的子文件夹的名称。
-     * @return 如果在指定目录下找到了指定的子文件夹，返回该子文件夹的 Uri；否则，返回 null。
+     * @param displayName 要查找的文件的名称，如果为空，则返回指定目录（当前目录）。
+     * @return 如果在指定目录下找到了指定的文件，返回该文件的；否则，返回 null。
      */
     @JvmStatic
-    fun getSubdirectoryUri(
+    @JvmOverloads
+    fun getDocumentFile(
         context: Context,
         parentTreeUri: Uri,
-        directoryName: String
-    ): Uri? {
-        // 使用 SAF 的 DocumentFile.fromTreeUri 方法获取表示目录的 DocumentFile 实例
-        val dir = DocumentFile.fromTreeUri(context, parentTreeUri)
-
-        // 检查目录是否存在并且是一个目录
-        if (dir != null && dir.exists() && dir.isDirectory) {
-            // 遍历目录下的所有子文件夹
-            for (folder in dir.listFiles()) {
-                // 检查子文件夹是否存在并且是一个目录，而不是文件
-                if (folder != null && folder.exists() && folder.isDirectory) {
-                    // 检查子文件夹的名称是否与指定的名称匹配
-                    if (folder.name == directoryName) {
-                        // 如果找到了匹配的子文件夹，返回该子文件夹的 Uri
-                        return folder.uri
-                    }
-                }
-            }
+        displayName: String = "",
+    ): DocumentFile? {
+        return if (displayName.isEmpty()) {
+            DocumentFile.fromTreeUri(context, parentTreeUri)
+        } else {
+            DocumentFile.fromTreeUri(context, parentTreeUri)?.findFile(displayName)
         }
-
-        // 如果没有找到匹配的子文件夹，返回 null
-        return null
     }
 
     /**
-     * 在指定的目录下创建文件。
+     * 创建多级目录，如果子目录已经存在，则直接返回该子目录。
      *
-     * @param context 应用程序上下文。用于获取 DocumentFile 实例。
-     * @param parentTreeUri 父目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param fileName 要创建的文件的名称。
-     * @param mimeType 文件的 MIME 类型，例如 "text/plain" 或 "image/jpeg"。如果为 null，则默认创建二进制类型的文件。
-     * @return 如果文件成功创建，返回表示该文件的 DocumentFile 实例；否则，返回 null。
+     * @param documentFile 父目录。
+     * @param displayName 要创建的子目录的名称。
      */
     @JvmStatic
+    fun createDirectories(
+        documentFile: DocumentFile?,
+        displayName: String,
+    ): DocumentFile? {
+        var parentDirectory = documentFile
+        for (directory in displayName.split("/")) {
+            parentDirectory = parentDirectory?.findFile(directory)
+                ?: parentDirectory?.createDirectory(directory)
+        }
+        return parentDirectory
+    }
+
+    /**
+     * 创建文件，默认创建一个空的原始文件
+     *
+     * @param documentFile 父目录。
+     * @param displayName 要创建的子文件的名称。
+     * @param mimeType 文件类型。
+     */
+    @JvmStatic
+    @JvmOverloads
     fun createFile(
-        context: Context,
-        parentTreeUri: Uri,
-        fileName: String,
-        mimeType: String? = "application/octet-stream"
+        documentFile: DocumentFile?,
+        displayName: String,
+        mimeType: String = MIME_TYPE_OCTET_STREAM,
     ): DocumentFile? {
-        // 使用 SAF 的 DocumentFile.fromTreeUri 方法获取表示父目录的 DocumentFile 实例
-        val parentDirectory = DocumentFile.fromTreeUri(context, parentTreeUri)
-
-        // 使用 DocumentFile 的 createFile 方法创建文件
-        // 如果文件成功创建，createFile 方法将返回一个新的 DocumentFile 实例，表示新创建的文件
-        // 如果文件未能创建，createFile 方法将返回 null
-        return parentDirectory?.createFile(mimeType!!, fileName)
-    }
-
-    /**
-     * 获取指定目录下指定文件的 Uri。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 和 DocumentFile 实例。
-     * @param parentTreeUri 要搜索的目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param filename 要搜索的文件的名称。
-     * @return 如果在指定目录下找到了指定的文件，返回该文件的 Uri；否则，返回 null。
-     */
-    @JvmStatic
-    fun getFileUri(
-        context: Context,
-        parentTreeUri: Uri,
-        filename: String
-    ): Uri? {
-        // 使用 SAF 的 DocumentFile.fromTreeUri 方法获取表示目录的 DocumentFile 实例
-        val dir = DocumentFile.fromTreeUri(context, parentTreeUri)
-
-        // 检查目录是否存在并且是一个目录
-        if (dir != null && dir.exists() && dir.isDirectory) {
-            // 遍历目录下的所有文件
-            for (file in dir.listFiles()) {
-                // 检查文件是否存在并且是一个文件，而不是目录
-                if (file != null && file.exists() && !file.isDirectory) {
-                    // 检查文件的名称是否与指定的文件名称匹配
-                    if (file.name == filename) {
-                        // 如果找到了匹配的文件，返回该文件的 Uri
-                        return file.uri
-                    }
-                }
-            }
-        }
-
-        // 如果没有找到匹配的文件，返回 null
-        return null
+        return documentFile?.createFile(mimeType, displayName)
     }
 
     /**
      * 通过指定文件打开一个输入流。
      *
-     * @param documentFile 指定文件
-     */
-    @JvmStatic
-    fun openInputStream(
-        context: Context,
-        documentFile: DocumentFile,
-    ): InputStream? {
-        return context.contentResolver.openInputStream(documentFile.uri)
-    }
-
-    /**
-     * 通过指定文件的Uri打开一个输入流。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 和 DocumentFile 实例。
-     * @param fileUri 要读取的文件的 Uri。应该是已经通过 SAF 授权的文件的 Uri。
+     * @param context 应用程序上下文。
+     * @param documentFile 指定文件。
      * @return 如果文件存在并且可以读取，返回表示文件内容的 InputStream 实例；否则，返回 null。
      * @throws FileNotFoundException 如果文件不存在或无法打开。
      * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
@@ -177,43 +114,20 @@ object KDocumentUtils {
     @JvmStatic
     fun openInputStream(
         context: Context,
-        fileUri: Uri
+        documentFile: DocumentFile,
     ): InputStream? {
-        // 使用 SAF 的 DocumentFile.fromSingleUri 方法获取表示文件的 DocumentFile 实例
-        val file = DocumentFile.fromSingleUri(context, fileUri)
-
-        // 检查文件是否存在并且可以读取
-        return if (file != null && file.exists() && file.canRead()) {
-            // 使用 ContentResolver 的 openInputStream 方法打开文件并返回一个 InputStream 实例
-            context.contentResolver.openInputStream(file.uri)
-        } else {
-            null
-        }
-    }
-
-    /**
-     * 通过指定目录的Uri获取某个文件，并返回该文件的输入流。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 实例。
-     * @param parentTreeUri 要在其中创建或打开文件的目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param filename 要创建或打开的文件的名称。
-     * @return 如果能成功获取到 InputStream，返回该 InputStream；否则，返回 null。
-     * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
-     */
-    @JvmStatic
-    fun openInputStream(
-        context: Context,
-        parentTreeUri: Uri,
-        filename: String,
-    ): InputStream? {
-        val uri = getFileUri(context, parentTreeUri, filename) ?: return null
-        return openInputStream(context, uri)
+        return context.applicationContext.contentResolver.openInputStream(documentFile.uri)
     }
 
     /**
      * 通过指定文件打开一个输出流。
      *
-     * @param documentFile 指定文件
+     * @param context 应用程序上下文。
+     * @param documentFile 指定文件。
+     * @param mode 打开模式，如 "w" 表示写入，可选值有 "wa" 追加写入，"rw" 读写，"rwt" 读写并清空。
+     * @return 如果文件存在并且可以读取，返回表示文件内容的 InputStream 实例；否则，返回 null。
+     * @throws FileNotFoundException 如果文件不存在或无法打开。
+     * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
      */
     @JvmStatic
     fun openOutputStream(
@@ -221,59 +135,22 @@ object KDocumentUtils {
         documentFile: DocumentFile,
         mode: String = "w",
     ): OutputStream? {
-        return context.contentResolver.openOutputStream(documentFile.uri, mode)
+        return context.applicationContext.contentResolver.openOutputStream(documentFile.uri, mode)
     }
 
     /**
-     * 通过指定文件的Uri打开一个输出流。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 实例。
-     * @param fileUri 要获取 OutputStream 的文件的 Uri。应该是已经通过 SAF 授权的文件的 Uri。
-     * @return 如果能成功获取到 OutputStream，返回该 OutputStream；否则，返回 null。
-     * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
+     * 获取某个文件的 FileProviderUri 形式
+     * @param context Context
+     * @param file 文件
+     * @param authority see: https://blog.csdn.net/AoXue2017/article/details/126105906
      */
     @JvmStatic
-    fun openOutputStream(
+    @JvmOverloads
+    fun getFileProviderUri(
         context: Context,
-        fileUri: Uri,
-        mode: String = "w",
-    ): OutputStream? {
-        // 使用 SAF 的 DocumentFile.fromSingleUri 方法获取表示文件的 DocumentFile 实例
-        val file = DocumentFile.fromSingleUri(context, fileUri)
-
-        // 检查文件是否存在并且可以写出
-        return if (file != null && file.exists() && file.canWrite()) {
-            // 使用 ContentResolver 的 openOutputStream 方法打开文件并返回一个 OutputStream 实例
-            // 如果文件不存在或无法打开，openOutputStream 方法将返回 null
-            context.contentResolver.openOutputStream(file.uri, mode)
-        } else {
-            null
-        }
-    }
-
-    /**
-     * 通过指定目录的Uri获取或创建某个文件，并返回该文件的输出流。
-     *
-     * @param context 应用程序上下文。用于获取 ContentResolver 实例。
-     * @param parentTreeUri 要在其中创建或打开文件的目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
-     * @param filename 要打开的文件的名称。
-     * @return 如果能成功获取到 OutputStream，返回该 OutputStream；否则，返回 null。
-     * 注意：调用者应该在使用完 InputStream 后合理关闭它，以释放系统资源。
-     */
-    @JvmStatic
-    fun openOutputStream(
-        context: Context,
-        parentTreeUri: Uri,
-        filename: String,
-        mode: String = "w",
-        mimeType: String? = "application/octet-stream"
-    ): OutputStream? {
-        getFileUri(context, parentTreeUri, filename)?.let {
-            return openOutputStream(context, it, mode)
-        }
-        createFile(context, parentTreeUri, filename, mimeType)?.let {
-            return openOutputStream(context, it.uri, mode)
-        }
-        return null
+        file: File,
+        authority: String = "${context.applicationContext.packageName}.fileprovider",
+    ): Uri? {
+        return FileProvider.getUriForFile(context.applicationContext, authority, file)
     }
 }
