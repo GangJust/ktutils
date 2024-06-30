@@ -1,6 +1,10 @@
 package com.freegang.extension
 
+import com.freegang.ktutils.reflect.FieldFindBuilder
+import com.freegang.ktutils.reflect.FiledFind
 import com.freegang.ktutils.reflect.KReflectUtils
+import com.freegang.ktutils.reflect.MethodFind
+import com.freegang.ktutils.reflect.MethodFindBuilder
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -16,153 +20,68 @@ val Any.classLoader: ClassLoader?
         }
     }
 
-/**
- * 获取某个类/实例的所有字段
- *
- * @param name 字段名
- * @param type 字段类型
- */
-fun Any.fields(
-    name: String? = null,
-    type: Class<*>? = null,
-): List<Field> {
-    return if (name == null && type == null) {
-        KReflectUtils.getFields(this)
-    } else {
-        KReflectUtils.findFields(this, name, type)
-    }
+fun Any.fields(): List<Field> {
+    return KReflectUtils.reflect(this).fields
+}
+
+fun Any.methods(): List<Method> {
+    return KReflectUtils.reflect(this).methods
 }
 
 /**
- * 获取某个实例的所有字段的值
- *
- * @param name 字段名
- * @param type 字段类型
+ * 返回字段搜索构建
  */
-fun Any.fieldGets(
-    name: String? = null,
-    type: Class<*>? = null,
-): List<Any?> {
-    return fields(name = name, type = type).map {
-        try {
-            it.get(this)
-        } catch (e: Exception) {
-            null
-        }
-    }
+fun Any.findField(): FieldFindBuilder {
+    return KReflectUtils.reflect(this).findField()
 }
 
 /**
- * 获取某个类/实例的某个字段
- *
- * @param name 字段名
- * @param type 字段类型
+ * 返回字段搜索构建DSL
  */
-fun Any.field(
-    name: String? = null,
-    type: Class<*>? = null,
-): Field? {
-    return KReflectUtils.findField(this, name, type)
+fun Any.findField(block: FieldFindBuilder.() -> Unit): FiledFind {
+    return KReflectUtils.reflect(this).findField(block)
 }
 
 /**
- * 获取某个实例的某个字段的值
- *
- * @param name 字段名
- * @param type 字段类型
+ * 返回字段搜索构建DSL，并设置值
  */
-@Throws(IllegalArgumentException::class, IllegalAccessException::class)
-fun Any.fieldGet(
-    name: String? = null,
-    type: Class<*>? = null,
-): Any? {
-    val field = field(name = name, type = type)
-    return field?.get(this)
+fun Any.findFieldSetValue(any: Any?, block: FieldFindBuilder.() -> Unit) {
+    val find = KReflectUtils.reflect(this).findField(block)
+    return find.setValueFirst(this, any)
 }
 
 /**
- * 设置某个实例的某个字段的值
- *
- * @param name 字段名
- * @param value 字段值
+ * 返回字段搜索构建DSL，并获取值
  */
-@Throws(IllegalArgumentException::class, IllegalAccessException::class)
-fun Any.fieldSet(
-    name: String,
-    value: Any?,
-) {
-    val field = field(name = name, type = value?.javaClass)
-    field?.set(this, value)
+inline fun <reified T> Any.findFieldGetValue(
+    noinline block: FieldFindBuilder.() -> Unit,
+): T? {
+    val find = KReflectUtils.reflect(this).findField(block)
+    return find.getValueFirst(this) as T?
 }
 
 /**
- * 获取某个类/实例的所有方法
- *
- * @param name 方法名
- * @param returnType 返回值类型
+ * 返回方法搜索构建
  */
-fun Any.methods(
-    name: String? = null,
-    returnType: Class<*>? = null,
-    vararg paramTypes: Class<*>?,
-): List<Method> {
-    return if (name == null && returnType == null && paramTypes.isEmpty()) {
-        KReflectUtils.getMethods(this)
-    } else {
-        KReflectUtils.findMethods(this, name, returnType, *paramTypes)
-    }
+fun Any.findMethod(): MethodFindBuilder {
+    return KReflectUtils.reflect(this).findMethod()
 }
 
 /**
- * 获取某个类/实例的某个方法
- *
- * @param name 方法名
- * @param returnType 返回值类型
+ * 返回方法搜索构建DSL
  */
-fun Any.method(
-    name: String? = null,
-    returnType: Class<*>? = null,
-    vararg paramTypes: Class<*>?,
-): Method? {
-    return KReflectUtils.findMethod(this, name, returnType, *paramTypes)
+fun Any.findMethod(block: MethodFindBuilder.() -> Unit): MethodFind {
+    return KReflectUtils.reflect(this).findMethod(block)
 }
 
 /**
- * 调用某个实例中符合条件的所有方法，返回所有方法的返回值
- *
- * @param name 方法名
- * @param returnType 返回值类型
- * @param args 方法参数
+ * 返回方法搜索构建DSL，并通过传入参数调用
  */
-fun Any.methodInvokes(
-    name: String? = null,
-    returnType: Class<*>? = null,
+inline fun <reified T> Any.findMethodInvoke(
     vararg args: Any?,
-): List<Any?> {
-    val typedArray = args.map { it?.javaClass }.toTypedArray()
-    return methods(name = name, returnType = returnType, paramTypes = typedArray).map {
-        try {
-            it.invoke(this, *args)
-        } catch (e: Exception) {
-            null
-        }
-    }
+    noinline block: MethodFindBuilder.() -> Unit,
+): T? {
+    val find = KReflectUtils.reflect(this).findMethod(block)
+    return find.invokeFirst(this, *args) as T?
 }
 
-/**
- * 调用某个实例中符合条件的某个方法，返回方法的返回值
- *
- * @param name 方法名
- * @param returnType 返回值类型
- * @param args 方法参数
- */
-@Throws(IllegalArgumentException::class, IllegalAccessException::class)
-fun Any.methodInvoke(
-    name: String? = null,
-    returnType: Class<*>? = null,
-    vararg args: Any,
-): Any? {
-    val typedArray = args.map { it.javaClass }.toTypedArray()
-    val method = method(name = name, returnType = returnType, paramTypes = typedArray)
-    return method?.invoke(this, *args)
-}

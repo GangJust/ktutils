@@ -18,8 +18,9 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.freegang.extension.asOrNull
-import com.freegang.extension.fieldGet
-import com.freegang.extension.methodInvoke
+import com.freegang.extension.findFieldGetValue
+import com.freegang.extension.findMethod
+import com.freegang.extension.findMethodInvoke
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.security.MessageDigest
@@ -592,8 +593,8 @@ object KAppUtils {
     fun getDalvikInstructionSet(): String {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvoke(name = "getRuntime")
-            return runtime?.methodInvoke("vmInstructionSet")?.asOrNull<String>() ?: "unknown"
+            val runtime = forName.findMethod().name("getRuntime").invokeFirst(null)
+            return runtime?.findMethod()?.name("vmInstructionSet")?.invokeFirst(null)?.asOrNull<String>() ?: "unknown"
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -607,8 +608,8 @@ object KAppUtils {
     fun is64BitDalvik(): Boolean {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.methodInvoke(name = "getRuntime")
-            return runtime?.methodInvoke("is64Bit")?.asOrNull<Boolean>() ?: false
+            val runtime = forName.findMethodInvoke<Any> { name("getRuntime") }
+            return runtime?.findMethodInvoke<Boolean> { name("is64Bit") }?: false
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -629,8 +630,9 @@ object KAppUtils {
      */
     @JvmStatic
     fun getSecurityPatchLevel(): String {
-        return Build.VERSION::class.java.fieldGet(name = "SECURITY_PATCH")?.asOrNull<String>()
-            ?: "unknown"
+        return Build.VERSION::class.findFieldGetValue<String> {
+            name("SECURITY_PATCH")
+        } ?: "unknown"
     }
 
     /**
