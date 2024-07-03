@@ -112,7 +112,7 @@ object KJSONUtils {
     @JvmStatic
     fun getJSONArrays(json: JSONObject, key: String): Array<JSONObject> {
         val array = getJSONArray(json, key)
-        if (array.length() == 0) return emptyArray()
+        if (isEmpty(array)) return emptyArray()
         return Array(array.length()) { array.getJSONObject(it) }
     }
 
@@ -156,7 +156,11 @@ object KJSONUtils {
     @JvmStatic
     fun isEmpty(json: JSONObject): Boolean {
         val jsonStr = json.toString()
-        return json == JSONObject.NULL || jsonStr == "{}" || jsonStr == "null" || jsonStr == ""
+        return json == JSONObject.NULL ||
+                jsonStr == "{}" ||
+                jsonStr == "{null}" ||
+                jsonStr == "null" ||
+                jsonStr == ""
     }
 
     /// Json Array ///
@@ -284,7 +288,10 @@ object KJSONUtils {
     fun isEmpty(array: JSONArray): Boolean {
         if (array.length() == 0) return true
         val jsonStr = array.toString()
-        return jsonStr == "[]" || jsonStr == "null" || jsonStr == ""
+        return jsonStr == "[]" ||
+                jsonStr == "[null]" ||
+                jsonStr == "null" ||
+                jsonStr == ""
     }
 
 

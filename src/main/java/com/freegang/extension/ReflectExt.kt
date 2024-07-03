@@ -7,23 +7,42 @@ import com.freegang.ktutils.reflect.MethodFind
 import com.freegang.ktutils.reflect.MethodFindBuilder
 import java.lang.reflect.Field
 import java.lang.reflect.Method
+import kotlin.reflect.KClass
 
 /**
- * 获取类加载器
+ * 直接获取类加载器
  */
 val Any.classLoader: ClassLoader?
     get() {
-        return if (this.javaClass == Class::class.java) {
-            (this as Class<*>).classLoader
-        } else {
-            this.javaClass.classLoader
+        return when (this) {
+            is Class<*> -> this.classLoader
+            is KClass<*> -> this.java.classLoader
+            else -> this.javaClass.classLoader
         }
     }
 
+/**
+ * 直接获取类名
+ */
+val Any.className: String
+    get() {
+        return when (this) {
+            is Class<*> -> this.name
+            is KClass<*> -> this.java.name
+            else -> this.javaClass.name
+        }
+    }
+
+/**
+ * 直接获取字段列表
+ */
 fun Any.fields(): List<Field> {
     return KReflectUtils.reflect(this).fields
 }
 
+/**
+ * 直接获取获取方法列表
+ */
 fun Any.methods(): List<Method> {
     return KReflectUtils.reflect(this).methods
 }
