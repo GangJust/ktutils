@@ -235,11 +235,15 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
         return finds()[index]
     }
 
+    override fun count(): Int {
+        return finds().size
+    }
+
     override fun first(): Method {
         return finds().first()
     }
 
-    override fun fistOrNull(): Method? {
+    override fun firstOrNull(): Method? {
         return finds().firstOrNull()
     }
 

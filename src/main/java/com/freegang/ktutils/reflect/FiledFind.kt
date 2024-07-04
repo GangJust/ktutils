@@ -85,7 +85,7 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
     }
 
     /**
-     * 返回类型
+     * 字段类型
      *
      * @param type 类型
      * @param isAssignableFrom 是否互相比较继承关系
@@ -205,11 +205,15 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
         return finds()[index]
     }
 
+    override fun count(): Int {
+        return finds().size
+    }
+
     override fun first(): Field {
         return finds().first()
     }
 
-    override fun fistOrNull(): Field? {
+    override fun firstOrNull(): Field? {
         return finds().firstOrNull()
     }
 

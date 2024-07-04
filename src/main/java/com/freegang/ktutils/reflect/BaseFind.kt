@@ -18,6 +18,11 @@ interface BaseFind<T> {
     operator fun get(index: Int): T
 
     /**
+     * 返回查找匹配到的总数
+     */
+    fun count(): Int
+
+    /**
      * 查找匹配，返回第一项，并确保不为null
      */
     fun first(): T
@@ -25,7 +30,7 @@ interface BaseFind<T> {
     /**
      * 查找匹配，返回第一项，并可以为null
      */
-    fun fistOrNull(): T?
+    fun firstOrNull(): T?
 
     /**
      * 查找匹配，返回最后一项，并确保不为null
