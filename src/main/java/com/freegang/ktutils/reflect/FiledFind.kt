@@ -18,6 +18,11 @@ interface FiledFind : BaseFind<Field> {
     fun getValueFirst(any: Any?): Any?
 
     /**
+     * 获取指定下标项的值
+     */
+    fun getValueIndex(index: Int, any: Any?): Any?
+
+    /**
      * 获取查找匹配到的最后一项值
      *
      * @param any 实例对象
@@ -37,6 +42,11 @@ interface FiledFind : BaseFind<Field> {
      * @param any 实例对象
      */
     fun setValueLast(any: Any?, value: Any?)
+
+    /**
+     * 设置指定下标项的值
+     */
+    fun setValueIndex(index: Int, any: Any?, value: Any?)
 }
 
 class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
@@ -233,6 +243,10 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
         return first().get(any)
     }
 
+    override fun getValueIndex(index: Int, any: Any?): Any? {
+        return get(index).get(any)
+    }
+
     override fun getValueLast(any: Any?): Any? {
         return last().get(any)
     }
@@ -243,5 +257,9 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
 
     override fun setValueLast(any: Any?, value: Any?) {
         last().set(any, value)
+    }
+
+    override fun setValueIndex(index: Int, any: Any?, value: Any?) {
+        get(index).set(any, value)
     }
 }

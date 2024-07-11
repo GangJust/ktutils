@@ -1,40 +1,33 @@
 package com.freegang.ktutils.reflect
 
-import java.lang.reflect.Method
+import java.lang.reflect.Constructor
 
-interface MethodFind : BaseFind<Method> {
+interface ConstructorFind : BaseFind<Constructor<*>> {
     /**
-     * 调用查找匹配到的第一项
+     * 构建查找匹配到的第一项
      *
-     * @param any 实例对象
-     * @param args 实例参数列表
+     * @param args 参数列表
      */
-    fun invokeFirst(any: Any?, vararg args: Any?): Any?
+    fun newFirst(vararg args: Any?): Any
 
     /**
-     * 调用查找匹配到的最后一项
+     * 构建查找匹配到的最后一项
      *
-     * @param any 实例对象
-     * @param args 实例参数列表
+     * @param args 参数列表
      */
-    fun invokeLast(any: Any?, vararg args: Any?): Any?
+    fun newLast(vararg args: Any?): Any
 
     /**
-     * 调用指定下标项
+     * 构建指定下标项
      */
-    fun invokeIndex(index: Int, any: Any?, vararg args: Any?): Any?
+    fun newIndex(index: Int, vararg args: Any?): Any
 }
 
-class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
+class ConstructorFindBuilder(
+    private val constructors: List<Constructor<*>>,
+) : ConstructorFind {
     // 修饰符
     private var mModifiers: Int? = null
-
-    // 方法名
-    private var mName: String? = null
-
-    // 返回类型
-    private var mReturnType: Class<*>? = null
-    private var mReturnTypeAsFrom: Boolean = false
 
     // 参数类型列表
     private var mParameterTypes: List<Class<*>?>? = null
@@ -50,45 +43,18 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
     // 参数列表注解 - future
 
     // 其他外置条件
-    private var mFindPredicate: FindMethodPredicate? = null
+    private var mFindPredicate: FindConstructorPredicate? = null
 
     // 存放查找过的列表
-    private var finded: List<Method> = listOf()
+    private var finded: List<Constructor<*>> = listOf()
 
     /**
      * 修饰符
      *
      * @param modifiers 修饰符, example: `Modifier.PUBLIC or Modifier.STATIC`
      */
-    fun modifiers(modifiers: Int): MethodFindBuilder {
+    fun modifiers(modifiers: Int): ConstructorFindBuilder {
         this.mModifiers = modifiers
-
-        return this
-    }
-
-    /**
-     * 方法名
-     *
-     * @param name 方法名
-     */
-    fun name(name: String): MethodFindBuilder {
-        this.mName = name
-
-        return this
-    }
-
-    /**
-     * 返回类型
-     *
-     * @param returnType 类型
-     * @param isAssignableFrom 是否互相比较继承关系
-     */
-    fun returnType(
-        returnType: Class<*>,
-        isAssignableFrom: Boolean = false,
-    ): MethodFindBuilder {
-        this.mReturnType = returnType
-        this.mReturnTypeAsFrom = isAssignableFrom
 
         return this
     }
@@ -102,7 +68,7 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
     fun parameterTypes(
         parameterTypes: List<Class<*>?>,
         isAssignableFrom: Boolean = false,
-    ): MethodFindBuilder {
+    ): ConstructorFindBuilder {
         this.mParameterTypes = parameterTypes
         this.mParameterTypesAsFrom = isAssignableFrom
 
@@ -118,7 +84,7 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
     fun exceptionTypes(
         exceptionTypes: List<Class<*>?>,
         isAssignableFrom: Boolean = false,
-    ): MethodFindBuilder {
+    ): ConstructorFindBuilder {
         this.mExceptionTypes = exceptionTypes
         this.mExceptionTypesAsFrom = isAssignableFrom
 
@@ -132,7 +98,7 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
      */
     fun annotations(
         annotation: List<Class<*>?>,
-    ): MethodFindBuilder {
+    ): ConstructorFindBuilder {
         this.mAnnotationTypes = annotation
 
         return this
@@ -143,14 +109,12 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
      *
      * @param predicate 外置判断条件
      */
-    fun predicate(predicate: FindMethodPredicate) {
+    fun predicate(predicate: FindConstructorPredicate) {
         this.mFindPredicate = predicate
     }
 
     private fun checkRules() {
         val rules = mModifiers == null
-                && mName == null
-                && mReturnType == null
                 && mParameterTypes == null
                 && mExceptionTypes == null
                 && mAnnotationTypes == null
@@ -159,29 +123,17 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
             throw IllegalArgumentException("at least one matching rule is required.")
     }
 
-    private fun finds(): List<Method> {
+    private fun finds(): List<Constructor<*>> {
         checkRules()
 
         if (finded.isNotEmpty())
             return finded
 
-        var sequence = methods.asSequence()
+        var sequence = constructors.asSequence()
 
         if (mModifiers != null) {
             sequence = sequence.filter {
                 it.modifiers == mModifiers
-            }
-        }
-
-        if (mName != null) {
-            sequence = sequence.filter {
-                it.name == mName
-            }
-        }
-
-        if (mReturnType != null) {
-            sequence = sequence.filter {
-                KReflectUtils.compareType(it.returnType, mReturnType!!, mReturnTypeAsFrom)
             }
         }
 
@@ -222,11 +174,11 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
             .also { finded = it }
     }
 
-    override fun forEach(action: (Method) -> Unit) {
+    override fun forEach(action: (Constructor<*>) -> Unit) {
         finds().forEach(action)
     }
 
-    override fun onEach(action: (Method) -> Unit): List<Method> {
+    override fun onEach(action: (Constructor<*>) -> Unit): List<Constructor<*>> {
         return finds().onEach(action)
     }
 
@@ -234,11 +186,11 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
         return finds().isEmpty()
     }
 
-    override fun toList(): List<Method> {
+    override fun toList(): List<Constructor<*>> {
         return finds()
     }
 
-    override fun get(index: Int): Method {
+    override fun get(index: Int): Constructor<*> {
         return finds()[index]
     }
 
@@ -246,31 +198,31 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
         return finds().size
     }
 
-    override fun first(): Method {
+    override fun first(): Constructor<*> {
         return finds().first()
     }
 
-    override fun firstOrNull(): Method? {
+    override fun firstOrNull(): Constructor<*>? {
         return finds().firstOrNull()
     }
 
-    override fun last(): Method {
+    override fun last(): Constructor<*> {
         return finds().last()
     }
 
-    override fun lastOrNull(): Method? {
+    override fun lastOrNull(): Constructor<*>? {
         return finds().lastOrNull()
     }
 
-    override fun invokeFirst(any: Any?, vararg args: Any?): Any? {
-        return first().invoke(any, *args)
+    override fun newFirst(vararg args: Any?): Any {
+        return first().newInstance(*args)
     }
 
-    override fun invokeLast(any: Any?, vararg args: Any?): Any? {
-        return last().invoke(any, *args)
+    override fun newLast(vararg args: Any?): Any {
+        return last().newInstance(*args)
     }
 
-    override fun invokeIndex(index: Int, any: Any?, vararg args: Any?): Any? {
-        return get(index).invoke(any, *args)
+    override fun newIndex(index: Int, vararg args: Any?): Any {
+        return get(index).newInstance(*args)
     }
 }
