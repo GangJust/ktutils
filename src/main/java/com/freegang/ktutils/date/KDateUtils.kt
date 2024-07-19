@@ -27,6 +27,12 @@ object KDateUtils {
     const val PATTERN_MONTH = "yyyy-MM"
     const val PATTERN_YEAR = "yyyy"
 
+    private val formatLocal = object : ThreadLocal<MutableMap<String, SimpleDateFormat>>() {
+        override fun initialValue(): MutableMap<String, SimpleDateFormat> {
+            return mutableMapOf()
+        }
+    }
+
     /**
      * 获取日历实例
      * @return Calendar
@@ -93,7 +99,10 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun format(date: Date = current, pattern: String = PATTERN_FULL): String {
-        val format = SimpleDateFormat(pattern, Locale.CHINA)
+        val fl = formatLocal.get()!!
+        val format = fl.getOrPut(pattern) {
+            SimpleDateFormat(pattern, Locale.CHINA)
+        }
         return format.format(date)
     }
 
@@ -131,7 +140,10 @@ object KDateUtils {
         second: Int = 0,
         pattern: String = PATTERN_FULL,
     ): String {
-        val format = SimpleDateFormat(pattern, Locale.CHINA)
+        val fl = formatLocal.get()!!
+        val format = fl.getOrPut(pattern) {
+            SimpleDateFormat(pattern, Locale.CHINA)
+        }
         val instance = Calendar.getInstance()
         instance.set(Calendar.YEAR, year)
         instance.set(Calendar.MONTH, month)
@@ -152,7 +164,10 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun parse(dateString: String, pattern: String = PATTERN_FULL): Date? {
-        val format = SimpleDateFormat(pattern, Locale.CHINA)
+        val fl = formatLocal.get()!!
+        val format = fl.getOrPut(pattern) {
+            SimpleDateFormat(pattern, Locale.CHINA)
+        }
         return try {
             format.parse(dateString)
         } catch (e: Exception) {

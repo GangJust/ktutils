@@ -50,19 +50,34 @@ fun Any.methods(): List<Method> {
 }
 
 /**
- * 返回字段搜索构建
- */
-fun Any.findField(): FieldFindBuilder {
-    return KReflectUtils.reflect(this).findField()
-}
-
-/**
  * 返回字段搜索构建DSL
  */
 fun Any.findField(
     block: FieldFindBuilder.() -> Unit,
 ): FiledFind {
     return KReflectUtils.reflect(this).findField(block)
+}
+
+/**
+ * 查找并返回第一个匹配条件的字段
+ *
+ * @param block 构建DSL
+ */
+fun Any.findFieldFirst(
+    block: FieldFindBuilder.() -> Unit,
+): Field {
+    return KReflectUtils.reflect(this).findField(block).first()
+}
+
+/**
+ * 查找并返回第一个匹配条件的字段或null
+ *
+ * @param block 构建DSL
+ */
+fun Any.findFieldFirstOrNull(
+    block: FieldFindBuilder.() -> Unit,
+): Field? {
+    return KReflectUtils.reflect(this).findField(block).firstOrNull()
 }
 
 /**
@@ -76,7 +91,8 @@ fun Any.findFieldSetValue(
     block: (FieldFindBuilder.() -> Unit)? = null,
 ) {
     val find = KReflectUtils.reflect(this).findField {
-        type(any?.javaClass ?: Any::class.java)
+        if (any != null)
+            type(any.javaClass, true)
         block?.invoke(this)
     }
     return find.setValueFirst(this, any)
@@ -93,13 +109,6 @@ inline fun <reified T> Any.findFieldGetValue(
 }
 
 /**
- * 返回方法搜索构建
- */
-fun Any.findMethod(): MethodFindBuilder {
-    return KReflectUtils.reflect(this).findMethod()
-}
-
-/**
  * 返回方法搜索构建DSL
  *
  * @param block 构建DSL
@@ -108,6 +117,28 @@ fun Any.findMethod(
     block: MethodFindBuilder.() -> Unit,
 ): MethodFind {
     return KReflectUtils.reflect(this).findMethod(block)
+}
+
+/**
+ * 查找并返回第一个匹配条件的方法
+ *
+ * @param block 构建DSL
+ */
+fun Any.findMethodFirst(
+    block: MethodFindBuilder.() -> Unit,
+): Method {
+    return KReflectUtils.reflect(this).findMethod(block).first()
+}
+
+/**
+ * 查找并返回第一个匹配条件的方法或null
+ *
+ * @param block 构建DSL
+ */
+fun Any.findMethodFirstOrNull(
+    block: MethodFindBuilder.() -> Unit,
+): Method? {
+    return KReflectUtils.reflect(this).findMethod(block).firstOrNull()
 }
 
 /**
@@ -122,7 +153,7 @@ inline fun <reified T> Any.findMethodInvoke(
 ): T? {
     val argTypes = args.map { it?.javaClass }
     val find = KReflectUtils.reflect(this).findMethod {
-        parameterTypes(argTypes)
+        parameterTypes(argTypes, true)
         block?.invoke(this)
     }
     return find.invokeFirst(this, *args) as T?
@@ -158,7 +189,7 @@ inline fun <reified T> Any.findNewInstance(
 ): T {
     val argTypes = args.map { it?.javaClass }
     val find = KReflectUtils.reflect(this).findConstructor {
-        parameterTypes(argTypes)
+        parameterTypes(argTypes, true)
         block?.invoke(this)
     }
     return find.newFirst(*args) as T

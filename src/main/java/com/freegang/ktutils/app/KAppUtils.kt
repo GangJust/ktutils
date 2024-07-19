@@ -17,10 +17,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.freegang.extension.asOrNull
-import com.freegang.extension.findFieldGetValue
-import com.freegang.extension.findMethod
-import com.freegang.extension.findMethodInvoke
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.security.MessageDigest
@@ -593,11 +589,15 @@ object KAppUtils {
     fun getDalvikInstructionSet(): String {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.findMethod().name("getRuntime").invokeFirst(null)
-            return runtime?.findMethod()?.name("vmInstructionSet")?.invokeFirst(null)?.asOrNull<String>() ?: "unknown"
+            val runtimeMethod = forName?.getDeclaredMethod("getRuntime")
+            val runtime = runtimeMethod?.invoke(null)
+            val vmInstructionSetMethod = forName?.getDeclaredMethod("vmInstructionSet")
+            val vmInstructionSet = vmInstructionSetMethod?.invoke(runtime) as? String
+            return vmInstructionSet ?: ""
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
         return "unknown"
     }
 
@@ -608,8 +608,11 @@ object KAppUtils {
     fun is64BitDalvik(): Boolean {
         try {
             val forName = Class.forName("dalvik.system.VMRuntime")
-            val runtime = forName.findMethodInvoke<Any> { name("getRuntime") }
-            return runtime?.findMethodInvoke<Boolean> { name("is64Bit") }?: false
+            val runtimeMethod = forName?.getDeclaredMethod("getRuntime")
+            val runtime = runtimeMethod?.invoke(null)
+            val is64BitMethod = forName?.getDeclaredMethod("is64Bit")
+            val is64Bit = is64BitMethod?.invoke(runtime) as? Boolean
+            return is64Bit ?: false
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -630,9 +633,9 @@ object KAppUtils {
      */
     @JvmStatic
     fun getSecurityPatchLevel(): String {
-        return Build.VERSION::class.findFieldGetValue<String> {
-            name("SECURITY_PATCH")
-        } ?: "unknown"
+        val securityPatchFiled = Build.VERSION::class.java.getDeclaredField("SECURITY_PATCH")
+        val securityPatch = securityPatchFiled.get(null) as? String
+        return securityPatch ?: "unknown"
     }
 
     /**

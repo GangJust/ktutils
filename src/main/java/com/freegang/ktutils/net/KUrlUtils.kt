@@ -220,7 +220,7 @@ object KUrlUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun splitParams(params: Map<String, String>, encoding: String? = null): String {
+    fun joinParams(params: Map<String, String>, encoding: String? = null): String {
         return params.entries.joinToString("&") {
             val key = it.key
             val value = it.value

@@ -2,7 +2,6 @@ package com.freegang.ktutils.app
 
 import android.app.Application
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutManager
@@ -25,7 +24,6 @@ object KShortcutUtils {
      * 检查桌面上是否存在快捷方式
      *
      * @param context context
-     * @param className 快捷方式启动的Activity类名
      * @param shortcutId 快捷方式ID
      */
     @RequiresApi(Build.VERSION_CODES.N_MR1)
@@ -33,10 +31,8 @@ object KShortcutUtils {
     @JvmOverloads
     fun checkHasShortcut(
         context: Context,
-        className: String,
         shortcutId: String = APP_SHORTCUT_INFO_ID,
     ): Boolean {
-        val shortId = className + shortcutId
         val manager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
         val shortcuts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             manager.getShortcuts(ShortcutManager.FLAG_MATCH_PINNED)
@@ -48,7 +44,7 @@ object KShortcutUtils {
 
         if (shortcuts.isNotEmpty()) {
             for (shortcut in shortcuts) {
-                if (TextUtils.equals(shortId, shortcut.id)) {
+                if (TextUtils.equals(shortcutId, shortcut.id)) {
                     return true
                 }
             }
@@ -61,7 +57,9 @@ object KShortcutUtils {
      * label必须是唯一的，如果桌面存在相同label的icon则无法创建
      *
      * @param context context
+     * @param className 类名
      * @param label 快捷方式名称
+     * @param shortcutId 快捷方式ID
      */
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     @JvmStatic
@@ -77,7 +75,30 @@ object KShortcutUtils {
             return
         }
 
-        val manager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
+        val application: Application = context.applicationContext as Application
+        val intent = Intent()
+        intent.setClassName(application.packageName, className)
+        createShortcut(context, intent, label, shortcutId)
+    }
+
+    /**
+     * 创建快捷方式
+     * label必须是唯一的，如果桌面存在相同label的icon则无法创建
+     *
+     * @param context context
+     * @param intent Intent
+     * @param label 快捷方式名称
+     * @param shortcutId 快捷方式ID
+     */
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    @JvmStatic
+    @JvmOverloads
+    fun createShortcut(
+        context: Context,
+        intent: Intent,
+        label: String,
+        shortcutId: String = APP_SHORTCUT_INFO_ID,
+    ) {
         val shortcutSupported: Boolean = ShortcutManagerCompat.isRequestPinShortcutSupported(context)
         if (!shortcutSupported) {
             Log.w(TAG, "createShortcut error: no shortcutSupported")
@@ -88,12 +109,15 @@ object KShortcutUtils {
         broadcastIntent.setPackage(context.packageName)
 
         try {
-            val shortcutInfo: ShortcutInfoCompat = newShortcutInfo(context, className, label, shortcutId)
+            intent.action = Intent.ACTION_VIEW
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.putExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID, shortcutId)
+            val shortcutInfo: ShortcutInfoCompat = newShortcutInfo(context, intent, label, shortcutId)
             val flag = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             val pendingIntent: PendingIntent = PendingIntent.getBroadcast(context, 0, broadcastIntent, flag)
             // 返回值仅仅是调用成功，并不是快捷方式创建成功
             val result: Boolean = ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, pendingIntent.intentSender)
-            Log.d(TAG, "requestPinShortcut result = $result")
+            Log.i(TAG, "requestPinShortcut result = $result, shortcutId: $shortcutId")
         } catch (e: Exception) {
             Log.e(TAG, "requestPinShortcut error: " + e.message)
         }
@@ -104,25 +128,24 @@ object KShortcutUtils {
      */
     @Throws(Exception::class)
     private fun newShortcutInfo(
-        ctx: Context,
-        className: String,
+        context: Context,
+        intent: Intent,
         label: String,
         shortcutId: String,
     ): ShortcutInfoCompat {
         var labelStr = label
-        val application: Application = ctx.applicationContext as Application
-        val shortcutLaunchId = className + shortcutId
-        val builder: ShortcutInfoCompat.Builder = ShortcutInfoCompat.Builder(application, shortcutLaunchId)
+        val application: Application = context.applicationContext as Application
+        val builder: ShortcutInfoCompat.Builder = ShortcutInfoCompat.Builder(application, shortcutId)
+
         if (TextUtils.isEmpty(labelStr)) {
             labelStr = application.appLabelName
         }
-        val intent = Intent()
-        intent.action = Intent.ACTION_VIEW
-        intent.putExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID, shortcutLaunchId)
-        intent.setPackage(ctx.packageName)
-        intent.setClassName(application.packageName, className)
+
+        intent.component?.let {
+            builder.setActivity(it) // 这个必须加防止有些机型快捷方式不显示
+        }
+
         return builder
-            .setActivity(ComponentName(application, className)) // 这个必须加防止有些机型快捷方式不显示
             .setIcon(IconCompat.createWithResource(application, application.appIconId)) // 快捷方式图标
             .setLongLabel(labelStr)
             .setShortLabel(labelStr)
