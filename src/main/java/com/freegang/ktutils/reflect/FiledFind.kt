@@ -139,6 +139,7 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
                 && mName == null
                 && mType == null
                 && mAnnotationTypes == null
+                && mFindPredicate == null
 
         if (rules)
             throw IllegalArgumentException("at least one matching rule is required.")

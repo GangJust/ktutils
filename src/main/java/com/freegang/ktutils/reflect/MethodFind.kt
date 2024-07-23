@@ -154,6 +154,7 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
                 && mParameterTypes == null
                 && mExceptionTypes == null
                 && mAnnotationTypes == null
+                && mFindPredicate == null
 
         if (rules)
             throw IllegalArgumentException("at least one matching rule is required.")

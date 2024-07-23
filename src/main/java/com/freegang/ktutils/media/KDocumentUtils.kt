@@ -45,6 +45,22 @@ object KDocumentUtils {
     }
 
     /**
+     * 获取指定文件的 DocumentFile 实例。
+     *
+     * @param context 应用程序上下文。
+     * @param uri 目录的 Uri。应该是已经通过 SAF 授权的目录的 Uri。
+     * @return 如果文件存在，返回表示该文件的 DocumentFile 实例；否则，返回 null。
+     */
+    @JvmStatic
+    fun getDocumentFile(
+        context: Context,
+        uri: Uri?
+    ): DocumentFile? {
+        uri ?: return null
+        return DocumentFile.fromSingleUri(context, uri)
+    }
+
+    /**
      * 获取指定目录下的指定文件。
      *
      * @param context 应用程序上下文。
@@ -54,7 +70,7 @@ object KDocumentUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getDocumentFile(
+    fun getDocumentChildFile(
         context: Context,
         parentTreeUri: Uri,
         displayName: String = "",
