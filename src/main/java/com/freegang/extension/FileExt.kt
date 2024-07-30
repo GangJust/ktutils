@@ -3,6 +3,7 @@ package com.freegang.extension
 import com.freegang.ktutils.io.KFileUtils
 import java.io.File
 import java.io.IOException
+import java.nio.charset.Charset
 
 /**
  * 重定义文件类型
@@ -96,4 +97,23 @@ val String.pureFileName: String
  */
 fun String.secureFilename(suffix: String = ""): String {
     return KFileUtils.secureFilename(this, suffix)
+}
+
+
+/**
+ * 将字符串写入到指定的文件，该操作将覆盖文件原有内容。
+ *
+ * @param file 指定的文件
+ */
+fun String.writeFile(file: File, charset: Charset = Charsets.UTF_8) {
+    KFileUtils.writeText(file, this, charset)
+}
+
+/**
+ * 将字符串追加到指定的文件末尾。
+ *
+ * @param file 指定的文件
+ */
+fun String.appendFile(file: File, charset: Charset = Charsets.UTF_8) {
+    KFileUtils.appendText(file, this, charset)
 }
