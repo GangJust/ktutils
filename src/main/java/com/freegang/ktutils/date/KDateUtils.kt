@@ -107,6 +107,19 @@ object KDateUtils {
     }
 
     /**
+     * 格式化时间戳为字符串
+     *
+     * @param time 时间戳
+     * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"
+     * @return 格式化后的日期字符串
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun format(time: Long, pattern: String = PATTERN_FULL): String {
+        return format(Date(time), pattern)
+    }
+
+    /**
      * 格式化当前日期为字符串
      *
      * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"

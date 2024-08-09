@@ -1,6 +1,7 @@
 package com.freegang.ktutils.reflect
 
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 
 interface FiledFind : BaseFind<Field> {
     /**
@@ -196,6 +197,20 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
             .also { finded = it }
     }
 
+    private fun inlineGetValue(any: Any?, field: Field): Any? {
+        return if (Modifier.isStatic(field.modifiers))
+            field.get(null)
+        else
+            field.get(any)
+    }
+
+    private fun inlineSetValue(any: Any?, field: Field, value: Any?) {
+        if (Modifier.isStatic(field.modifiers))
+            field.set(null, value)
+        else
+            field.set(any, value)
+    }
+
     override fun forEach(action: (Field) -> Unit) {
         finds().forEach(action)
     }
@@ -237,30 +252,30 @@ class FieldFindBuilder(private val fields: List<Field>) : FiledFind {
     }
 
     override fun getValues(any: Any?): List<Any?> {
-        return finds().map { it.get(any) }
+        return finds().map { inlineGetValue(any, it) }
     }
 
     override fun getValueFirst(any: Any?): Any? {
-        return first().get(any)
+        return inlineGetValue(any, first())
     }
 
     override fun getValueIndex(index: Int, any: Any?): Any? {
-        return get(index).get(any)
+        return inlineGetValue(any, get(index))
     }
 
     override fun getValueLast(any: Any?): Any? {
-        return last().get(any)
+        return inlineGetValue(any, last())
     }
 
     override fun setValueFirst(any: Any?, value: Any?) {
-        first().set(any, value)
+        inlineSetValue(any, first(), value)
     }
 
     override fun setValueLast(any: Any?, value: Any?) {
-        last().set(any, value)
+        inlineSetValue(any, last(), value)
     }
 
     override fun setValueIndex(index: Int, any: Any?, value: Any?) {
-        get(index).set(any, value)
+        inlineSetValue(any, get(index), value)
     }
 }

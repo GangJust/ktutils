@@ -9,8 +9,8 @@ class ClassBuilder(
 ) {
     private val mFields: List<Field> by lazy {
         val list = mutableListOf<Field>()
-        var currentClass = clazz
-        while (currentClass != Any::class.java) {
+        var currentClass: Class<*>? = clazz
+        while (currentClass != null && currentClass != Any::class.java) {
             currentClass.declaredFields.forEach {
                 runCatching { it.isAccessible = true }
                 list.add(it)
@@ -23,8 +23,8 @@ class ClassBuilder(
 
     private val mMethods: List<Method> by lazy {
         val list = mutableListOf<Method>()
-        var currentClass = clazz
-        while (currentClass != Any::class.java) {
+        var currentClass: Class<*>? = clazz
+        while (currentClass != null && currentClass != Any::class.java) {
             currentClass.declaredMethods.forEach {
                 runCatching { it.isAccessible = true }
                 list.add(it)

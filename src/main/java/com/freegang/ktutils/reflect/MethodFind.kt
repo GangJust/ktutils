@@ -1,6 +1,7 @@
 package com.freegang.ktutils.reflect
 
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 
 interface MethodFind : BaseFind<Method> {
     /**
@@ -223,6 +224,13 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
             .also { finded = it }
     }
 
+    private fun inlineInvoke(any: Any?, method: Method, args: Array<out Any?>): Any? {
+        return if (Modifier.isStatic(method.modifiers))
+            method.invoke(null, *args)
+        else
+            method.invoke(any, *args)
+    }
+
     override fun forEach(action: (Method) -> Unit) {
         finds().forEach(action)
     }
@@ -264,14 +272,14 @@ class MethodFindBuilder(private val methods: List<Method>) : MethodFind {
     }
 
     override fun invokeFirst(any: Any?, vararg args: Any?): Any? {
-        return first().invoke(any, *args)
+        return inlineInvoke(any, first(), args)
     }
 
     override fun invokeLast(any: Any?, vararg args: Any?): Any? {
-        return last().invoke(any, *args)
+        return inlineInvoke(any, last(), args)
     }
 
     override fun invokeIndex(index: Int, any: Any?, vararg args: Any?): Any? {
-        return get(index).invoke(any, *args)
+        return inlineInvoke(any, get(index), args)
     }
 }
