@@ -98,7 +98,10 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun format(date: Date = current, pattern: String = PATTERN_FULL): String {
+    fun format(
+        date: Date = current,
+        pattern: String = PATTERN_FULL,
+    ): String {
         val fl = formatLocal.get()!!
         val format = fl.getOrPut(pattern) {
             SimpleDateFormat(pattern, Locale.CHINA)
@@ -115,7 +118,10 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun format(time: Long, pattern: String = PATTERN_FULL): String {
+    fun format(
+        time: Long,
+        pattern: String = PATTERN_FULL,
+    ): String {
         return format(Date(time), pattern)
     }
 
@@ -170,19 +176,22 @@ object KDateUtils {
     /**
      * 将日期字符串解析为日期对象
      *
-     * @param dateString 日期字符串
+     * @param dateStr 日期字符串
      * @param pattern 日期格式化模式，默认为 "yyyy-MM-dd HH:mm:ss"
      * @return 解析后的日期对象，解析失败时返回 null
      */
     @JvmStatic
     @JvmOverloads
-    fun parse(dateString: String, pattern: String = PATTERN_FULL): Date? {
+    fun parse(
+        dateStr: String,
+        pattern: String = PATTERN_FULL,
+    ): Date? {
         val fl = formatLocal.get()!!
         val format = fl.getOrPut(pattern) {
             SimpleDateFormat(pattern, Locale.CHINA)
         }
         return try {
-            format.parse(dateString)
+            format.parse(dateStr)
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -197,11 +206,54 @@ object KDateUtils {
      * @return 两个日期之间的天数差，若 startDate 在 endDate 之后，则返回负数
      */
     @JvmStatic
-    fun getDaysBetweenDates(startDate: Date, endDate: Date): Long {
-        val start = getStartOfDay(startDate)
-        val end = getStartOfDay(endDate)
+    fun difference(
+        startDate: Date,
+        endDate: Date,
+    ): Long {
+        val start = startOfDay(startDate)
+        val end = startOfDay(endDate)
         val diff = end.time - start.time
         return diff / (1000 * 60 * 60 * 24)
+    }
+
+    /**
+     * 获取指定日期的起始月 (当月的第一天)
+     *
+     * @param date 指定日期
+     * @return 起始时间的日期对象
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun startOfMonth(date: Date = current): Date {
+        calendar.time = date
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+
+        return calendar.time
+    }
+
+    /**
+     * 获取指定日期的起始月 (当月的最后一天)
+     *
+     * @param date 指定日期
+     * @return 起始时间的日期对象
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun endOfMonth(date: Date = current): Date {
+        calendar.time = date
+        calendar.add(Calendar.MONTH, 1) // 到下个月
+        calendar.set(Calendar.DAY_OF_MONTH, 1) // 先将日期设为下个月的第一天
+        calendar.add(Calendar.MONTH, -1) // 将日期减去1，得到当月的最后一天
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+
+        return calendar.time
     }
 
     /**
@@ -212,8 +264,7 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getStartOfDay(date: Date = current): Date {
-        val calendar = Calendar.getInstance()
+    fun startOfDay(date: Date = current): Date {
         calendar.time = date
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
@@ -230,8 +281,7 @@ object KDateUtils {
      */
     @JvmStatic
     @JvmOverloads
-    fun getEndOfDay(date: Date = current): Date {
-        val calendar = Calendar.getInstance()
+    fun endOfDay(date: Date = current): Date {
         calendar.time = date
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
@@ -250,7 +300,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addYears(date: Date = current, years: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.YEAR, years)
         return calendar.time
@@ -266,7 +315,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addMonths(date: Date = current, months: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.MONTH, months)
         return calendar.time
@@ -282,7 +330,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addDays(date: Date = current, days: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.DAY_OF_YEAR, days)
         return calendar.time
@@ -298,7 +345,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addHours(date: Date = current, hours: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.HOUR_OF_DAY, hours)
         return calendar.time
@@ -314,7 +360,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addMinutes(date: Date = current, minutes: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.MINUTE, minutes)
         return calendar.time
@@ -330,7 +375,6 @@ object KDateUtils {
     @JvmStatic
     @JvmOverloads
     fun addSeconds(date: Date = current, seconds: Int): Date {
-        val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.SECOND, seconds)
         return calendar.time
@@ -427,13 +471,23 @@ object KDateUtils {
             return this
         }
 
-        fun getStartOfDay(): Builder {
-            date = getStartOfDay(date)
+        fun startOfMonth(): Builder {
+            date = startOfMonth(date)
             return this
         }
 
-        fun getEndOfDay(): Builder {
-            date = getEndOfDay(date)
+        fun endOfMonth(): Builder {
+            date = endOfMonth(date)
+            return this
+        }
+
+        fun startOfDay(): Builder {
+            date = startOfDay(date)
+            return this
+        }
+
+        fun endOfDay(): Builder {
+            date = endOfDay(date)
             return this
         }
 
@@ -442,7 +496,7 @@ object KDateUtils {
         }
 
         @JvmOverloads
-        fun buildFormat(pattern: String = KDateUtils.PATTERN_FULL): String {
+        fun buildFormat(pattern: String = PATTERN_FULL): String {
             return format(date, pattern)
         }
     }
