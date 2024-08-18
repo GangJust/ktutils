@@ -50,6 +50,16 @@ fun Any.methods(): List<Method> {
 }
 
 /**
+ * 获取字段值, 当字段内容为null时返回默认值
+ *
+ * @param any 对象
+ * @param default 默认值
+ */
+inline fun <reified T> Field.getOrDefault(any: Any?, default: T): T {
+    return get(any) as? T ?: default
+}
+
+/**
  * 返回字段搜索构建DSL
  */
 fun Any.findField(
