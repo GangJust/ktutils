@@ -678,7 +678,7 @@ object KViewUtils {
      * @return 如果存在位于relativeIndex位置的兄弟View，则返回该View，否则返回null。
      */
     @JvmStatic
-    fun getSiblingViewAt(view: View, relativeIndex: Int): View? {
+    fun getBrotherViewAt(view: View, relativeIndex: Int): View? {
         val parent = view.parent?.asOrNull<ViewGroup>() ?: return null
         val indexOfChild = parent.indexOfChild(view)
         val targetIndex = indexOfChild + relativeIndex

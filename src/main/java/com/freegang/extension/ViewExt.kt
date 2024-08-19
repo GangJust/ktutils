@@ -253,8 +253,8 @@ fun View.replaceWith(newView: View) {
  *
  * @param relativeIndex 相对位置索引
  */
-fun View.getSiblingViewAt(relativeIndex: Int): View? {
-    return KViewUtils.getSiblingViewAt(this, relativeIndex)
+fun View.getBrotherViewAt(relativeIndex: Int): View? {
+    return KViewUtils.getBrotherViewAt(this, relativeIndex)
 }
 
 /**
