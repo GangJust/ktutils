@@ -7,6 +7,13 @@ import java.lang.reflect.Method
 class ClassBuilder(
     private val clazz: Class<*>,
 ) {
+    private val mCurrFields: List<Field> by lazy {
+        clazz.declaredFields.map {
+            runCatching { it.isAccessible = true }
+            it
+        }
+    }
+
     private val mFields: List<Field> by lazy {
         val list = mutableListOf<Field>()
         var currentClass: Class<*>? = clazz
@@ -19,6 +26,13 @@ class ClassBuilder(
         }
 
         list
+    }
+
+    private val mCurrMethods: List<Method> by lazy {
+        clazz.declaredMethods.map {
+            runCatching { it.isAccessible = true }
+            it
+        }
     }
 
     private val mMethods: List<Method> by lazy {
@@ -56,10 +70,22 @@ class ClassBuilder(
         get() = mFields
 
     /**
+     * 字段列表，仅当前类的所有字段
+     */
+    val currFields: List<Field>
+        get() = mCurrFields
+
+    /**
      * 方法列表，含父类所有方法
      */
     val methods: List<Method>
         get() = mMethods
+
+    /**
+     * 方法列表，仅当前类的所有方法
+     */
+    val currMethods: List<Method>
+        get() = mCurrMethods
 
     /**
      * 构造方法列表，含父类的所有构造方法

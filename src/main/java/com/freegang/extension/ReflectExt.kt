@@ -7,6 +7,7 @@ import com.freegang.ktutils.reflect.FiledFind
 import com.freegang.ktutils.reflect.KReflectUtils
 import com.freegang.ktutils.reflect.MethodFind
 import com.freegang.ktutils.reflect.MethodFindBuilder
+import org.json.JSONObject
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import kotlin.reflect.KClass
@@ -36,6 +37,103 @@ val Any.className: String
     }
 
 /**
+ * 将某个实例对象中的所有字段转为JSON
+ *
+ * @param maxDepth 手动设置栈深度，以避免对象嵌套栈溢出
+ */
+fun Any.fieldToJson(
+    maxDepth: Int = 5,
+): JSONObject {
+    val json = JSONObject()
+    val stack = mutableListOf<Pair<Any, JSONObject>>()
+    val visited = mutableSetOf<Int>()
+    val depths = mutableMapOf<Int, Int>()
+
+    stack.add(this to json)
+    visited.add(System.identityHashCode(this))
+    depths[System.identityHashCode(this)] = 0
+
+    while (stack.isNotEmpty()) {
+        val (currentObject, currentJson) = stack.removeLast()
+        val currentDepth = depths[System.identityHashCode(currentObject)] ?: 0
+
+        if (currentDepth >= maxDepth) {
+            currentJson.putOpt("maxDepthReached", "...")
+            continue
+        }
+
+        val fields = currentObject::class.java.declaredFields
+        for (field in fields) {
+            field.isAccessible = true
+            val value = field.get(currentObject)
+
+            when {
+                value == null || value is String || field.type.isPrimitive -> {
+                    currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", "$value")
+                }
+
+                value is Collection<*> -> {
+                    currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                }
+
+                value.javaClass.isArray -> {
+                    // 基本类型数组, 直接join
+                    if (value is ByteArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is CharArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is ShortArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is IntArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is LongArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is FloatArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is DoubleArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is BooleanArray) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value.joinToString())
+                        continue
+                    }
+                    if (value is Array<*>) {
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", value)
+                        continue
+                    }
+                }
+
+                else -> {
+                    val valueHash = System.identityHashCode(value)
+                    if (valueHash !in visited) {
+                        visited.add(valueHash)
+                        val nestedJson = JSONObject()
+                        currentJson.putOpt("⟨${field.type.name}⟩ ${field.name}", nestedJson)
+                        stack.add(value to nestedJson)
+                        depths[valueHash] = currentDepth + 1
+                    }
+                }
+            }
+        }
+    }
+
+    return JSONObject().putOpt(this.javaClass.name, json)
+}
+
+/**
  * 直接获取字段列表，含父类字段
  */
 fun Any.fields(): List<Field> {
@@ -43,10 +141,24 @@ fun Any.fields(): List<Field> {
 }
 
 /**
+ * 直接获取字段列表，仅当前类字段
+ */
+fun Any.currFields(): List<Field> {
+    return KReflectUtils.reflect(this).currFields
+}
+
+/**
  * 直接获取获取方法列表，含父类方法
  */
 fun Any.methods(): List<Method> {
     return KReflectUtils.reflect(this).methods
+}
+
+/**
+ * 直接获取获取方法列表，仅当前类方法
+ */
+fun Any.currMethods(): List<Method> {
+    return KReflectUtils.reflect(this).currMethods
 }
 
 /**
