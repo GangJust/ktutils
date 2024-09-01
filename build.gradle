@@ -5,12 +5,10 @@ plugins {
 
 android {
     namespace 'com.freegang.ktutils'
-    compileSdkVersion 33
-    buildToolsVersion "30.0.3"
+    compileSdk 34
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdk 21
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
